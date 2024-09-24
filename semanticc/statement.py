@@ -118,7 +118,7 @@ class StatementList(list[Statement]):
                 # elif token.value[0] in ["("]:   # type conversion?
                 #     stype = StatementType.EXPRESSION
                 elif token.value[0] != "/" and reg_c_operators.search(token.value):  # invalid
-                    stype = StatementType.EXPRESSION
+                    stype = StatementType.EXPRESSION  # TODO: this fails on variable declaration and initialization treating it as expression
                 elif reg_identifier.match(token.value):    # something starging with an identifier name
                     stype = StatementType.EXPRESSION_OR_VARDECL_OR_FUNC_OR_FUNCALL
                 elif reg_type.match(token.value):       # ???
@@ -147,7 +147,7 @@ class StatementList(list[Statement]):
             if not statement_special:   # Constructs that don't end by ; or {}
                 if token.value == "if": # if can continue with else after ;
                     statement_special = 1
-                elif token.value in ["struct", "union", "enum", "do", "typedef"]:  # These end strictly with a ;
+                elif stype == StatementType.EXPRESSION or token.value in ["struct", "union", "enum", "do", "typedef"]:  # These end strictly with a ;
                     statement_special = 2
             cur.append(token)
             if (complete and token.value == "\n") or token.value[0] == "#":

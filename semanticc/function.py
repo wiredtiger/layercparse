@@ -65,7 +65,7 @@ class FunctionParts:
             return
         saved_type: Any = None
         for st in StatementList.xFromText(self.body.value):
-            if st.type in [StatementType.EXPRESSION, StatementType.STATEMENT, StatementType.FUNCTION_CALL]:
+            if st.type in [StatementType.EXPRESSION, StatementType.STATEMENT]:
                 break
             if st.type == StatementType.VARDECL:
                 var = Variable.fromVarDef(st.tokens)

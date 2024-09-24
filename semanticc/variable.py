@@ -3,7 +3,6 @@ from copy import deepcopy
 
 from .common import *
 from .ctoken import *
-from .statement import *
 
 @dataclass
 class Variable:
