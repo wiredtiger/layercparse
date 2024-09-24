@@ -31,9 +31,7 @@ for f in sys.argv[1:]:
         # pprint(st)
         # pprint(st.filterCode())
         print(f"{st.type} {st.range()}: ", end="")
-        if st.type in [StatementType.STRUCT, StatementType.UNION, StatementType.ENUM]:
-            print("〈"+"⌇".join((t.value for t in st.tokens))+"〉")
-        elif st.type == StatementType.FUNCTION_DEF:
+        if st.type == StatementType.FUNCTION_DEF:
             func = FunctionParts.fromStatement(st)
             pprint(func)
             if func:
@@ -54,6 +52,12 @@ for f in sys.argv[1:]:
             #         for stt in StatementList.xFromText(clean_text_sz(t.value[1:-1])):
             #             print("〈"+"⌇".join((tt.value for tt in stt.tokens))+"〉", end="")
             # print("〉")
+        elif st.type == StatementType.RECORD:
+            struct = RecordParts.fromStatement(st)
+            pprint(struct)
+            if struct:
+                for var in struct.xGetMembers():
+                    print(f"=== Member: {var}")
         else:
             print("〈"+"⌇".join((t.value for t in st.tokens))+"〉")
 

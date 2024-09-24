@@ -131,9 +131,7 @@ class StatementType(enum.Enum):
     COMMENT = enum.auto()
     PREPROC = enum.auto()
     TYPEDEF = enum.auto()
-    STRUCT = enum.auto()
-    UNION = enum.auto()
-    ENUM = enum.auto()
+    RECORD = enum.auto()  # struct, union, enum
     FUNCTION_DEF = enum.auto()
     FUNCTION_DECL = enum.auto()
     FUNCTION_CALL = enum.auto()
@@ -194,8 +192,10 @@ class StatementList(list[Statement]):
                 stype = StatementType.VARDECL
             elif stype == StatementType.FUNCTION_DEF_OR_DECL:
                 stype = StatementType.FUNCTION_DECL
-            elif stype in [StatementType.STRUCT, StatementType.UNION, StatementType.ENUM] and not curly:
+            elif stype == StatementType.RECORD and not curly:
                 stype = StatementType.VARDECL
+            elif stype == StatementType.TYPEDEF and curly:
+                stype = StatementType.RECORD
             ret = Statement(stype, TokenList(cur))
             stype, cur, complete, statement_special, prev_thing, prev_word, prev_type, curly = StatementType.UNDEF, TokenList([]), False, 0, -10, False, False, False
             return ret
@@ -231,7 +231,7 @@ class StatementList(list[Statement]):
                 elif token.value[0] == "#":
                     stype = StatementType.PREPROC
                 elif token.value in ["struct", "union", "enum"]:
-                    stype = StatementType.STRUCT if token.value == "struct" else StatementType.UNION if token.value == "union" else StatementType.ENUM
+                    stype = StatementType.RECORD
                 elif token.value in ["typedef"]:
                     stype = StatementType.TYPEDEF
                 elif reg_statement_keyword.match(token.value):
@@ -268,7 +268,7 @@ class StatementList(list[Statement]):
             if not statement_special:   # Constructs that don't end by ; or {}
                 if token.value == "if": # if can continue with else after ;
                     statement_special = 1
-                elif token.value in ["struct", "union", "enum", "do"]:  # These end strictly with a ;
+                elif token.value in ["struct", "union", "enum", "do", "typedef"]:  # These end strictly with a ;
                     statement_special = 2
             cur.append(token)
             if (complete and token.value == "\n") or token.value[0] == "#":
@@ -281,7 +281,7 @@ class StatementList(list[Statement]):
             if token.value[0] == "{":
                 curly = True
             elif token.value[0] in [";", ","] and statement_special == 2:
-                if stype in [StatementType.STRUCT, StatementType.UNION, StatementType.ENUM] and not curly:
+                if stype == StatementType.RECORD and not curly:
                     stype = StatementType.VARDECL
                     statement_special = 0
 
@@ -317,6 +317,7 @@ class Variable:
     type: TokenList
     preComment: Token | None = None
     postComment: Token | None = None
+    end: Token | None = None
 
     # Get the vatiable name and type from C declaration or argument list.
     @staticmethod
@@ -344,7 +345,14 @@ class Variable:
         # Remove C keywords from type
         type = TokenList((filter(lambda x: x.value not in c_type_keywords, tokens)))
 
-        return Variable(name, type, get_pre_comment(vardef)[0], get_post_comment(vardef))
+        end = None
+        for token in reversed(vardef):
+            if token.value[0] in [" ", "\t", "\n", "/"]:
+                continue
+            end = token.value if token.value in [",", ";"] else None
+            break
+
+        return Variable(name, type, get_pre_comment(vardef)[0], get_post_comment(vardef), end)
 
 def get_pre_comment(tokens: TokenList) -> tuple[Token | None, int]:
     for i in range(len(tokens)):
@@ -432,8 +440,94 @@ class FunctionParts:
                     if not var.type:
                         var.type = saved_type
                     yield var
-                    saved_type = var.type
+                    saved_type = var.type if var.end == "," else None
             else:
                 saved_type = None
     def getLocalVars(self) -> list[Variable]:
         return list(self.xGetLocalVars())
+
+class RecordType(enum.Enum):
+    UNDEF = 0
+    STRUCT = enum.auto()
+    UNION = enum.auto()
+    ENUM = enum.auto()
+
+@dataclass
+class RecordParts:
+    type: RecordType
+    name: Token | None = None
+    body: Token | None = None
+    members: list[Variable] | None = None
+    typedefs: list[Variable] | None = None
+    vardefs: list[Variable] | None = None
+    preComment: Token | None = None
+    postComment: Token | None = None
+
+    @staticmethod
+    def fromStatement(st: Statement) -> 'RecordParts | None':
+        tokens = st.tokens
+        ret = RecordParts(RecordType.UNDEF)
+
+        ret.preComment, i = get_pre_comment(tokens)
+
+        for i in range(i+1, len(tokens)):
+            token = tokens[i]
+            if token.value == "typedef":
+                ret.typedefs = []
+            elif token.value == "struct":
+                ret.type = RecordType.STRUCT
+            elif token.value == "union":
+                ret.type = RecordType.UNION
+            elif token.value == "enum":
+                ret.type = RecordType.ENUM
+            elif token.value == "enum":
+                ret.type = RecordType.ENUM
+            elif token.value in c_type_keywords:
+                pass
+            elif reg_identifier.match(token.value):
+                ret.name = token
+            elif token.value[0] == "{":
+                ret.body = Token(token.idx, (token.range[0]+1, token.range[1]-1), token.value[1:-1])
+                break
+            elif token.value[0] in [";", ","]:
+                return None
+
+        if not ret.body:
+            return None
+
+        # vars or types list
+        names: list[Variable] = []
+        typename = ret.name if ret.name else Token(ret.body.idx, ret.body.range, "(anonymous)")
+        for stt in StatementList.xFromTokens(TokenList(tokens[i+1:])):
+            var = Variable.fromVarDef(stt.tokens)
+            if var:
+                var.type = TokenList([typename])
+                names.append(var)
+
+        if ret.typedefs is not None:
+            ret.typedefs = names
+        else:
+            ret.vardefs = names
+
+        ret.postComment = get_post_comment(tokens)
+
+        return ret
+
+    def xGetMembers(self) -> Iterable[Variable]:
+        if not self.body:
+            return
+        saved_type: Any = None
+        for st in StatementList.xFromText(self.body.value):
+            if st.type == StatementType.PREPROC:
+                continue
+            var = Variable.fromVarDef(st.tokens)
+            if var:
+                if not var.type:
+                    var.type = saved_type
+                yield var
+                saved_type = var.type if var.end == "," else None
+            else:
+                saved_type = None
+
+
+
