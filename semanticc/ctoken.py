@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Iterable
 
+from . import common
 from .common import *
 
 @dataclass
@@ -27,6 +28,7 @@ class TokenList(list[Token]):
 
     @staticmethod
     def xFromFile(fname: str) -> Iterable[Token]:
+        common.parsing_file = fname
         with open(fname) as file:
             return TokenList.xFromText(file.read())
     @staticmethod
@@ -62,9 +64,9 @@ def get_pre_comment(tokens: TokenList) -> tuple[Token | None, int]:
         if token.value[0] in [" ", "\t", "\n"]:
             continue
         if token.value[0] == "/":
-            return (token, i)
+            return (token, i+1)
         return (None, i)
-    return (None, i)
+    return (None, i+1)
 
 
 def get_post_comment(tokens: TokenList) -> Token | None:

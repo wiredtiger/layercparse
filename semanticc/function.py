@@ -26,7 +26,7 @@ class FunctionParts:
         retType = TokenList([])
         funcName = None
         argsList = None
-        for i in range(i+1, len(tokens)):
+        for i in range(i, len(tokens)):
             token = tokens[i]
             if token.value[0] == "(":
                 if retType:

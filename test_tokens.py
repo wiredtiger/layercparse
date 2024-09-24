@@ -53,10 +53,11 @@ for f in sys.argv[1:]:
             #             print("〈"+"⌇".join((tt.value for tt in stt.tokens))+"〉", end="")
             # print("〉")
         elif st.type == StatementType.RECORD:
-            struct = RecordParts.fromStatement(st)
-            pprint(struct)
-            if struct:
-                for var in struct.xGetMembers():
+            record = RecordParts.fromStatement(st)
+            if record:
+                members = record.getMembers()
+                pprint(record)
+                for var in members:
                     print(f"=== Member: {var}")
         else:
             print("〈"+"⌇".join((t.value for t in st.tokens))+"〉")

@@ -68,3 +68,9 @@ def clean_text_sz(txt: str):
 # Remove comments and preprocessor directives
 def clean_text(txt: str):
     return reg_clean.sub(lambda match: " " if match[0][0] in ["#", "/"] else match[0], txt)
+
+parsing_file = "-"
+
+def set_file(fname: str):
+    global parsing_file
+    parsing_file = fname
