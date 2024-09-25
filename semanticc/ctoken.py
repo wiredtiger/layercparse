@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Iterable
 
 from . import common
-from .common import *
+from .internal import *
 
 @dataclass
 class Token:

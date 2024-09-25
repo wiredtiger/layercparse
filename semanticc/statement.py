@@ -2,7 +2,6 @@ import enum
 from dataclasses import dataclass
 from typing import Iterable
 
-from .common import *
 from .ctoken import *
 
 class StatementType(enum.Enum):

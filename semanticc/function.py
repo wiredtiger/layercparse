@@ -1,7 +1,7 @@
 from typing import Iterable, Any
 from dataclasses import dataclass
 
-from .common import *
+from .internal import *
 from .ctoken import *
 from .statement import *
 from .variable import *

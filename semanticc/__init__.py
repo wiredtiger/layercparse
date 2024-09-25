@@ -1,5 +1,5 @@
 
-from .common import Range, lineno, linepos, clean_text_sz, clean_text, set_file
+from .common import *
 from .ctoken import *
 from .statement import *
 from .variable import *

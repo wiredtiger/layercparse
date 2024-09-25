@@ -2,7 +2,6 @@ import enum
 from dataclasses import dataclass
 
 from . import common
-from .common import *
 from .ctoken import *
 from .statement import *
 from .variable import *

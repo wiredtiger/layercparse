@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from copy import deepcopy
 
-from .common import *
 from .ctoken import *
 
 @dataclass
