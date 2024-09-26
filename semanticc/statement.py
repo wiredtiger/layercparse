@@ -97,8 +97,8 @@ class StatementList(list[Statement]):
                     yield push_statement()
 
             is_thing = token.value[0] not in [" ", "\t", "\n", "#", "/"]
-            is_word = is_thing and not not reg_identifier.match(token.value)
-            is_type = is_thing and not not reg_type.match(token.value)
+            is_word = is_thing and bool(reg_identifier.match(token.value))
+            is_type = is_thing and bool(reg_type.match(token.value))
 
             if stype == StatementType.UNDEF:
                 if token.value[0] == "/":
@@ -188,4 +188,125 @@ class StatementList(list[Statement]):
             yield st.filterCode_r()
     def filterCode_r(self) -> 'StatementList':
         return StatementList(self.xFilterCode_r())
+
+
+@dataclass
+class StatementKind:
+    is_comment: bool | None = None
+    is_preproc: bool | None = None
+    is_typedef: bool | None = None
+    is_record: bool | None = None
+    is_function: bool | None = None
+    is_function_def: bool | None = None
+    is_function_decl: bool | None = None
+    is_statement: bool | None = None
+    is_decl: bool | None = None
+    is_expression: bool | None = None
+    is_initialization: bool | None = None
+    end: str | None = None
+    preComment: Token | None = None
+    postComment: Token | None = None
+
+    @staticmethod
+    def fromTokens(tokens: TokenList) -> 'StatementKind | None':
+        if not tokens:
+            return None
+        ret = StatementKind()
+        for token in tokens:
+            if token.value[0] in [" ", "\t", "\n"]:
+                continue
+            if token.value[0] == "/":
+                ret.is_comment = True
+                ret.preComment = token
+                continue
+            if token.value[0] == "#":
+                ret.is_preproc = True
+                return ret
+            if token.value in c_statement_keywords:
+                ret.is_statement = True
+                return ret
+            if token.value[0] not in [" ", "\t", "\n", "#", "/"]:
+                break
+        else:
+            # we get here if "break" was not executed
+            return ret
+
+        # Only get here if we have a non-empty token
+        clean_tokens = tokens.filterCode()
+        if not clean_tokens:
+            return ret
+
+        # From here the options are:
+        # - typedef
+        # - record
+        # - function
+        # - expression
+        # - declaration
+        # - declaration + initialization (expression)
+
+        ret.postComment = get_post_comment(tokens)
+
+        curly = next((True for token in clean_tokens if token.value[0] == "{"), False)
+        if clean_tokens[0].value == "typedef":
+            ret.is_typedef = True
+            clean_tokens.pop(0)
+        if clean_tokens[0].value in ["struct", "union", "enum"]:
+            if curly:
+                ret.is_record = True
+            else:
+                if not ret.is_typedef:
+                    ret.is_decl = True
+            return ret
+        if ret.is_typedef:
+            return ret
+
+        # Not a typedef or record
+
+        first_is_type = bool(reg_type.match(clean_tokens[0].value))
+
+        if len(clean_tokens) == 1:
+            if first_is_type:
+                # ret.is_decl = True
+                ret.is_expression = True
+            elif clean_tokens[0].value in ["(", "[", "{"] or clean_tokens[0].value in c_operators_all:
+                ret.is_expression = True
+            return ret
+
+        # There are at least two tokens
+
+        if first_is_type:
+            next_word = next((token for token in clean_tokens[1:] if token.value != "*"), None)
+            if next_word:
+                next_next_word = next((token for token in clean_tokens if token.idx > next_word.idx and token.value != "*"), None)
+                if reg_type.match(next_word.value):
+                    ret.is_decl = True
+                elif next_word.value in ["(", "[", "{"] and next_next_word and reg_type.match(next_next_word.value):
+                    ret.is_decl = True
+
+        for i in range(1, len(clean_tokens)):
+            token = clean_tokens[i]
+            if token.value[0] == "(":
+                if reg_identifier.match(clean_tokens[i-1].value):   # word followed by (
+                    ret.is_function = True
+                    if ret.is_decl:
+                        ret.is_function_decl = True
+                        if curly:                                   # has a body
+                            ret.is_function_def = True
+                break
+
+        for i in range(1, len(clean_tokens)-1):
+            token = clean_tokens[i]
+            if token.value[0] == "=":
+                ret.is_expression = True
+                if ret.is_decl:
+                    ret.is_initialization = True
+                break
+            elif token.value in c_operators_all:
+                if token.value == "*" and clean_tokens[i+1].idx - token.idx == 1:
+                    pass # pointer dereference
+                else:
+                    ret.is_expression = True
+                    break
+
+        return ret
 

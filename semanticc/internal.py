@@ -10,6 +10,7 @@ re_arg = r'''(?(DEFINE)(?<TOKEN>
     [\r\t ]++ |
     [;]++ |
     (?>,) |           ########### Add : and ? here?
+    (?>[-=+%&|^~.?:*]) |
     (?> (?:\#|\/\/) (?:[^\\\n]|\\.)*+ \n) |
     (?> \/\* (?:[^*]|\*[^\/])*+ \*\/ ) |
     (?> " (?>[^\\"]|\\.)* " ) |
@@ -17,7 +18,7 @@ re_arg = r'''(?(DEFINE)(?<TOKEN>
     (?> \{ (?&TOKEN)* \} ) |
     (?> \( (?&TOKEN)* \) ) |
     (?> \[ (?&TOKEN)* \] ) |
-    (?>(?:[^\[\](){};,\#\s"'\/]|\/[^\/\*])++)
+    (?>(?:[^-=+%&|^~.?:*\[\](){};,\#\s"'\/]|\/[^\/\*])++)
 ))''' # /nxs;
 
 regex.DEFAULT_VERSION = regex.RegexFlag.VERSION1
@@ -27,16 +28,17 @@ reg = regex.compile(r"(?&TOKEN)"+re_arg, re_flags)
 
 Range: TypeAlias = tuple[int, int]
 
-reg_identifier = regex.compile(r"^\w++$", re_flags)
+reg_identifier = regex.compile(r"^[a-zA-Z_]\w++$", re_flags)
 reg_type = regex.compile(r"^[\w\[\]\(\)\*\, ]++$", re_flags)
 
 c_type_keywords = ["const", "volatile", "restrict", "static", "extern", "auto", "register", "struct", "union", "enum"]
 c_statement_keywords = [
-    "case", "continue", "default", "do", "else", "enum", "for", "goto", "if",
-    "return", "struct", "switch", "typedef", "union", "while",
+    "case", "continue", "default", "do", "else", "for", "goto", "if",
+    "return", "switch", "while",
 ]
 reg_statement_keyword = regex.compile(r"^(?:" + "|".join(c_statement_keywords) + r")$", re_flags)
 
+c_operators_all = ["=", "+", "-", "%", "&", "|", "^", "~", ".", "?", ":", "*"]
 c_operators = ["=", "+", "-", "%", "&", "|", "^", "~", ".", "?", ":"] # , "*"
 reg_c_operators = regex.compile(r"(?:" + "|".join([regex.escape(op) for op in c_operators]) + r")", re_flags)
 

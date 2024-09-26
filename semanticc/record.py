@@ -25,10 +25,14 @@ class RecordParts:
     nested: 'list[RecordParts] | None' = None
     parent: 'RecordParts | None' = None
 
+    def getBodyOffset(self) -> int:
+        ret = 0 if not self.body else self.body.range[0]
+        return ret if not self.parent else self.parent.getBodyOffset() + ret
+
     @staticmethod
-    def fromStatement(st: Statement) -> 'RecordParts | None':
+    def fromStatement(st: Statement, parent: 'RecordParts | None' = None) -> 'RecordParts | None':
         tokens = st.tokens
-        ret = RecordParts(RecordType.UNDEF)
+        ret = RecordParts(RecordType.UNDEF, parent=parent)
 
         ret.preComment, i = get_pre_comment(tokens)
 
@@ -58,7 +62,7 @@ class RecordParts:
         # vars or types list
         names: list[Variable] = []
         if ret.name is None:
-            ret.name = Token(ret.body.idx, ret.body.range, f"({common.parsing_file}:{ret.body.range[0]}-{ret.body.range[1]})")
+            ret.name = Token(ret.body.idx, ret.body.range, f"({common.parsing_file}:{ret.getBodyOffset()})")
         for stt in StatementList.xFromTokens(TokenList(tokens[i+1:])):
             var = Variable.fromVarDef(stt.tokens)
             if var:
@@ -84,12 +88,11 @@ class RecordParts:
                 continue
 
             if st.type == StatementType.RECORD:
-                record = RecordParts.fromStatement(st)
+                record = RecordParts.fromStatement(st, parent=self)
                 if record:
                     if self.nested is None:
                         self.nested = []
                     self.nested.append(record)
-                    record.parent = self
                     record.getMembers()
                     if record.vardefs:
                         for var in record.vardefs:

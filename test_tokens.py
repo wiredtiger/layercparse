@@ -17,62 +17,82 @@ from typing import Union, Any, Optional, TYPE_CHECKING, cast, Iterator, TypeAlia
 # pprint(reg)
 # pprint(reg.match("qwe"))
 
-for f in sys.argv[1:]:
-    # with open(f) as file:
-    #     txt = file.read()
-    #     for x in reg.finditer(txt):
-    #         pprint(x)
-    #         print(f"{x.span()[0]}...{x.span()[1]}: {x[0]}")
+# for f in sys.argv[1:]:
+#     # with open(f) as file:
+#     #     txt = file.read()
+#     #     for x in reg.finditer(txt):
+#     #         pprint(x)
+#     #         print(f"{x.span()[0]}...{x.span()[1]}: {x[0]}")
 
-    # pprint(TokenList.fromFile(f))
+#     # pprint(TokenList.fromFile(f))
 
+#     print(f" === File: {f}")
+#     for st in StatementList.xFromFile(f):
+#         # pprint(st)
+#         # pprint(st.filterCode())
+#         print(f"{st.type} {st.range()}: ", end="")
+#         if st.type == StatementType.FUNCTION_DEF:
+#             func = FunctionParts.fromStatement(st)
+#             pprint(func)
+#             if func:
+#                 for var in func.xGetArgs():
+#                     print(f"=== Arg: <{var.name.value}> : {var.type}")
+#                 if func.body:
+#                     for var in func.xGetLocalVars():
+#                         print(f"=== Local var: <{var.name.value}> : {var.type}")
+#                     # for stt in StatementList.xFromText(func.body.value):
+#                     #     print(f"{stt.type}: " + "〈"+"⌇".join((t.value for t in stt.tokens))+"〉")
+
+#             # print("〈", end="")
+#             # for t in st.tokens:
+#             #     if t.value[0] != "{":
+#             #         print("〈"+t.value+"〉", end="")
+#             #     else:
+#             #         # print("⌇".join((tt.value for tt in TokenList.fromText(clean_text_sz(t.value[1:-1])))))
+#             #         for stt in StatementList.xFromText(clean_text_sz(t.value[1:-1])):
+#             #             print("〈"+"⌇".join((tt.value for tt in stt.tokens))+"〉", end="")
+#             # print("〉")
+#         elif st.type == StatementType.RECORD:
+#             record = RecordParts.fromStatement(st)
+#             if record:
+#                 members = record.getMembers()
+#                 pprint(record)
+#                 for var in members:
+#                     print(f"=== Member: {var}")
+#         else:
+#             print("〈"+"⌇".join((t.value for t in st.tokens))+"〉")
+
+#         # for t in st.tokens:
+#         #     print("〈", end="")
+#         #     if t.value[0] not in ["{", "("]:
+#         #         print(t.value, end="")
+#         #     else:
+#         #         print("\n〈", end="")
+#         #         tt = TokenList.fromText(t.value[1:-1])
+#         #         for stt in StatementList.xFromTokens(tt):
+#         #             print("〈", end="")
+#         #             print("⌇".join((ttt.value for ttt in stt.tokens)), end="")
+#         #             print("〉")
+#         #         print("〉\n", end="")
+#         #     print("〉", end="")
+#         # print("")
+
+for f in get_files(sys.argv[1]):
     print(f" === File: {f}")
     for st in StatementList.xFromFile(f):
-        # pprint(st)
-        # pprint(st.filterCode())
-        print(f"{st.type} {st.range()}: ", end="")
-        if st.type == StatementType.FUNCTION_DEF:
-            func = FunctionParts.fromStatement(st)
-            pprint(func)
-            if func:
-                for var in func.xGetArgs():
-                    print(f"=== Arg: <{var.name.value}> : {var.type}")
-                if func.body:
-                    for var in func.xGetLocalVars():
-                        print(f"=== Local var: <{var.name.value}> : {var.type}")
-                    # for stt in StatementList.xFromText(func.body.value):
-                    #     print(f"{stt.type}: " + "〈"+"⌇".join((t.value for t in stt.tokens))+"〉")
+        i = 0
+        for t in st.xFilterCode():
+            if i == 0:
+                if t.value != "extern":
+                    break
+                i = 1
+                continue
+            if i == 2:
+                if t.value != '"C"':
+                    break
+                i = 3
+                continue
+            print(f"{i}: {t.value}")
+            i += 1
+        pprint(st)
 
-            # print("〈", end="")
-            # for t in st.tokens:
-            #     if t.value[0] != "{":
-            #         print("〈"+t.value+"〉", end="")
-            #     else:
-            #         # print("⌇".join((tt.value for tt in TokenList.fromText(clean_text_sz(t.value[1:-1])))))
-            #         for stt in StatementList.xFromText(clean_text_sz(t.value[1:-1])):
-            #             print("〈"+"⌇".join((tt.value for tt in stt.tokens))+"〉", end="")
-            # print("〉")
-        elif st.type == StatementType.RECORD:
-            record = RecordParts.fromStatement(st)
-            if record:
-                members = record.getMembers()
-                pprint(record)
-                for var in members:
-                    print(f"=== Member: {var}")
-        else:
-            print("〈"+"⌇".join((t.value for t in st.tokens))+"〉")
-
-        # for t in st.tokens:
-        #     print("〈", end="")
-        #     if t.value[0] not in ["{", "("]:
-        #         print(t.value, end="")
-        #     else:
-        #         print("\n〈", end="")
-        #         tt = TokenList.fromText(t.value[1:-1])
-        #         for stt in StatementList.xFromTokens(tt):
-        #             print("〈", end="")
-        #             print("⌇".join((ttt.value for ttt in stt.tokens)), end="")
-        #             print("〉")
-        #         print("〉\n", end="")
-        #     print("〉", end="")
-        # print("")
