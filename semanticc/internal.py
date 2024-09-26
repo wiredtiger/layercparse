@@ -7,7 +7,7 @@ from glob import glob
 
 re_arg = r'''(?(DEFINE)(?<TOKEN>
     (?>\n) |
-    \s++ |
+    [\r\t ]++ |
     [;]++ |
     (?>,) |           ########### Add : and ? here?
     (?> (?:\#|\/\/) (?:[^\\\n]|\\.)*+ \n) |

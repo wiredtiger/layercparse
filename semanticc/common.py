@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from copy import deepcopy
 import regex
 from glob import glob
+from os import path
 
 from .internal import *
 
@@ -35,9 +36,8 @@ def set_file(fname: str):
     parsing_file = fname
 
 # First go headers, then inlines, then sources
-def get_sources(root: str) -> list[str]:
-    return sorted(glob(f"{root}/src/**/*.[ch]", recursive=True),
+def get_files(root: str) -> list[str]:
+    return sorted(glob(path.join(root, "src/**/*.[ch]"), recursive=True),
                   key=lambda x: ("3" if x.endswith(".c") else
                                  "2" if x.endswith("_inline.h") else
                                  "1")+x)
-
