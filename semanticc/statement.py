@@ -19,6 +19,7 @@ class StatementKind:
     is_decl: bool | None = None
     is_expression: bool | None = None
     is_initialization: bool | None = None
+    is_extern_c: bool | None = None
     end: str | None = None
     preComment: Token | None = None
     postComment: Token | None = None
@@ -61,6 +62,10 @@ class StatementKind:
         # - declaration + initialization (expression)
 
         ret.postComment = get_post_comment(tokens)
+
+        if len(clean_tokens) > 1 and clean_tokens[0].value == "extern" and clean_tokens[1].value == '"C"':
+            ret.is_extern_c = True
+            return ret
 
         curly = next((True for token in clean_tokens if token.value[0] == "{"), False)
         if clean_tokens[0].value == "typedef":

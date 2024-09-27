@@ -51,28 +51,38 @@ class TestCaseLocal(unittest.TestCase):
     def checkObjAgainstFile(self, result, fname):
         self.checkStrAgainstFile(pf(result), fname)
 
-    def parseDetailsFromFile(self, fname: str) -> str:
+    def parseDetailsFromText(self, txt: str, offset: int = 0) -> str:
         a = []
-        for st in StatementList.fromFile(fname):
-            st.getKind()
-            a.append(pf(st))
-            # a.append(pf(StatementKind.fromTokens(st.tokens)))
-            if st.getKind().is_function_def:
-                func = FunctionParts.fromStatement(st)
-                self.assertIsNotNone(func)
-                if func:
-                    a.extend(["Function:", pf(func)])
-                    a.extend(["Args:", pf(func.getArgs())])
-                    if func.body:
-                        a.extend(["Vars:", pf(func.getLocalVars())])
-            elif st.getKind().is_record:
-                record = RecordParts.fromStatement(st)
-                self.assertIsNotNone(record)
-                if record:
-                    members = record.getMembers()
-                    a.extend(["Record:", pf(record)])
-                    # a.extend(["Members:", pf(members)])
+        with ScopePush(offset=offset):
+            for st in StatementList.fromText(txt):
+                st.getKind()
+                a.append(pf(st))
+                # a.append(pf(StatementKind.fromTokens(st.tokens)))
+                if st.getKind().is_function_def:
+                    func = FunctionParts.fromStatement(st)
+                    self.assertIsNotNone(func)
+                    if func:
+                        a.extend(["Function:", pf(func)])
+                        a.extend(["Args:", pf(func.getArgs())])
+                        if func.body:
+                            a.extend(["Vars:", pf(func.getLocalVars())])
+                elif st.getKind().is_record:
+                    record = RecordParts.fromStatement(st)
+                    self.assertIsNotNone(record)
+                    if record:
+                        members = record.getMembers()
+                        a.extend(["Record:", pf(record)])
+                        # a.extend(["Members:", pf(members)])
+                elif st.getKind().is_extern_c:
+                    body = next((t for t in st.tokens if t.value[0] == "{"), None)
+                    self.assertIsNotNone(body)
+                    if body:
+                        a.append(self.parseDetailsFromText(body.value[1:-1], offset=body.range[0]+1))
         return "\n".join(a)
+
+    def parseDetailsFromFile(self, fname: str) -> str:
+        with ScopePush(file=fname):
+            return self.parseDetailsFromText(file_content(fname))
 
 
 class TestRegex(TestCaseLocal):
@@ -113,7 +123,8 @@ class TestVariable(TestCaseLocal):
 
 class TestStatement(TestCaseLocal):
     def test_statement(self):
-        self.checkObjAgainstFile(StatementList.fromFile("data/block.h"), "data/block.h.statements")
+        with ScopePush(file=File("data/block.h")):
+            self.checkObjAgainstFile(StatementList.fromFile("data/block.h"), "data/block.h.statements")
 
     def test_statement_details(self):
         self.checkStrAgainstFile(self.parseDetailsFromFile("data/block.h"), "data/block.h.statements-details")

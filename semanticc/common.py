@@ -3,8 +3,6 @@ from typing import Union, Any, Optional, TYPE_CHECKING, cast, Iterator, TypeAlia
 from dataclasses import dataclass
 from copy import deepcopy
 import regex
-from glob import glob
-from os import path
 
 from .internal import *
 
@@ -28,16 +26,3 @@ def clean_text_sz(txt: str):
 # Remove comments and preprocessor directives
 def clean_text(txt: str):
     return reg_clean.sub(lambda match: " " if match[0][0] in ["#", "/"] else match[0], txt)
-
-parsing_file = "-"
-
-def set_file(fname: str):
-    global parsing_file
-    parsing_file = fname
-
-# First go headers, then inlines, then sources
-def get_files(root: str) -> list[str]:
-    return sorted(glob(path.join(root, "src/**/*.[ch]"), recursive=True),
-                  key=lambda x: ("3" if x.endswith(".c") else
-                                 "2" if x.endswith("_inline.h") else
-                                 "1")+x)

@@ -5,6 +5,7 @@ from . import common
 from .ctoken import *
 from .statement import *
 from .variable import *
+from .workspace import *
 
 class RecordType(enum.Enum):
     UNDEF = 0
@@ -25,9 +26,13 @@ class RecordParts:
     nested: 'list[RecordParts] | None' = None
     parent: 'RecordParts | None' = None
 
-    def getBodyOffset(self) -> int:
-        ret = 0 if not self.body else self.body.range[0]
-        return ret if not self.parent else self.parent.getBodyOffset() + ret
+    def _getBodyOffset(self) -> int:
+        ret = 0
+        if self.body:
+            ret += self.body.range[0]
+        if self.parent:
+            ret += self.parent._getBodyOffset()
+        return ret + scope_offset()
 
     @staticmethod
     def fromStatement(st: Statement, parent: 'RecordParts | None' = None) -> 'RecordParts | None':
@@ -62,7 +67,7 @@ class RecordParts:
         # vars or types list
         names: list[Variable] = []
         if ret.name is None:
-            ret.name = Token(ret.body.idx, ret.body.range, f"({common.parsing_file}:{ret.getBodyOffset()})")
+            ret.name = Token(ret.body.idx, ret.body.range, f"({scope_filename()}:{ret._getBodyOffset()})")
         for stt in StatementList.xFromTokens(TokenList(tokens[i+1:])):
             var = Variable.fromVarDef(stt.tokens)
             if var:

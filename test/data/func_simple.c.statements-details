@@ -13,6 +13,7 @@ Statement(tokens=[0:33] 〈int⌇ ⌇func⌇(void)⌇ ⌇{
                              is_decl=True,
                              is_expression=None,
                              is_initialization=None,
+                             is_extern_c=None,
                              end=None,
                              preComment=None,
                              postComment=None))

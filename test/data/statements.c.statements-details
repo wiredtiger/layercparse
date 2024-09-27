@@ -12,6 +12,7 @@ Statement(tokens=[0:12] 〈
                              is_decl=True,
                              is_expression=None,
                              is_initialization=None,
+                             is_extern_c=None,
                              end=None,
                              preComment=None,
                              postComment=None))
@@ -29,6 +30,7 @@ Statement(tokens=[12:31] 〈
                              is_decl=None,
                              is_expression=None,
                              is_initialization=None,
+                             is_extern_c=None,
                              end=None,
                              preComment=None,
                              postComment=None))
@@ -46,6 +48,7 @@ Statement(tokens=[31:39] 〈
                              is_decl=True,
                              is_expression=None,
                              is_initialization=None,
+                             is_extern_c=None,
                              end=None,
                              preComment=None,
                              postComment=None))
@@ -64,6 +67,7 @@ Statement(tokens=[39:69] 〈
                              is_decl=True,
                              is_expression=None,
                              is_initialization=None,
+                             is_extern_c=None,
                              end=None,
                              preComment=Token(idx=19, range=(40, 49), value='/* pre */'),
                              postComment=Token(idx=27, range=(58, 68), value='/* post */')))
@@ -81,6 +85,7 @@ Statement(tokens=[69:73] 〈
                              is_decl=None,
                              is_expression=True,
                              is_initialization=None,
+                             is_extern_c=None,
                              end=None,
                              preComment=None,
                              postComment=None))
@@ -97,6 +102,7 @@ Statement(tokens=[73:77] 〈
                              is_decl=None,
                              is_expression=True,
                              is_initialization=None,
+                             is_extern_c=None,
                              end=None,
                              preComment=None,
                              postComment=None))
@@ -113,6 +119,7 @@ Statement(tokens=[77:80] 〈b⌇;⌇
                              is_decl=None,
                              is_expression=True,
                              is_initialization=None,
+                             is_extern_c=None,
                              end=None,
                              preComment=None,
                              postComment=None))
@@ -130,6 +137,7 @@ Statement(tokens=[80:85] 〈
                              is_decl=True,
                              is_expression=None,
                              is_initialization=None,
+                             is_extern_c=None,
                              end=None,
                              preComment=None,
                              postComment=None))
@@ -146,6 +154,7 @@ Statement(tokens=[85:90] 〈
                              is_decl=True,
                              is_expression=None,
                              is_initialization=None,
+                             is_extern_c=None,
                              end=None,
                              preComment=None,
                              postComment=None))
@@ -162,6 +171,7 @@ Statement(tokens=[90:94] 〈*⌇b⌇;⌇
                              is_decl=True,
                              is_expression=None,
                              is_initialization=None,
+                             is_extern_c=None,
                              end=None,
                              preComment=None,
                              postComment=None))
@@ -179,6 +189,7 @@ Statement(tokens=[94:106] 〈
                              is_decl=None,
                              is_expression=True,
                              is_initialization=None,
+                             is_extern_c=None,
                              end=None,
                              preComment=None,
                              postComment=None))
@@ -196,6 +207,7 @@ Statement(tokens=[106:122] 〈
                              is_decl=True,
                              is_expression=True,
                              is_initialization=True,
+                             is_extern_c=None,
                              end=None,
                              preComment=None,
                              postComment=None))
@@ -213,6 +225,7 @@ Statement(tokens=[122:137] 〈
                              is_decl=None,
                              is_expression=None,
                              is_initialization=None,
+                             is_extern_c=None,
                              end=None,
                              preComment=Token(idx=81, range=(123, 136), value='/* comment */'),
                              postComment=None))
@@ -232,6 +245,7 @@ Statement(tokens=[137:162] 〈/*
                              is_decl=None,
                              is_expression=None,
                              is_initialization=None,
+                             is_extern_c=None,
                              end=None,
                              preComment=Token(idx=83, range=(137, 160), value='/*\n * block comment\n */'),
                              postComment=None))
@@ -249,6 +263,7 @@ Statement(tokens=[162:179] 〈// Preprocessor
                              is_decl=None,
                              is_expression=None,
                              is_initialization=None,
+                             is_extern_c=None,
                              end=None,
                              preComment=Token(idx=86, range=(162, 178), value='// Preprocessor\n'),
                              postComment=None))
@@ -266,6 +281,7 @@ Statement(tokens=[179:232] 〈/* pre comment */⌇
                              is_decl=None,
                              is_expression=None,
                              is_initialization=None,
+                             is_extern_c=None,
                              end=None,
                              preComment=Token(idx=88, range=(179, 196), value='/* pre comment */'),
                              postComment=None))
@@ -284,6 +300,7 @@ Statement(tokens=[232:282] 〈
                              is_decl=None,
                              is_expression=None,
                              is_initialization=None,
+                             is_extern_c=None,
                              end=None,
                              preComment=None,
                              postComment=None))
@@ -302,6 +319,7 @@ Statement(tokens=[282:295] 〈
                              is_decl=None,
                              is_expression=None,
                              is_initialization=None,
+                             is_extern_c=None,
                              end=None,
                              preComment=Token(idx=94, range=(283, 294), value='// typedef\n'),
                              postComment=None))
@@ -319,6 +337,7 @@ Statement(tokens=[295:348] 〈/* pre comment */⌇
                              is_decl=None,
                              is_expression=None,
                              is_initialization=None,
+                             is_extern_c=None,
                              end=None,
                              preComment=Token(idx=96, range=(295, 312), value='/* pre comment */'),
                              postComment=Token(idx=105, range=(329, 347), value='/* post comment */')))
@@ -337,6 +356,7 @@ Statement(tokens=[348:417] 〈
                              is_decl=None,
                              is_expression=None,
                              is_initialization=None,
+                             is_extern_c=None,
                              end=None,
                              preComment=Token(idx=108, range=(349, 366), value='/* pre comment */'),
                              postComment=Token(idx=118, range=(398, 416), value='/* post comment */')))
@@ -355,6 +375,7 @@ Statement(tokens=[417:430] 〈
                              is_decl=None,
                              is_expression=None,
                              is_initialization=None,
+                             is_extern_c=None,
                              end=None,
                              preComment=Token(idx=121, range=(418, 429), value='// records\n'),
                              postComment=None))
@@ -376,6 +397,7 @@ Statement(tokens=[430:544] 〈/* pre comment */⌇
                              is_decl=None,
                              is_expression=None,
                              is_initialization=None,
+                             is_extern_c=None,
                              end=None,
                              preComment=Token(idx=123, range=(430, 447), value='/* pre comment */'),
                              postComment=Token(idx=130, range=(525, 543), value='/* post comment */')))
@@ -425,6 +447,7 @@ Statement(tokens=[544:663] 〈
                              is_decl=None,
                              is_expression=None,
                              is_initialization=None,
+                             is_extern_c=None,
                              end=None,
                              preComment=Token(idx=133, range=(545, 562), value='/* pre comment */'),
                              postComment=Token(idx=142, range=(644, 662), value='/* post comment */')))
@@ -474,6 +497,7 @@ Statement(tokens=[663:782] 〈
                              is_decl=None,
                              is_expression=None,
                              is_initialization=None,
+                             is_extern_c=None,
                              end=None,
                              preComment=Token(idx=145, range=(664, 681), value='/* pre comment */'),
                              postComment=Token(idx=154, range=(763, 781), value='/* post comment */')))
@@ -527,6 +551,7 @@ Statement(tokens=[782:910] 〈
                              is_decl=None,
                              is_expression=None,
                              is_initialization=None,
+                             is_extern_c=None,
                              end=None,
                              preComment=Token(idx=157, range=(783, 800), value='/* pre comment */'),
                              postComment=Token(idx=171, range=(891, 909), value='/* post comment */')))
@@ -585,6 +610,7 @@ Statement(tokens=[910:1046] 〈
                              is_decl=None,
                              is_expression=None,
                              is_initialization=None,
+                             is_extern_c=None,
                              end=None,
                              preComment=Token(idx=174, range=(911, 928), value='/* pre comment */'),
                              postComment=Token(idx=190, range=(1027, 1045), value='/* post comment */')))
@@ -643,6 +669,7 @@ Statement(tokens=[1046:1173] 〈
                              is_decl=None,
                              is_expression=None,
                              is_initialization=None,
+                             is_extern_c=None,
                              end=None,
                              preComment=Token(idx=193, range=(1047, 1064), value='/* pre comment */'),
                              postComment=Token(idx=207, range=(1154, 1172), value='/* post comment */')))
@@ -699,6 +726,7 @@ Statement(tokens=[1173:1258] 〈
                              is_decl=None,
                              is_expression=None,
                              is_initialization=None,
+                             is_extern_c=None,
                              end=None,
                              preComment=Token(idx=210, range=(1174, 1191), value='/* pre comment */'),
                              postComment=Token(idx=226, range=(1239, 1257), value='/* post comment */')))
@@ -753,6 +781,7 @@ Statement(tokens=[1258:1343] 〈
                              is_decl=None,
                              is_expression=None,
                              is_initialization=None,
+                             is_extern_c=None,
                              end=None,
                              preComment=Token(idx=229, range=(1259, 1276), value='/* pre comment */'),
                              postComment=Token(idx=245, range=(1324, 1342), value='/* post comment */')))
@@ -815,6 +844,7 @@ Statement(tokens=[1343:1567] 〈
                              is_decl=None,
                              is_expression=None,
                              is_initialization=None,
+                             is_extern_c=None,
                              end=None,
                              preComment=Token(idx=248, range=(1344, 1361), value='/* pre comment */'),
                              postComment=Token(idx=264, range=(1548, 1566), value='/* post comment */')))
@@ -939,6 +969,7 @@ Statement(tokens=[1567:1774] 〈
                              is_decl=None,
                              is_expression=None,
                              is_initialization=None,
+                             is_extern_c=None,
                              end=None,
                              preComment=Token(idx=267, range=(1568, 1585), value='/* pre comment */'),
                              postComment=Token(idx=283, range=(1755, 1773), value='/* post comment */')))
@@ -1049,6 +1080,7 @@ Statement(tokens=[1774:1799] 〈
                              is_decl=True,
                              is_expression=None,
                              is_initialization=None,
+                             is_extern_c=None,
                              end=None,
                              preComment=None,
                              postComment=None))
@@ -1065,6 +1097,7 @@ Statement(tokens=[1799:1861] 〈extern⌇ ⌇void⌇ ⌇func⌇(int a, int b)⌇
                              is_decl=True,
                              is_expression=None,
                              is_initialization=None,
+                             is_extern_c=None,
                              end=None,
                              preComment=None,
                              postComment=None))
@@ -1081,6 +1114,7 @@ Statement(tokens=[1861:1930] 〈extern⌇ ⌇inline⌇ ⌇void⌇ ⌇func⌇(int
                              is_decl=True,
                              is_expression=None,
                              is_initialization=None,
+                             is_extern_c=None,
                              end=None,
                              preComment=None,
                              postComment=None))
@@ -1097,6 +1131,7 @@ Statement(tokens=[1930:2002] 〈extern⌇ ⌇WT_INLINE⌇ ⌇void⌇ ⌇func⌇(
                              is_decl=True,
                              is_expression=None,
                              is_initialization=None,
+                             is_extern_c=None,
                              end=None,
                              preComment=None,
                              postComment=None))
@@ -1114,6 +1149,7 @@ Statement(tokens=[2002:2043] 〈extern⌇ ⌇void⌇ ⌇func_of_ptr⌇(int *a[10
                              is_decl=True,
                              is_expression=None,
                              is_initialization=None,
+                             is_extern_c=None,
                              end=None,
                              preComment=None,
                              postComment=None))
@@ -1150,6 +1186,7 @@ Statement(tokens=[2043:2154] 〈
                              is_decl=True,
                              is_expression=None,
                              is_initialization=None,
+                             is_extern_c=None,
                              end=None,
                              preComment=Token(idx=339,
                                               range=(2044, 2090),
@@ -1182,10 +1219,15 @@ Statement(tokens=[2154:2173] 〈
                              is_decl=None,
                              is_expression=None,
                              is_initialization=None,
+                             is_extern_c=None,
                              end=None,
                              preComment=None,
                              postComment=None))
-Statement(tokens=[2173:2174] 〈
+Statement(tokens=[2173:2216] 〈
+⌇
+⌇extern⌇ ⌇"C"⌇ ⌇{
+  int func(int a, int b);
+}⌇
 〉,
           kind=StatementKind(is_comment=None,
                              is_preproc=None,
@@ -1198,6 +1240,43 @@ Statement(tokens=[2173:2174] 〈
                              is_decl=None,
                              is_expression=None,
                              is_initialization=None,
+                             is_extern_c=True,
+                             end=None,
+                             preComment=None,
+                             postComment=None))
+Statement(tokens=[0:27] 〈
+⌇  ⌇int⌇ ⌇func⌇(int a, int b)⌇;⌇
+〉,
+          kind=StatementKind(is_comment=None,
+                             is_preproc=None,
+                             is_typedef=None,
+                             is_record=None,
+                             is_function=True,
+                             is_function_def=None,
+                             is_function_decl=True,
+                             is_statement=None,
+                             is_decl=True,
+                             is_expression=None,
+                             is_initialization=None,
+                             is_extern_c=None,
+                             end=None,
+                             preComment=None,
+                             postComment=None))
+Statement(tokens=[2216:2218] 〈
+⌇
+〉,
+          kind=StatementKind(is_comment=None,
+                             is_preproc=None,
+                             is_typedef=None,
+                             is_record=None,
+                             is_function=None,
+                             is_function_def=None,
+                             is_function_decl=None,
+                             is_statement=None,
+                             is_decl=None,
+                             is_expression=None,
+                             is_initialization=None,
+                             is_extern_c=None,
                              end=None,
                              preComment=None,
                              postComment=None))

@@ -1,5 +1,6 @@
 
 from .common import *
+from .workspace import *
 from .ctoken import *
 from .statement import *
 from .variable import *

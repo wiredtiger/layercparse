@@ -6,92 +6,37 @@ from pprint import pprint, pformat
 
 from typing import Union, Any, Optional, TYPE_CHECKING, cast, Iterator, TypeAlias, Generator, Iterable
 
-# import regex
+def file_content(fname: str) -> str:
+    with open(fname) as file:
+        return file.read()
 
+def print_statement_from_text(txt: str, offset: int = 0):
+    with ScopePush(offset=offset):
+        for st in StatementList.fromText(txt):
+            st.getKind()
+            pprint(st, width=120)
+            if st.getKind().is_function_def:
+                func = FunctionParts.fromStatement(st)
+                if func:
+                    print("Function:")
+                    pprint(func, width=120)
+                    print("Args:")
+                    pprint(func.getArgs(), width=120)
+                    if func.body:
+                        print("Vars:")
+                        pprint(func.getLocalVars(), width=120)
+            elif st.getKind().is_record:
+                record = RecordParts.fromStatement(st)
+                if record:
+                    members = record.getMembers()
+                    print("Record:")
+                    pprint(record, width=120)
+            elif st.getKind().is_extern_c:
+                body = next((t for t in st.tokens if t.value[0] == "{"), None)
+                if body:
+                    print_statement_from_text(body.value[1:-1], offset=body.range[0]+1)
 
-# pprint(regex.findall(r"(?&TOKEN)"+re_arg, "qwe", regex.RegexFlag.VERSION1 | regex.RegexFlag.DOTALL | regex.RegexFlag.VERBOSE | regex.RegexFlag.POSIX))
-# for x in regex.finditer(r"(?&TOKEN)"+re_arg, "qwe", regex.RegexFlag.VERSION1 | regex.RegexFlag.DOTALL | regex.RegexFlag.VERBOSE | regex.RegexFlag.POSIX):
-#     pprint(x)
-
-
-# pprint(reg)
-# pprint(reg.match("qwe"))
-
-# for f in sys.argv[1:]:
-#     # with open(f) as file:
-#     #     txt = file.read()
-#     #     for x in reg.finditer(txt):
-#     #         pprint(x)
-#     #         print(f"{x.span()[0]}...{x.span()[1]}: {x[0]}")
-
-#     # pprint(TokenList.fromFile(f))
-
-#     print(f" === File: {f}")
-#     for st in StatementList.xFromFile(f):
-#         # pprint(st)
-#         # pprint(st.filterCode())
-#         print(f"{st.type} {st.range()}: ", end="")
-#         if st.type == StatementType.FUNCTION_DEF:
-#             func = FunctionParts.fromStatement(st)
-#             pprint(func)
-#             if func:
-#                 for var in func.xGetArgs():
-#                     print(f"=== Arg: <{var.name.value}> : {var.type}")
-#                 if func.body:
-#                     for var in func.xGetLocalVars():
-#                         print(f"=== Local var: <{var.name.value}> : {var.type}")
-#                     # for stt in StatementList.xFromText(func.body.value):
-#                     #     print(f"{stt.type}: " + "〈"+"⌇".join((t.value for t in stt.tokens))+"〉")
-
-#             # print("〈", end="")
-#             # for t in st.tokens:
-#             #     if t.value[0] != "{":
-#             #         print("〈"+t.value+"〉", end="")
-#             #     else:
-#             #         # print("⌇".join((tt.value for tt in TokenList.fromText(clean_text_sz(t.value[1:-1])))))
-#             #         for stt in StatementList.xFromText(clean_text_sz(t.value[1:-1])):
-#             #             print("〈"+"⌇".join((tt.value for tt in stt.tokens))+"〉", end="")
-#             # print("〉")
-#         elif st.type == StatementType.RECORD:
-#             record = RecordParts.fromStatement(st)
-#             if record:
-#                 members = record.getMembers()
-#                 pprint(record)
-#                 for var in members:
-#                     print(f"=== Member: {var}")
-#         else:
-#             print("〈"+"⌇".join((t.value for t in st.tokens))+"〉")
-
-#         # for t in st.tokens:
-#         #     print("〈", end="")
-#         #     if t.value[0] not in ["{", "("]:
-#         #         print(t.value, end="")
-#         #     else:
-#         #         print("\n〈", end="")
-#         #         tt = TokenList.fromText(t.value[1:-1])
-#         #         for stt in StatementList.xFromTokens(tt):
-#         #             print("〈", end="")
-#         #             print("⌇".join((ttt.value for ttt in stt.tokens)), end="")
-#         #             print("〉")
-#         #         print("〉\n", end="")
-#         #     print("〉", end="")
-#         # print("")
-
-for f in get_files(sys.argv[1]):
-    print(f" === File: {f}")
-    for st in StatementList.xFromFile(f):
-        i = 0
-        for t in st.xFilterCode():
-            if i == 0:
-                if t.value != "extern":
-                    break
-                i = 1
-                continue
-            if i == 2:
-                if t.value != '"C"':
-                    break
-                i = 3
-                continue
-            print(f"{i}: {t.value}")
-            i += 1
-        pprint(st)
+for fname in get_files(sys.argv[1]):
+    print(f" === File: {fname}")
+    with ScopePush(file=File(fname)):
+        print_statement_from_text(file_content(fname))

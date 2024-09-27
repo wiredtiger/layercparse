@@ -28,7 +28,6 @@ class TokenList(list[Token]):
 
     @staticmethod
     def xFromFile(fname: str) -> Iterable[Token]:
-        common.parsing_file = fname
         with open(fname) as file:
             return TokenList.xFromText(file.read())
     @staticmethod

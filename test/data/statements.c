@@ -141,3 +141,9 @@ int func(int a, int b) {
 do {
 } while (0);
 
+
+extern "C" {
+  int func(int a, int b);
+}
+
+
