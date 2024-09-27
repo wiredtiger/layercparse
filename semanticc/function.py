@@ -65,9 +65,10 @@ class FunctionParts:
             return
         saved_type: Any = None
         for st in StatementList.xFromText(self.body.value):
-            if st.type in [StatementType.EXPRESSION, StatementType.STATEMENT]:
+            t = st.getKind()
+            if saved_type is None and (t.is_statement or (t.is_expression and not t.is_initialization)):
                 break
-            if st.type == StatementType.VARDECL:
+            if saved_type is not None or t.is_decl:
                 var = Variable.fromVarDef(st.tokens)
                 if var:
                     if not var.type:

@@ -1,193 +1,9 @@
 import enum
+from itertools import islice
 from dataclasses import dataclass
 from typing import Iterable
 
 from .ctoken import *
-
-class StatementType(enum.Enum):
-    UNDEF = 0
-    COMMENT = enum.auto()
-    PREPROC = enum.auto()
-    TYPEDEF = enum.auto()
-    RECORD = enum.auto()  # struct, union, enum
-    FUNCTION_DEF = enum.auto()
-    FUNCTION_DECL = enum.auto()
-    FUNCTION_CALL = enum.auto()
-    STATEMENT = enum.auto()
-    VARDECL = enum.auto()
-    EXPRESSION = enum.auto()
-    #
-    EXPRESSION_OR_VARDECL = enum.auto()
-    EXPRESSION_OR_VARDECL_OR_FUNC = enum.auto()
-    EXPRESSION_OR_VARDECL_OR_FUNC_OR_FUNCALL = enum.auto()
-    FUNCTION_DEF_OR_DECL = enum.auto()
-
-@dataclass
-class Statement:
-    type: StatementType
-    tokens: TokenList
-
-    def range(self) -> Range:
-        return self.tokens.range()
-
-    def xFilterCode(self) -> Iterable[Token]:
-        return self.tokens.xFilterCode()
-    def filterCode(self) -> 'Statement':
-        return Statement(self.type, self.tokens.filterCode())
-
-    def xFilterCode_r(self) -> Iterable[Token]:
-        return self.tokens.xFilterCode_r()
-    def filterCode_r(self) -> 'Statement':
-        return Statement(self.type, self.tokens.filterCode_r())
-
-# class StatementList: ...
-class StatementList(list[Statement]):
-    def range(self):
-        return self[0].range[0], self[-1].range[1] if len(self) > 0 else (0, 0)
-
-    @staticmethod
-    def xFromFile(fname: str) -> Iterable[Statement]:
-        return StatementList.xFromTokens(TokenList.fromFile(fname))
-    @staticmethod
-    def fromFile(fname: str) -> 'StatementList':
-        return StatementList.fromTokens(TokenList.fromFile(fname))
-
-    @staticmethod
-    def xFromText(txt: str) -> Iterable[Statement]:
-        return StatementList.xFromTokens(TokenList.fromText(txt))
-    @staticmethod
-    def fromText(txt: str) -> 'StatementList':
-        return StatementList.fromTokens(TokenList.fromText(txt))
-
-    @staticmethod
-    def xFromTokens(tokens: TokenList) -> Iterable[Statement]:
-        stype, cur, complete, statement_special, prev_thing, prev_word, prev_type, curly = StatementType.UNDEF, TokenList([]), False, 0, -10, False, False, False
-        else_idx = -1
-
-        def push_statement():
-            nonlocal stype, cur, complete, statement_special, prev_thing, prev_word, prev_type, curly
-            if stype in [StatementType.EXPRESSION_OR_VARDECL, StatementType.EXPRESSION_OR_VARDECL_OR_FUNC, StatementType.EXPRESSION_OR_VARDECL_OR_FUNC_OR_FUNCALL]:
-                stype = StatementType.VARDECL
-            elif stype == StatementType.FUNCTION_DEF_OR_DECL:
-                stype = StatementType.FUNCTION_DECL
-            elif stype == StatementType.RECORD and not curly:
-                stype = StatementType.VARDECL
-            elif stype == StatementType.TYPEDEF and curly:
-                stype = StatementType.RECORD
-            ret = Statement(stype, TokenList(cur))
-            stype, cur, complete, statement_special, prev_thing, prev_word, prev_type, curly = StatementType.UNDEF, TokenList([]), False, 0, -10, False, False, False
-            return ret
-
-        for i in range(len(tokens)):
-            def find_else():
-                nonlocal else_idx, i
-                if else_idx > i:
-                    return tokens[else_idx].value == "else"
-                for ii in range(i+1, len(tokens)):
-                    if tokens[ii].value == "else":
-                        else_idx = ii
-                        return True
-                    if tokens[ii].value[0] == ";" or tokens[ii].value[0] not in [" ", "\t", "\n", "#", "/"]:
-                        else_idx = ii
-                        return False
-
-            token = tokens[i]
-            if (complete and token.value[0] not in ["/", " ", "\t", "\n"]) or \
-               (stype == StatementType.COMMENT and token.value[0] == "/"):
-                    yield push_statement()
-
-            is_thing = token.value[0] not in [" ", "\t", "\n", "#", "/"]
-            is_word = is_thing and bool(reg_identifier.match(token.value))
-            is_type = is_thing and bool(reg_type.match(token.value))
-
-            if stype == StatementType.UNDEF:
-                if token.value[0] == "/":
-                    stype = StatementType.COMMENT
-            if stype in [StatementType.UNDEF, StatementType.COMMENT]:
-                if token.value[0] in [" ", "\t", "\n", "/"]:
-                    pass
-                elif token.value[0] == "#":
-                    stype = StatementType.PREPROC
-                elif token.value in ["struct", "union", "enum"]:
-                    stype = StatementType.RECORD
-                elif token.value in ["typedef"]:
-                    stype = StatementType.TYPEDEF
-                elif reg_statement_keyword.match(token.value):
-                    stype = StatementType.STATEMENT
-                # elif token.value[0] in ["("]:   # type conversion?
-                #     stype = StatementType.EXPRESSION
-                elif token.value[0] != "/" and reg_c_operators.search(token.value):  # invalid
-                    stype = StatementType.EXPRESSION  # TODO: this fails on variable declaration and initialization treating it as expression
-                elif reg_identifier.match(token.value):    # something starging with an identifier name
-                    stype = StatementType.EXPRESSION_OR_VARDECL_OR_FUNC_OR_FUNCALL
-                elif reg_type.match(token.value):       # ???
-                    stype = StatementType.EXPRESSION_OR_VARDECL_OR_FUNC_OR_FUNCALL
-            elif stype == StatementType.EXPRESSION_OR_VARDECL_OR_FUNC_OR_FUNCALL:
-                if token.value[0] == "(":   # For function call, ellipsis follow the identifier
-                    stype = StatementType.FUNCTION_CALL
-                else:
-                    # it's a space or comment or preproc
-                    stype = StatementType.EXPRESSION_OR_VARDECL_OR_FUNC
-                # can to into the next statement
-            if stype == StatementType.EXPRESSION_OR_VARDECL_OR_FUNC:
-                if token.value[0] != "/" and reg_c_operators.search(token.value):
-                    stype = StatementType.EXPRESSION
-                elif token.value[0] == "(" and prev_thing == i-1 and prev_word:  # no space between the identifier and the (
-                    stype = StatementType.FUNCTION_DEF_OR_DECL
-            elif stype == StatementType.FUNCTION_DEF_OR_DECL:
-                if token.value[0] == "{":
-                    stype = StatementType.FUNCTION_DEF
-
-            # print(f"i={i}, stype={stype}, token=<{token.value}>, is_thing={is_thing}, is_word={is_word}, is_type={is_type}")
-
-            if is_thing:
-                prev_thing, prev_word, prev_type = i, is_word, is_type
-
-            if not statement_special:   # Constructs that don't end by ; or {}
-                if token.value == "if": # if can continue with else after ;
-                    statement_special = 1
-                elif stype == StatementType.EXPRESSION or token.value in ["struct", "union", "enum", "do", "typedef"]:  # These end strictly with a ;
-                    statement_special = 2
-            cur.append(token)
-            if (complete and token.value == "\n") or token.value[0] == "#":
-                yield push_statement()
-                continue
-
-            if token.value[0] not in [";", ",", "{"]:  # Any statement ends with one of these
-                continue
-
-            if token.value[0] == "{":
-                curly = True
-            elif token.value[0] in [";", ","] and statement_special == 2:
-                if stype == StatementType.RECORD and not curly:
-                    stype = StatementType.VARDECL
-                    statement_special = 0
-
-            if statement_special == 1:
-                if find_else():
-                    continue
-            elif statement_special == 2 and token.value[0] != ";":
-                continue
-
-            complete = True  # The statement is complete but may want to attach trailing \n or comment
-
-        if cur:
-            yield push_statement()
-    @staticmethod
-    def fromTokens(tokens: TokenList) -> 'StatementList':
-        return StatementList(StatementList.xFromTokens(tokens))
-
-    def xFilterCode(self) -> Iterable[Statement]:
-        for st in self:
-            yield st.filterCode()
-    def filterCode(self) -> 'StatementList':
-        return StatementList(self.xFilterCode())
-
-    def xFilterCode_r(self) -> Iterable[Statement]:
-        for st in self:
-            yield st.filterCode_r()
-    def filterCode_r(self) -> 'StatementList':
-        return StatementList(self.xFilterCode_r())
 
 
 @dataclass
@@ -208,10 +24,10 @@ class StatementKind:
     postComment: Token | None = None
 
     @staticmethod
-    def fromTokens(tokens: TokenList) -> 'StatementKind | None':
-        if not tokens:
-            return None
+    def fromTokens(tokens: TokenList) -> 'StatementKind':
         ret = StatementKind()
+        if not tokens:
+            return ret
         for token in tokens:
             if token.value[0] in [" ", "\t", "\n"]:
                 continue
@@ -275,7 +91,7 @@ class StatementKind:
         # There are at least two tokens
 
         if first_is_type:
-            next_word = next((token for token in clean_tokens[1:] if token.value != "*"), None)
+            next_word = next((token for token in islice(clean_tokens, 1, None) if token.value != "*"), None)
             if next_word:
                 next_next_word = next((token for token in clean_tokens if token.idx > next_word.idx and token.value != "*"), None)
                 if reg_type.match(next_word.value):
@@ -309,4 +125,137 @@ class StatementKind:
                     break
 
         return ret
+
+
+@dataclass
+class Statement:
+    tokens: TokenList
+    kind: StatementKind | None = None
+
+    def range(self) -> Range:
+        return self.tokens.range()
+
+    def xFilterCode(self) -> Iterable[Token]:
+        return self.tokens.xFilterCode()
+    def filterCode(self) -> 'Statement':
+        return Statement(self.tokens.filterCode(), self.kind)
+
+    def xFilterCode_r(self) -> Iterable[Token]:
+        return self.tokens.xFilterCode_r()
+    def filterCode_r(self) -> 'Statement':
+        return Statement(self.tokens.filterCode_r(), self.kind)
+
+    def getKind(self) -> StatementKind:
+        if not self.kind:
+            self.kind = StatementKind.fromTokens(self.tokens)
+        return self.kind
+
+
+# class StatementList: ...
+class StatementList(list[Statement]):
+    def range(self):
+        return self[0].range[0], self[-1].range[1] if len(self) > 0 else (0, 0)
+
+    @staticmethod
+    def xFromFile(fname: str) -> Iterable[Statement]:
+        return StatementList.xFromTokens(TokenList.fromFile(fname))
+    @staticmethod
+    def fromFile(fname: str) -> 'StatementList':
+        return StatementList.fromTokens(TokenList.fromFile(fname))
+
+    @staticmethod
+    def xFromText(txt: str) -> Iterable[Statement]:
+        return StatementList.xFromTokens(TokenList.fromText(txt))
+    @staticmethod
+    def fromText(txt: str) -> 'StatementList':
+        return StatementList.fromTokens(TokenList.fromText(txt))
+
+    @staticmethod
+    def xFromTokens(tokens: TokenList) -> Iterable[Statement]:
+        cur, complete, statement_special, curly, comment_only, is_record, is_expr = TokenList([]), False, 0, False, None, False, False
+        else_idx = -1
+
+        def push_statement():
+            nonlocal cur, complete, statement_special, curly, comment_only, is_record, is_expr
+            ret = Statement(cur)
+            cur, complete, statement_special, curly, comment_only, is_record, is_expr = TokenList([]), False, 0, False, None, False, False
+            return ret
+
+        for i in range(len(tokens)):
+            def find_else():
+                nonlocal else_idx, i
+                if else_idx > i:
+                    return tokens[else_idx].value == "else"
+                for ii in range(i+1, len(tokens)):
+                    if tokens[ii].value == "else":
+                        else_idx = ii
+                        return True
+                    if tokens[ii].value[0] == ";" or tokens[ii].value[0] not in [" ", "\t", "\n", "#", "/"]:
+                        else_idx = ii
+                        return False
+
+            token = tokens[i]
+            if (complete and token.value[0] not in ["/", " ", "\t", "\n"]) or \
+               (comment_only and token.value[0] == "/"):
+                    yield push_statement()
+
+            if comment_only is None and token.value[0] == "/":
+                comment_only = True
+            elif comment_only is not False and token.value[0] not in ["/", " ", "\t", "\n"]:
+                comment_only = False
+            if not is_expr and token.value in c_operators_all and i < len(tokens)-1 and tokens[i+1].value in [" ", "\t", "\n"]:
+                is_expr = True
+
+            # print(f"i={i}, stype={stype}, token=<{token.value}>, is_thing={is_thing}, is_word={is_word}, is_type={is_type}")
+
+            if not statement_special:   # Constructs that don't end by ; or {}
+                if token.value == "if": # if can continue with else after ;
+                    statement_special = 1
+                elif token.value in ["struct", "union", "enum"]:  # These end strictly with a ;
+                    statement_special = 2
+                    is_record = True
+                elif is_expr or token.value == "do":  # These end strictly with a ;
+                    statement_special = 2
+
+            cur.append(token)
+
+            if (complete and token.value == "\n") or token.value[0] == "#": # preproc is always a single token
+                yield push_statement()
+                continue
+
+            if token.value[0] not in [";", ",", "{"]:  # Any statement ends with one of these
+                continue
+
+            if token.value[0] == "{":
+                curly = True
+            elif token.value[0] in [";", ","] and statement_special == 2:
+                if is_record and not curly:
+                    is_record = False
+                    statement_special = 0
+
+            if statement_special == 1:
+                if find_else():
+                    continue
+            elif statement_special == 2 and token.value[0] != ";":
+                continue
+
+            complete = True  # The statement is complete but may want to attach trailing \n or comment
+
+        if cur:
+            yield push_statement()
+    @staticmethod
+    def fromTokens(tokens: TokenList) -> 'StatementList':
+        return StatementList(StatementList.xFromTokens(tokens))
+
+    def xFilterCode(self) -> Iterable[Statement]:
+        for st in self:
+            yield st.filterCode()
+    def filterCode(self) -> 'StatementList':
+        return StatementList(self.xFilterCode())
+
+    def xFilterCode_r(self) -> Iterable[Statement]:
+        for st in self:
+            yield st.filterCode_r()
+    def filterCode_r(self) -> 'StatementList':
+        return StatementList(self.xFilterCode_r())
 

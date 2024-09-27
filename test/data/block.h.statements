@@ -1,5 +1,4 @@
-[Statement(type=<StatementType.PREPROC: 2>,
-           tokens=[0:193] 〈/*-
+[Statement(tokens=[0:193] 〈/*-
  * Copyright (c) 2014-present MongoDB, Inc.
  * Copyright (c) 2008-2014 WiredTiger, Inc.
  *	All rights reserved.
@@ -8,23 +7,22 @@
  */⌇
 ⌇
 ⌇#pragma once
-〉),
- Statement(type=<StatementType.COMMENT: 1>,
-           tokens=[193:243] 〈
+〉,
+           kind=None),
+ Statement(tokens=[193:243] 〈
 ⌇/*
  * WiredTiger's block manager interface.
  */⌇
 ⌇
-〉),
- Statement(type=<StatementType.PREPROC: 2>,
-           tokens=[243:418] 〈/*
+〉, kind=None),
+ Statement(tokens=[243:418] 〈/*
  * The file's description is written into the first block of the file, which means we can use an
  * offset of 0 as an invalid offset.
  */⌇
 ⌇#define WT_BLOCK_INVALID_OFFSET 0
-〉),
- Statement(type=<StatementType.COMMENT: 1>,
-           tokens=[418:1686] 〈
+〉,
+           kind=None),
+ Statement(tokens=[418:1686] 〈
 ⌇/*
  * The block manager maintains three per-checkpoint extent lists:
  *	alloc:	 the extents allocated in this checkpoint
@@ -50,9 +48,9 @@
  * list, the alloc and discard extent lists are not searched based on size.
  */⌇
 ⌇
-〉),
- Statement(type=<StatementType.RECORD: 4>,
-           tokens=[1686:2261] 〈/*
+〉,
+           kind=None),
+ Statement(tokens=[1686:2261] 〈/*
  * WT_EXTLIST --
  *	An extent list.
  */⌇
@@ -74,9 +72,9 @@
     WT_EXT *off[WT_SKIP_MAXDEPTH]; /* Size/offset skiplists */
     WT_SIZE *sz[WT_SKIP_MAXDEPTH];
 }⌇;⌇
-〉),
- Statement(type=<StatementType.RECORD: 4>,
-           tokens=[2261:2784] 〈
+〉,
+           kind=None),
+ Statement(tokens=[2261:2784] 〈
 ⌇/*
  * WT_EXT --
  *	Encapsulation of an extent, either allocated or freed within the
@@ -95,9 +93,9 @@
      */
     WT_EXT *next[0]; /* Offset, size skiplists */
 }⌇;⌇
-〉),
- Statement(type=<StatementType.RECORD: 4>,
-           tokens=[2784:3304] 〈
+〉,
+           kind=None),
+ Statement(tokens=[2784:3304] 〈
 ⌇/*
  * WT_SIZE --
  *	Encapsulation of a block size skiplist entry.
@@ -116,9 +114,9 @@
      */
     WT_SIZE *next[WT_SKIP_MAXDEPTH]; /* Size skiplist */
 }⌇;⌇
-〉),
- Statement(type=<StatementType.RECORD: 4>,
-           tokens=[3304:3591] 〈
+〉,
+           kind=None),
+ Statement(tokens=[3304:3591] 〈
 ⌇/*
  * Per session handle cached block manager information.
  */⌇
@@ -129,9 +127,9 @@
     WT_SIZE *sz_cache;  /* List of WT_SIZE handles */
     u_int sz_cache_cnt; /* Count */
 }⌇ ⌇WT_BLOCK_MGR_SESSION⌇;⌇
-〉),
- Statement(type=<StatementType.PREPROC: 2>,
-           tokens=[3591:3878] 〈
+〉,
+           kind=None),
+ Statement(tokens=[3591:3878] 〈
 ⌇/*
  * WT_EXT_FOREACH --
  *	Walk a block manager skiplist.
@@ -141,13 +139,13 @@
  */⌇
 ⌇#define WT_EXT_FOREACH(skip, head) \
     for ((skip) = (head)[0]; (skip) != NULL; (skip) = (skip)->next[0])
-〉),
- Statement(type=<StatementType.PREPROC: 2>,
-           tokens=[3878:4002] 〈#define WT_EXT_FOREACH_OFF(skip, head) \
+〉,
+           kind=None),
+ Statement(tokens=[3878:4002] 〈#define WT_EXT_FOREACH_OFF(skip, head) \
     for ((skip) = (head)[0]; (skip) != NULL; (skip) = (skip)->next[(skip)->depth])
-〉),
- Statement(type=<StatementType.PREPROC: 2>,
-           tokens=[4002:4372] 〈
+〉,
+           kind=None),
+ Statement(tokens=[4002:4372] 〈
 ⌇/*
  * WT_EXT_FOREACH_FROM_OFFSET_INCL --
  *	Walk a by-offset skiplist from the given offset, starting with the extent that contains the
@@ -156,9 +154,9 @@
 ⌇#define WT_EXT_FOREACH_FROM_OFFSET_INCL(skip, el, start)                        \
     for ((skip) = __wt_block_off_srch_inclusive((el), (start)); (skip) != NULL; \
          (skip) = (skip)->next[0])
-〉),
- Statement(type=<StatementType.PREPROC: 2>,
-           tokens=[4372:4764] 〈
+〉,
+           kind=None),
+ Statement(tokens=[4372:4764] 〈
 ⌇/*
  * Checkpoint cookie: carries a version number as I don't want to rev the schema
  * file version should the default block manager checkpoint format change.
@@ -168,31 +166,29 @@
  *	    [file size] [checkpoint size] [write generation]
  */⌇
 ⌇#define WT_BM_CHECKPOINT_VERSION 1   /* Checkpoint format version */
-〉),
- Statement(type=<StatementType.PREPROC: 2>,
-           tokens=[4764:4823] 〈#define WT_BLOCK_EXTLIST_MAGIC 71002 /* Identify a list */
-〉),
- Statement(type=<StatementType.PREPROC: 2>,
-           tokens=[4823:5060] 〈
+〉,
+           kind=None),
+ Statement(tokens=[4764:4823] 〈#define WT_BLOCK_EXTLIST_MAGIC 71002 /* Identify a list */
+〉, kind=None),
+ Statement(tokens=[4823:5060] 〈
 ⌇/*
  * There are two versions of the extent list blocks: the original, and a second version where
  * current checkpoint information is appended to the avail extent list.
  */⌇
 ⌇#define WT_BLOCK_EXTLIST_VERSION_ORIG 0 /* Original version */
-〉),
- Statement(type=<StatementType.PREPROC: 2>,
-           tokens=[5060:5133] 〈#define WT_BLOCK_EXTLIST_VERSION_CKPT 1 /* Checkpoint in avail output */
-〉),
- Statement(type=<StatementType.PREPROC: 2>,
-           tokens=[5133:5309] 〈
+〉,
+           kind=None),
+ Statement(tokens=[5060:5133] 〈#define WT_BLOCK_EXTLIST_VERSION_CKPT 1 /* Checkpoint in avail output */
+〉, kind=None),
+ Statement(tokens=[5133:5309] 〈
 ⌇/*
  * Maximum buffer required to store a checkpoint: 1 version byte followed by
  * 14 packed 8B values.
  */⌇
 ⌇#define WT_BLOCK_CHECKPOINT_BUFFER (1 + 14 * WT_INTPACK64_MAXSIZE)
-〉),
- Statement(type=<StatementType.RECORD: 4>,
-           tokens=[5309:6183] 〈
+〉,
+           kind=None),
+ Statement(tokens=[5309:6183] 〈
 ⌇struct⌇ ⌇__wt_block_ckpt⌇ ⌇{
     uint8_t version; /* Version */
 
@@ -217,9 +213,9 @@
     WT_EXTLIST ckpt_alloc;   /* Checkpoint archive */
     WT_EXTLIST ckpt_discard; /* Checkpoint archive */
 }⌇;⌇
-〉),
- Statement(type=<StatementType.RECORD: 4>,
-           tokens=[6183:9959] 〈
+〉,
+           kind=None),
+ Statement(tokens=[6183:9959] 〈
 ⌇/*
  * WT_BM --
  *	Block manager handle, references a single checkpoint in a btree.
@@ -289,9 +285,9 @@
      */
     bool is_live; /* The live system */
 }⌇;⌇
-〉),
- Statement(type=<StatementType.RECORD: 4>,
-           tokens=[9959:13572] 〈
+〉,
+           kind=None),
+ Statement(tokens=[9959:13572] 〈
 ⌇/*
  * WT_BLOCK --
  *	Block manager handle, references a single file.
@@ -371,9 +367,9 @@
     /* Multi-file support */
     wt_shared uint32_t read_count; /* Count of active read requests using this block handle */
 }⌇;⌇
-〉),
- Statement(type=<StatementType.RECORD: 4>,
-           tokens=[13572:14000] 〈
+〉,
+           kind=None),
+ Statement(tokens=[13572:14000] 〈
 ⌇/*
  * WT_BLOCK_DESC --
  *	The file's description.
@@ -390,17 +386,17 @@
 
     uint32_t unused; /* 12-15: Padding */
 }⌇;⌇
-〉),
- Statement(type=<StatementType.PREPROC: 2>,
-           tokens=[14000:14323] 〈/*
+〉,
+           kind=None),
+ Statement(tokens=[14000:14323] 〈/*
  * WT_BLOCK_DESC_SIZE is the expected structure size -- we verify the build to ensure the compiler
  * hasn't inserted padding (padding won't cause failure, we reserve the first allocation-size block
  * of the file for this information, but it would be worth investigation, regardless).
  */⌇
 ⌇#define WT_BLOCK_DESC_SIZE 16
-〉),
- Statement(type=<StatementType.FUNCTION_DEF: 5>,
-           tokens=[14323:14757] 〈
+〉,
+           kind=None),
+ Statement(tokens=[14323:14757] 〈
 ⌇/*
  * __wt_block_desc_byteswap --
  *     Handle big- and little-endian transformation of a description block.
@@ -417,9 +413,9 @@
     WT_UNUSED(desc);
 #endif
 }⌇
-〉),
- Statement(type=<StatementType.RECORD: 4>,
-           tokens=[14757:16358] 〈
+〉,
+           kind=None),
+ Statement(tokens=[14757:16358] 〈
 ⌇/*
  * WT_BLOCK_HEADER --
  *	Blocks have a common header, a WT_PAGE_HEADER structure followed by a
@@ -455,16 +451,16 @@
      */
     uint8_t unused[3]; /* 09-11: unused padding */
 }⌇;⌇
-〉),
- Statement(type=<StatementType.PREPROC: 2>,
-           tokens=[16358:16535] 〈/*
+〉,
+           kind=None),
+ Statement(tokens=[16358:16535] 〈/*
  * WT_BLOCK_HEADER_SIZE is the number of bytes we allocate for the structure: if the compiler
  * inserts padding it will break the world.
  */⌇
 ⌇#define WT_BLOCK_HEADER_SIZE 12
-〉),
- Statement(type=<StatementType.FUNCTION_DEF: 5>,
-           tokens=[16535:16943] 〈
+〉,
+           kind=None),
+ Statement(tokens=[16535:16943] 〈
 ⌇/*
  * __wt_block_header_byteswap_copy --
  *     Handle big- and little-endian transformation of a header block, copying from a source to a
@@ -479,9 +475,9 @@
     to->checksum = __wt_bswap32(from->checksum);
 #endif
 }⌇
-〉),
- Statement(type=<StatementType.FUNCTION_DEF: 5>,
-           tokens=[16943:17233] 〈
+〉,
+           kind=None),
+ Statement(tokens=[16943:17233] 〈
 ⌇/*
  * __wt_block_header_byteswap --
  *     Handle big- and little-endian transformation of a header block.
@@ -495,21 +491,21 @@
     WT_UNUSED(blk);
 #endif
 }⌇
-〉),
- Statement(type=<StatementType.PREPROC: 2>,
-           tokens=[17233:17448] 〈
+〉,
+           kind=None),
+ Statement(tokens=[17233:17448] 〈
 ⌇/*
  * WT_BLOCK_HEADER_BYTE
  * WT_BLOCK_HEADER_BYTE_SIZE --
  *	The first usable data byte on the block (past the combined headers).
  */⌇
 ⌇#define WT_BLOCK_HEADER_BYTE_SIZE (WT_PAGE_HEADER_SIZE + WT_BLOCK_HEADER_SIZE)
-〉),
- Statement(type=<StatementType.PREPROC: 2>,
-           tokens=[17448:17539] 〈#define WT_BLOCK_HEADER_BYTE(dsk) ((void *)((uint8_t *)(dsk) + WT_BLOCK_HEADER_BYTE_SIZE))
-〉),
- Statement(type=<StatementType.PREPROC: 2>,
-           tokens=[17539:18262] 〈
+〉,
+           kind=None),
+ Statement(tokens=[17448:17539] 〈#define WT_BLOCK_HEADER_BYTE(dsk) ((void *)((uint8_t *)(dsk) + WT_BLOCK_HEADER_BYTE_SIZE))
+〉,
+           kind=None),
+ Statement(tokens=[17539:18262] 〈
 ⌇/*
  * We don't compress or encrypt the block's WT_PAGE_HEADER or WT_BLOCK_HEADER structures because we
  * need both available with decompression or decryption. We use the WT_BLOCK_HEADER checksum and
@@ -520,12 +516,11 @@
  * engine, and skipping 64B shouldn't make any difference in terms of compression efficiency.
  */⌇
 ⌇#define WT_BLOCK_COMPRESS_SKIP 64
-〉),
- Statement(type=<StatementType.PREPROC: 2>,
-           tokens=[18262:18318] 〈#define WT_BLOCK_ENCRYPT_SKIP WT_BLOCK_HEADER_BYTE_SIZE
-〉),
- Statement(type=<StatementType.FUNCTION_DEF: 5>,
-           tokens=[18318:18530] 〈
+〉,
+           kind=None),
+ Statement(tokens=[18262:18318] 〈#define WT_BLOCK_ENCRYPT_SKIP WT_BLOCK_HEADER_BYTE_SIZE
+〉, kind=None),
+ Statement(tokens=[18318:18530] 〈
 ⌇/*
  * __wt_block_header --
  *     Return the size of the block-specific header.
@@ -537,9 +532,9 @@
 
     return ((u_int)WT_BLOCK_HEADER_SIZE);
 }⌇
-〉),
- Statement(type=<StatementType.FUNCTION_DEF: 5>,
-           tokens=[18530:18869] 〈
+〉,
+           kind=None),
+ Statement(tokens=[18530:18869] 〈
 ⌇/*
  * __wt_block_eligible_for_sweep --
  *     Return true if the block meets requirements for sweeping. The check that read reference count
@@ -550,4 +545,5 @@
 ⌇{
     return (!block->remote && block->objectid <= bm->max_flushed_objectid);
 }⌇
-〉)]
+〉,
+           kind=None)]

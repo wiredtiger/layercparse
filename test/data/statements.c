@@ -5,11 +5,16 @@ return func(5,6);
 
 int x;
 
-int *x;
+/* pre */
+int *x; /* post */
 
 a;
 
 a, b;
+
+*a;
+
+*a, *b;
 
 x = 5 + 8;
 

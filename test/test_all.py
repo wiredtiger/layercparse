@@ -18,6 +18,10 @@ def file_content(fname: str) -> str:
         return file.read()
 
 
+def pf(obj: Any) -> str:
+    return pformat(obj, width=120, compact=False)
+
+
 class TestCaseLocal(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -45,28 +49,29 @@ class TestCaseLocal(unittest.TestCase):
         self.assertMultiLineEqualDiff(result, file_content(fname))
 
     def checkObjAgainstFile(self, result, fname):
-        self.checkStrAgainstFile(pformat(result), fname)
+        self.checkStrAgainstFile(pf(result), fname)
 
     def parseDetailsFromFile(self, fname: str) -> str:
         a = []
         for st in StatementList.fromFile(fname):
-            a.append(pformat(st))
-            a.append(pformat(StatementKind.fromTokens(st.tokens)))
-            if st.type == StatementType.FUNCTION_DEF:
+            st.getKind()
+            a.append(pf(st))
+            # a.append(pf(StatementKind.fromTokens(st.tokens)))
+            if st.getKind().is_function_def:
                 func = FunctionParts.fromStatement(st)
                 self.assertIsNotNone(func)
                 if func:
-                    a.extend(["Function:", pformat(func)])
-                    a.extend(["Args:", pformat(func.getArgs())])
+                    a.extend(["Function:", pf(func)])
+                    a.extend(["Args:", pf(func.getArgs())])
                     if func.body:
-                        a.extend(["Vars:", pformat(func.getLocalVars())])
-            elif st.type == StatementType.RECORD:
+                        a.extend(["Vars:", pf(func.getLocalVars())])
+            elif st.getKind().is_record:
                 record = RecordParts.fromStatement(st)
                 self.assertIsNotNone(record)
                 if record:
                     members = record.getMembers()
-                    a.extend(["Record:", pformat(record)])
-                    # a.extend(["Members:", pformat(members)])
+                    a.extend(["Record:", pf(record)])
+                    # a.extend(["Members:", pf(members)])
         return "\n".join(a)
 
 
@@ -122,7 +127,6 @@ class TestStatementDetails(TestCaseLocal):
         self.checkStrAgainstFile(self.parseDetailsFromFile("data/various.c"), "data/various.c.statements-details")
 
     def test_statement_types(self):
-        # print(self.parseDetailsFromFile("data/statements.c"))
         self.checkStrAgainstFile(self.parseDetailsFromFile("data/statements.c"), "data/statements.c.statements-details")
 
 

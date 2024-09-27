@@ -95,4 +95,3 @@ for f in get_files(sys.argv[1]):
             print(f"{i}: {t.value}")
             i += 1
         pprint(st)
-

@@ -84,10 +84,11 @@ class RecordParts:
         saved_type: Any = None
         var: Variable | None
         for st in StatementList.xFromText(self.body.value):
-            if st.type == StatementType.PREPROC:
+            t = st.getKind()
+            if t.is_preproc:
                 continue
 
-            if st.type == StatementType.RECORD:
+            if t.is_record:
                 record = RecordParts.fromStatement(st, parent=self)
                 if record:
                     if self.nested is None:
