@@ -8,17 +8,43 @@ from .variable import *
 
 @dataclass
 class FunctionParts:
-    retType: TokenList
+    typename: TokenList
     name: Token
     args: Token
     body: Token | None = None
     preComment: Token | None = None
     postComment: Token | None = None
 
+    def short_repr(self) -> str:
+        return f"Function({self.name} ({self.args})) : {self.typename}"
+
+    def update(self, other: 'FunctionParts') -> list[str]:
+        errors = []
+        if self.typename != other.typename:
+            errors.append(f"ERROR: function retType mismatch for {self.name.value}: {self.typename.short_repr()} != {other.typename.short_repr()}")
+        if self.name != other.name:
+            errors.append(f"ERROR: function name mismatch for {self.name.value}: {self.name.value} != {other.name.value}")
+        if self.args != other.args:
+            errors.append(f"ERROR: function args mismatch for {self.name.value}: {self.args.value} != {other.args.value}")
+        if self.body is not None and other.body is not None and self.body != other.body:
+            errors.append(f"ERROR: function redifinition: {self.name.value}")
+        if self.preComment is None:
+            self.preComment = other.preComment
+        if self.postComment is None:
+            self.postComment = other.postComment
+        return errors
+
     @staticmethod
     def fromStatement(statement: Statement) -> 'FunctionParts | None':
+        tokens = TokenList([t for t in statement.tokens])
+
         i = 0
-        tokens = statement.tokens
+        while i < len(tokens):
+            if tokens[i].value in ignore_macros:
+                tokens.pop(i)
+                if tokens[i].value[0] == "(":
+                    tokens.pop(i)
+            i += 1
 
         preComment, i = get_pre_comment(tokens)
 
@@ -68,13 +94,13 @@ class FunctionParts:
             t = st.getKind()
             if saved_type is None and (t.is_statement or (t.is_expression and not t.is_initialization)):
                 break
-            if saved_type is not None or t.is_decl:
+            if saved_type is not None or (t.is_decl and not t.is_function):
                 var = Variable.fromVarDef(st.tokens)
                 if var:
-                    if not var.type:
-                        var.type = saved_type
+                    if not var.typename:
+                        var.typename = saved_type
                     yield var
-                    saved_type = var.type if var.end == "," else None
+                    saved_type = var.typename if var.end == "," else None
             else:
                 saved_type = None
     def getLocalVars(self) -> list[Variable]:

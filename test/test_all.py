@@ -6,16 +6,12 @@ os.chdir(os.path.dirname(__file__))
 
 import unittest
 from unittest.util import _common_shorten_repr
+from copy import deepcopy
 
 from semanticc import *
 from pprint import pprint, pformat
 
 import difflib
-
-
-def file_content(fname: str) -> str:
-    with open(fname) as file:
-        return file.read()
 
 
 def pf(obj: Any) -> str:
@@ -87,18 +83,36 @@ class TestCaseLocal(unittest.TestCase):
 
 class TestRegex(TestCaseLocal):
     def test_regex(self):
-        self.assertListEqual(reg.match("qwe").captures(),
+        self.assertListEqual(reg_token.match("qwe").captures(),
             ["qwe"])
-        self.assertListEqual(reg.findall("qwe"),
+        self.assertListEqual(reg_token.findall("qwe"),
             ["qwe"])
-        self.assertListEqual(reg.findall("qwe(asd)  {zxc} \n [wer]"),
+        self.assertListEqual(reg_token.findall("qwe\\\nasd"),
+            ['qwe', '\\\n', 'asd'])
+        self.assertListEqual(reg_token.findall("qwe(asd)  {zxc} \n [wer]"),
             ["qwe", "(asd)", "  ", "{zxc}", " ", "\n", " ", "[wer]"])
-        self.assertListEqual(reg.findall(r"""/* qwe(asd*/ "as\"d" {zxc} \n [wer]"""),
-            ['/* qwe(asd*/', ' ', '"as\\"d"', ' ', '{zxc}', ' ', '\\n', ' ', '[wer]'])
-        self.assertListEqual(reg.findall(r"""/* qwe(asd*/ "as\"d" {z/*xc} \n [wer]*/}"""),
-            ['/* qwe(asd*/', ' ', '"as\\"d"', ' ', '{z/*xc} \\n [wer]*/}'])
-        self.assertListEqual(reg.findall(r"""int main(int argc, char *argv[]) {\n  int a = 1;\n  return a;\n}"""),
+        self.assertListEqual(reg_token.findall(r"""/* qwe(asd*/ "as\"d" {zxc} """+"\n [wer]"),
+            ['/* qwe(asd*/', ' ', '"as\\"d"', ' ', '{zxc}', ' ', '\n', ' ', '[wer]'])
+        self.assertListEqual(reg_token.findall(r"""/* qwe(asd*/ "as\"d" {z/*xc} """+"\n [wer]*/}"),
+            ['/* qwe(asd*/', ' ', '"as\\"d"', ' ', '{z/*xc} \n [wer]*/}'])
+        self.assertListEqual(reg_token.findall(r"""int main(int argc, char *argv[]) {\n  int a = 1;\n  return a;\n}"""),
             ['int', ' ', 'main', '(int argc, char *argv[])', ' ', '{\\n  int a = 1;\\n  return a;\\n}'])
+
+    def test_regex_r(self):
+        self.assertListEqual(reg_token_r.match("qwe").captures(),
+            ["qwe"])
+        self.assertListEqual(reg_token_r.findall("qwe"),
+            ["qwe"])
+        # self.assertListEqual(reg_token_r.findall("qwe\\\nasd"),
+        #     list(reversed(['qwe', '\\\n', 'asd'])))
+        self.assertListEqual(reg_token_r.findall("qwe(asd)  {zxc} \n [wer]"),
+            list(reversed(["qwe", "(asd)", "  ", "{zxc}", " ", "\n", " ", "[wer]"])))
+        self.assertListEqual(reg_token_r.findall(r"""/* qwe(asd*/ "as\"d" {zxc} """+"\n [wer]"),
+            list(reversed(['/* qwe(asd*/', ' ', '"as\\"d"', ' ', '{zxc}', ' ', '\n', ' ', '[wer]'])))
+        self.assertListEqual(reg_token_r.findall(r"""/* qwe(asd*/ "as\"d" {z/*xc} """+"\n [wer]*/}"),
+            list(reversed(['/* qwe(asd*/', ' ', '"as\\"d"', ' ', '{z/*xc} \n [wer]*/}'])))
+        self.assertListEqual(reg_token_r.findall(r"""int main(int argc, char *argv[]) {\n  int a = 1;\n  return a;\n}"""),
+            list(reversed(['int', ' ', 'main', '(int argc, char *argv[])', ' ', '{\\n  int a = 1;\\n  return a;\\n}'])))
 
 
 class TestToken(TestCaseLocal):
@@ -109,16 +123,16 @@ class TestToken(TestCaseLocal):
 class TestVariable(TestCaseLocal):
     def test_1(self):
         self.assertMultiLineEqualDiff(repr(Variable.fromVarDef(TokenList.fromText("int a;"))),
-            r"""Variable(name=Token(idx=2, range=(4, 5), value='a'), type=[0:3] 〈int〉, preComment=None, postComment=None, end=';')""")
+            r"""Variable(name=Token(idx=2, range=(4, 5), value='a'), typename=[0:3] 〈int〉, preComment=None, postComment=None, end=';')""")
     def test_2(self):
         self.assertMultiLineEqualDiff(repr(Variable.fromVarDef(TokenList.fromText("int (*a)(void);"))),
-            r"""Variable(name=Token(idx=2, range=(4, 8), value='a'), type=[0:3] 〈int〉, preComment=None, postComment=None, end=';')""")
+            r"""Variable(name=Token(idx=2, range=(4, 8), value='a'), typename=[0:3] 〈int〉, preComment=None, postComment=None, end=';')""")
     def test_3(self):
         self.assertMultiLineEqualDiff(repr(Variable.fromVarDef(TokenList.fromText("int a[10];"))),
-            r"""Variable(name=Token(idx=2, range=(4, 5), value='a'), type=[0:3] 〈int〉, preComment=None, postComment=None, end=';')""")
+            r"""Variable(name=Token(idx=2, range=(4, 5), value='a'), typename=[0:3] 〈int〉, preComment=None, postComment=None, end=';')""")
     def test_4(self):
         self.assertMultiLineEqualDiff(repr(Variable.fromVarDef(TokenList.fromText("int *a[10];"))),
-            r"""Variable(name=Token(idx=3, range=(5, 6), value='a'), type=[0:3] 〈int〉, preComment=None, postComment=None, end=';')""")
+            r"""Variable(name=Token(idx=3, range=(5, 6), value='a'), typename=[0:3] 〈int〉, preComment=None, postComment=None, end=';')""")
 
 
 class TestStatement(TestCaseLocal):
@@ -140,6 +154,152 @@ class TestStatementDetails(TestCaseLocal):
     def test_statement_types(self):
         self.checkStrAgainstFile(self.parseDetailsFromFile("data/statements.c"), "data/statements.c.statements-details")
 
+
+class TestRecordAccess(TestCaseLocal):
+    def test_record(self):
+        _globals = Codebase()
+        _globals.updateFromFile("data/record.c")
+        errors = "\n".join(AccessCheck(_globals).checkAccess())
+        self.checkStrAgainstFile(errors, "data/record.c.access")
+
+    # def test_record2(self):
+    #     _globals = Codebase()
+    #     _globals.updateFromFile("data/record.c")
+    #     pprint(_globals, width=120, compact=False)
+    #     # self.checkStrAgainstFile("\n".join(AccessCheck(globals).checkAccess()), "data/record.c.access")
+
+    #     defn = _globals.names["func"]
+    #     body_clean = clean_text_sz(defn.details.body.value)
+    #     module = defn.module
+    #     locals = {} # : dict[str, str] = {}
+    #     for var in defn.details.getArgs() + defn.details.getLocalVars():
+    #         pprint(var)
+    #         locals[var.name.value] = get_base_type(var.typename)
+
+    #     import regex
+    #     body_clean = r"((S2*)((S1*)((S2*)s2[10])->s)->x)->s;"
+    #     reg_name =  r"(?<!->|\.)\s*+\b(s2)\b"
+    #     pprint(body_clean)
+    #     match = regex.search(reg_name, body_clean)
+    #     pprint(match)
+
+    #     # Check access to global name
+    #     name = match.group()
+    #     if name in _globals.names_restricted:
+    #         defn = _globals.names_restricted[name]
+    #         if defn.is_private and defn.module != module:
+    #             print(f"Access to private member '{name}' from module '{module}'")
+
+    #     # Check struct member access
+
+    #     def get_type_of_name(name: str) -> str:
+    #         nonlocal _globals, locals
+    #         if name in _globals.names:
+    #             return _globals.untypedef(get_base_type(_globals.names[name].details.recordKind))
+    #         if name in locals:
+    #             return _globals.untypedef(locals[name])
+    #         return ""
+
+    #     prev_type = get_type_of_name(name)
+    #     # if prev_type and prev_type in globals.fields:
+    #     #     pass # TODO: check access to the type
+
+    #     (begin, end) = match.span()
+
+    #     did_expand = True
+    #     while did_expand:
+    #         tmp = body_clean[begin:end]
+    #         print(f"Expression [{begin}:{end}]: {body_clean[begin:end]} : {prev_type}")
+
+    #         did_expand = False
+
+    #         def expand_right():
+    #             # Go right and find the end of the expression
+    #             nonlocal end, tmp, match
+    #             ret = False
+    #             while match := reg_token.match(body_clean, pos=end):
+    #                 ret = True
+    #                 end = match.span()[1]
+    #                 tmp = body_clean[begin:end]
+    #                 if match.group()[0] not in ["[", "(", "{", " ", "\t", "\n"]:
+    #                     break
+    #             return ret
+
+    #         def expand_left():
+    #             # Go left and find the start of the expression
+    #             nonlocal begin, tmp, match
+    #             ret = False
+    #             while match := reg_token_r.match(body_clean, endpos=begin):
+    #                 ret = True
+    #                 begin = match.span()[0]
+    #                 tmp = body_clean[begin:end]
+    #                 if match.group()[0] not in ["[", "{", " ", "\t", "\n"]:
+    #                     break
+    #             return ret
+
+    #         def read_next():
+    #             # Go right and find the end of the expression
+    #             nonlocal end, tmp, match
+    #             ret = False
+    #             while match := reg_token.match(body_clean, pos=end):
+    #                 ret = True
+    #                 end = match.span()[1]
+    #                 tmp = body_clean[begin:end]
+    #                 if match.group()[0] not in [" ", "\t", "\n"]:
+    #                     break
+    #             return ret
+
+    #         if expand_right():
+    #             did_expand = True
+    #             if match and match[0][0] in [";", ","]:
+    #                 break
+    #             if match := regex.match(r"^\.|->", body_clean, pos=end-1):
+    #                 end = match.span()[1]
+    #                 if read_next():
+    #                     name = match.group() # should be a word
+    #                     if not name or not prev_type or name not in _globals.fields[prev_type]:
+    #                         # no info about this member
+    #                         while expand_right():
+    #                             pass
+    #                         end = match.span()[1] if match else len(body_clean)
+    #                         continue
+    #                     defn = _globals.fields[prev_type][name]
+    #                     if defn.is_private and defn.module != module:
+    #                         print(f"Access to private member {prev_type}.{name} from module '{module}' ({body_clean[begin:end]})")
+    #                     if not defn.details or not defn.details.recordKind:
+    #                         # no type info
+    #                         while expand_right():
+    #                             pass
+    #                         end = match.span()[1] if match else len(body_clean)
+    #                         continue
+    #                     prev_type = _globals.untypedef(get_base_type(defn.details.recordKind))
+    #                 else:
+    #                     pass # ignore error
+    #             else:
+    #                 pass # ignore error
+    #         elif expand_left():
+    #             did_expand = True
+    #             if match[0][0] == "(":
+    #                 # type cast
+    #                 type_txt = match[0][1:-1]
+    #                 type_end = len(type_txt)
+    #                 while match := reg_token_r.match(type_txt, endpos=type_end):
+    #                     if match.group()[0] not in ["[", "(", "{", " ", "\t", "\n", "*"]:
+    #                         break
+    #                     type_end = match.span()[0]
+    #                 if match:
+    #                     # should be a word
+    #                     prev_type = _globals.untypedef(match.group())
+    #                 # TODO: check access to the type
+
+    #         if not did_expand:
+    #             # check if bounded by ( ) on both sides
+    #             if begin > 0 and end < len(body_clean) and body_clean[begin-1] == "(" and body_clean[end] == ")":
+    #                 did_expand = True
+    #                 begin -= 1
+    #                 end += 1
+
+    #         tmp = body_clean[begin:end]
 
 # Enable to run as a standalone script
 if __name__ == "__main__":

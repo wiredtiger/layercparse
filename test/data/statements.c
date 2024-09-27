@@ -1,4 +1,10 @@
 
+int __attribute__((xxx)) func(int a, int b) {
+  int x;
+  x = a + b;
+  return (x);
+}
+
 func(5,6);
 
 return func(5,6);
@@ -15,6 +21,10 @@ a, b;
 *a;
 
 *a, *b;
+
+a = b;
+
+*a = *b;
 
 x = 5 + 8;
 

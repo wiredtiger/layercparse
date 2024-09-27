@@ -5,11 +5,12 @@ from copy import deepcopy
 import regex
 from glob import glob
 
-re_arg = r'''(?(DEFINE)(?<TOKEN>
+re_token = r'''(?(DEFINE)(?<TOKEN>
     (?>\n) |
     [\r\t ]++ |
     [;]++ |
     (?>,) |           ########### Add : and ? here?
+    (?>\\.) |
     (?>[-=+%&|^~.?:*]) |
     (?> (?:\#|\/\/) (?:[^\\\n]|\\.)*+ \n) |
     (?> \/\* (?:[^*]|\*[^\/])*+ \*\/ ) |
@@ -18,13 +19,14 @@ re_arg = r'''(?(DEFINE)(?<TOKEN>
     (?> \{ (?&TOKEN)* \} ) |
     (?> \( (?&TOKEN)* \) ) |
     (?> \[ (?&TOKEN)* \] ) |
-    (?>(?:[^-=+%&|^~.?:*\[\](){};,\#\s"'\/]|\/[^\/\*])++)
+    (?>(?:[^-=+%&|^~.?:*\[\](){};,\\\#\s"'\/]|\/[^\/\*])++)
 ))''' # /nxs;
 
 regex.DEFAULT_VERSION = regex.RegexFlag.VERSION1
 re_flags = regex.RegexFlag.VERSION1 | regex.RegexFlag.DOTALL | regex.RegexFlag.VERBOSE # | regex.RegexFlag.POSIX
 
-reg = regex.compile(r"(?&TOKEN)"+re_arg, re_flags)
+reg_token = regex.compile(r"(?&TOKEN)"+re_token, re_flags)
+reg_token_r = regex.compile(r"(?&TOKEN)"+re_token, re_flags | regex.RegexFlag.REVERSE)
 
 Range: TypeAlias = tuple[int, int]
 
@@ -38,9 +40,22 @@ c_statement_keywords = [
 ]
 reg_statement_keyword = regex.compile(r"^(?:" + "|".join(c_statement_keywords) + r")$", re_flags)
 
-c_operators_all = ["=", "+", "-", "%", "&", "|", "^", "~", ".", "?", ":", "*"]
-c_operators = ["=", "+", "-", "%", "&", "|", "^", "~", ".", "?", ":"] # , "*"
-reg_c_operators = regex.compile(r"(?:" + "|".join([regex.escape(op) for op in c_operators]) + r")", re_flags)
+c_types = ["void", "char", "short", "int", "long", "float", "double", "signed", "unsigned",
+           "bool", "size_t", "ssize_t", "ptrdiff_t", "intptr_t", "uintptr_t", "int8_t", "int16_t", "int32_t", "int64_t",
+           "uint8_t", "uint16_t", "uint32_t", "uint64_t", "int_least8_t", "int_least16_t", "int_least32_t", "int_least64_t",
+           "uint_least8_t", "uint_least16_t", "uint_least32_t", "uint_least64_t", "int_fast8_t", "int_fast16_t", "int_fast32_t",
+           "int_fast64_t", "uint_fast8_t", "uint_fast16_t", "uint_fast32_t", "uint_fast64_t", "intmax_t", "uintmax_t",
+           "wchar_t", "char16_t", "char32_t",
+           "__int128", "__uint128", "__float80", "__float128", "__float16", "__float32", "__float64", "__float128",
+           "__int64", "__uint64", "__int32", "__uint32", "__int16", "__uint16", "__int8", "__uint8",]
+
+ignore_macros = ["__attribute__", "__extension__", "__restrict__", "__restrict", "__inline__", "__inline", "__asm__", "__asm",
+    "WT_GCC_FUNC_DECL_ATTRIBUTE", "WT_GCC_FUNC_ATTRIBUTE", "WT_INLINE", "wt_shared"]
+
+c_operators_all = ["=", "+", "-", "%", "&", "|", "^", "~", ".", "?", ":", "*", ">", "<"] # "/", "!", ",", ";"
+c_operators_no_star = ["=", "+", "-", "%", "&", "|", "^", "~", ".", "?", ":", ">", "<"] # , "*"
+c_operators_no_dash = ["=", "+", "%", "&", "|", "^", "~", ".", "?", ":", "*", ">", "<"]
+reg_c_operators = regex.compile(r"(?:" + "|".join([regex.escape(op) for op in c_operators_no_star]) + r")", re_flags)
 
 re_clean = r'''(
     (?> (?:\#|\/\/) (?:[^\\\n]|\\.)*+ \n) |
@@ -50,3 +65,7 @@ re_clean = r'''(
 )''' # /nxs;
 reg_clean = regex.compile(re_clean, re_flags)
 reg_cr = regex.compile(r"""[^\n]""", re_flags)
+
+def file_content(fname: str) -> str:
+    with open(fname) as file:
+        return file.read()

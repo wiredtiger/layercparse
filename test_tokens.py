@@ -1,16 +1,13 @@
 #!/usr/bin/env python3
 
+from dataclasses import dataclass, field
 from semanticc import *
-import sys
+import sys, os
 from pprint import pprint, pformat
 
 from typing import Union, Any, Optional, TYPE_CHECKING, cast, Iterator, TypeAlias, Generator, Iterable
 
 import multiprocessing
-
-def file_content(fname: str) -> str:
-    with open(fname) as file:
-        return file.read()
 
 def pf(obj: Any) -> str:
     return pformat(obj, width=120, compact=False)
@@ -45,7 +42,8 @@ def print_statement_from_file(fname: str) -> str:
     a = []
     a.append(f" === File: {fname}")
     with ScopePush(file=File(fname)):
-        a.append(print_statement_from_text(file_content(fname)))
+        txt = file_content(fname)
+        a.append(print_statement_from_text(txt))
     return "\n".join(a)
 
 
@@ -53,11 +51,21 @@ def main():
     # for fname in get_files(sys.argv[1]):
     #     print_statement_from_file(fname)
 
-    multiprocessing.set_start_method('fork')  # 'fork' is faster than 'spawn'
-    with multiprocessing.Pool() as pool:
-        for res in pool.starmap(print_statement_from_file, ((f,) for f in get_files(sys.argv[1]))):
-            print(res)
+    # multiprocessing.set_start_method('fork')  # 'fork' is faster than 'spawn'
+    # with multiprocessing.Pool() as pool:
+    #     for res in pool.starmap(print_statement_from_file, ((f,) for f in get_files(sys.argv[1]))):
+    #         print(res)
 
+    globals = Codebase()
+    for fname in get_files(sys.argv[1]):
+        globals.updateFromFile(fname)
+
+    pprint(globals, width=120, compact=False)
+
+    print(" ===== Access check:")
+    access = AccessCheck(globals)
+    for err in access.checkAccess():
+        print(err)
 
 if __name__ == "__main__":
     main()

@@ -5,7 +5,6 @@ from typing import Iterable
 
 from .ctoken import *
 
-
 @dataclass
 class StatementKind:
     is_comment: bool | None = None
@@ -50,6 +49,15 @@ class StatementKind:
 
         # Only get here if we have a non-empty token
         clean_tokens = tokens.filterCode()
+
+        i = 0
+        while i < len(clean_tokens):
+            if clean_tokens[i].value in ignore_macros:
+                clean_tokens.pop(i)
+                if clean_tokens[i].value[0] == "(":
+                    clean_tokens.pop(i)
+            i += 1
+
         if not clean_tokens:
             return ret
 
@@ -83,14 +91,15 @@ class StatementKind:
 
         # Not a typedef or record
 
-        first_is_type = bool(reg_type.match(clean_tokens[0].value))
+        first_is_type = bool(reg_identifier.match(clean_tokens[0].value))
 
         if len(clean_tokens) == 1:
-            if first_is_type:
-                # ret.is_decl = True
-                ret.is_expression = True
-            elif clean_tokens[0].value in ["(", "[", "{"] or clean_tokens[0].value in c_operators_all:
-                ret.is_expression = True
+            # if first_is_type:
+            #     # ret.is_decl = True
+            #     ret.is_expression = True
+            # elif clean_tokens[0].value in ["(", "[", "{"] or clean_tokens[0].value in c_operators_all:
+            #     ret.is_expression = True
+            ret.is_expression = True
             return ret
 
         # There are at least two tokens

@@ -7,7 +7,7 @@ from .statement import *
 from .variable import *
 from .workspace import *
 
-class RecordType(enum.Enum):
+class RecordKind(enum.Enum):
     UNDEF = 0
     STRUCT = enum.auto()
     UNION = enum.auto()
@@ -15,8 +15,9 @@ class RecordType(enum.Enum):
 
 @dataclass
 class RecordParts:
-    type: RecordType
-    name: Token | None = None
+    recordKind: RecordKind
+    name: Token
+    typename: TokenList
     body: Token | None = None
     members: list[Variable] | None = None
     typedefs: list[Variable] | None = None
@@ -26,6 +27,20 @@ class RecordParts:
     nested: 'list[RecordParts] | None' = None
     parent: 'RecordParts | None' = None
 
+    def short_repr(self) -> str:
+        ret = ["Record(", self.name.value, " : ", repr(self.recordKind)]
+        if self.members:
+            ret.extend(["".join(["\n  member: "+x.short_repr() for x in self.members])])
+        if self.typedefs:
+            ret.extend(["".join(["\n  typedef: "+x.short_repr() for x in self.typedefs])])
+        if self.vardefs:
+            ret.extend(["".join(["\n  vardef: "+x.short_repr() for x in self.vardefs])])
+        if self.nested:
+            # ret.extend(["".join(["\n  nested: "+x.short_repr() for x in self.nested])])
+            ret.extend(["".join(["\n  nested: "+x.name.value for x in self.nested])])
+        ret.append(")")
+        return "".join(ret)
+
     def _getBodyOffset(self) -> int:
         ret = 0
         if self.body:
@@ -34,10 +49,32 @@ class RecordParts:
             ret += self.parent._getBodyOffset()
         return ret + scope_offset()
 
+    def update(self, other: 'RecordParts') -> list[str]:
+        errors = []
+        if self.recordKind != other.recordKind:
+            errors.append(f"ERROR: record type mismatch for {self.name.value}: {self.recordKind} != {other.recordKind}")
+        if self.name != other.name:
+            errors.append(f"ERROR: record name mismatch for {self.name.value}: {self.name.value} != {other.name.value}")
+        # if self.typename != other.typename:
+        #     errors.append(f"ERROR: record name mismatch for {self.typename.value}: {self.typename.value} != {other.typename.value}")
+        if self.body is not None and other.body is not None and self.body != other.body:
+            errors.append(f"ERROR: record redifinition: {self.name.value}")
+        elif other.body is not None:
+            self.body = other.body
+            self.members = other.members
+            self.typedefs = other.typedefs
+            self.vardefs = other.vardefs
+            self.nested = other.nested
+        if self.preComment is None:
+            self.preComment = other.preComment
+        if self.postComment is None:
+            self.postComment = other.postComment
+        return errors
+
     @staticmethod
     def fromStatement(st: Statement, parent: 'RecordParts | None' = None) -> 'RecordParts | None':
         tokens = st.tokens
-        ret = RecordParts(RecordType.UNDEF, parent=parent)
+        ret = RecordParts(RecordKind.UNDEF, Token(-1, (0,0), ""), TokenList([]), parent=parent)
 
         ret.preComment, i = get_pre_comment(tokens)
 
@@ -46,15 +83,16 @@ class RecordParts:
             if token.value == "typedef":
                 ret.typedefs = []
             elif token.value == "struct":
-                ret.type = RecordType.STRUCT
+                ret.recordKind = RecordKind.STRUCT
             elif token.value == "union":
-                ret.type = RecordType.UNION
+                ret.recordKind = RecordKind.UNION
             elif token.value == "enum":
-                ret.type = RecordType.ENUM
+                ret.recordKind = RecordKind.ENUM
             elif token.value in c_type_keywords:
                 pass
             elif reg_identifier.match(token.value):
                 ret.name = token
+                ret.typename = TokenList([token])
             elif token.value[0] == "{":
                 ret.body = Token(token.idx, (token.range[0]+1, token.range[1]-1), token.value[1:-1])
                 break
@@ -66,12 +104,13 @@ class RecordParts:
 
         # vars or types list
         names: list[Variable] = []
-        if ret.name is None:
+        if not ret.name.value:
             ret.name = Token(ret.body.idx, ret.body.range, f"({scope_filename()}:{ret._getBodyOffset()})")
+            ret.typename = TokenList([ret.name])
         for stt in StatementList.xFromTokens(TokenList(tokens[i+1:])):
             var = Variable.fromVarDef(stt.tokens)
             if var:
-                var.type = TokenList([ret.name])
+                var.typename = ret.typename
                 names.append(var)
 
         if ret.typedefs is not None:
@@ -107,10 +146,10 @@ class RecordParts:
 
             var = Variable.fromVarDef(st.tokens)
             if var:
-                if not var.type:
-                    var.type = saved_type
+                if not var.typename:
+                    var.typename = saved_type
                 yield var
-                saved_type = var.type if var.end == "," else None
+                saved_type = var.typename if var.end == "," else None
             else:
                 saved_type = None
 

@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Iterable
 
 from . import common
@@ -7,19 +7,22 @@ from .internal import *
 @dataclass
 class Token:
     """One token in the source code"""
-    idx: int       # Index in the original stream of tokens
-    range: Range   # Character range in the original text
-    value: str     # Text value
+    idx: int = field(compare=False)     # Index in the original stream of tokens
+    range: Range = field(compare=False) # Character range in the original text
+    value: str                          # Text value
 
 class TokenList(list[Token]):
     """List of tokens"""
     def range(self) -> Range:
         return (self[0].range[0], self[-1].range[1]) if len(self) > 0 else (0, 0)
 
+    def short_repr(self) -> str:
+        return " ".join([t.value for t in self])
+
     @staticmethod
     def xFromText(txt: str) -> Iterable[Token]:
         i = 0
-        for x in reg.finditer(txt):
+        for x in reg_token.finditer(txt):
             yield Token(i, x.span(), x[0])
             i += 1
     @staticmethod

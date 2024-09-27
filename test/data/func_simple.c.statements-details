@@ -18,7 +18,7 @@ Statement(tokens=[0:33] 〈int⌇ ⌇func⌇(void)⌇ ⌇{
                              preComment=None,
                              postComment=None))
 Function:
-FunctionParts(retType=[0:3] 〈int〉,
+FunctionParts(typename=[0:3] 〈int〉,
               name=Token(idx=2, range=(4, 8), value='func'),
               args=Token(idx=3, range=(9, 13), value='void'),
               body=Token(idx=5, range=(16, 31), value='\n    int a, b;\n'),
@@ -27,5 +27,13 @@ FunctionParts(retType=[0:3] 〈int〉,
 Args:
 []
 Vars:
-[Variable(name=Token(idx=4, range=(9, 10), value='a'), type=[5:8] 〈int〉, preComment=None, postComment=None, end=','),
- Variable(name=Token(idx=7, range=(12, 13), value='b'), type=[5:8] 〈int〉, preComment=None, postComment=None, end=';')]
+[Variable(name=Token(idx=4, range=(9, 10), value='a'),
+          typename=[5:8] 〈int〉,
+          preComment=None,
+          postComment=None,
+          end=','),
+ Variable(name=Token(idx=7, range=(12, 13), value='b'),
+          typename=[5:8] 〈int〉,
+          preComment=None,
+          postComment=None,
+          end=';')]
