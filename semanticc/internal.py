@@ -1,5 +1,5 @@
 import enum
-from typing import Union, Any, Optional, TYPE_CHECKING, cast, Iterator, TypeAlias, Generator, Iterable, Callable, NamedTuple, TypedDict
+from typing import Union, Any, Optional, TYPE_CHECKING, cast, Iterator, TypeAlias, Generator, Iterable, Callable, NamedTuple, TypedDict, Literal
 from dataclasses import dataclass
 from copy import deepcopy
 import regex
@@ -67,13 +67,15 @@ ignore_macros = ["__attribute__", "__extension__", "__restrict__", "__restrict",
 c_operators_1c_all = ["=", "+", "-", "%", "&", "|", "^", "~", ".", "?", ":", "*", ">", "<"] # "/", "!", ",", ";", "~"
 c_operators_1c_no_star = ["=", "+", "-", "%", "&", "|", "^", "~", ".", "?", ":", ">", "<"]
 c_operators_1c_no_dash = ["=", "+", "%", "&", "|", "^", "~", ".", "?", ":", "*", ">", "<"]
-c_ops_all = [
+c_ops_all = (
     "<<=", ">>=",
     "++", "--", "->", "++", "--", "<<", ">>", "<=", ">=", "==", "!=", "&&", "||", "+=", "-=", "*=", "/=", "%=", "&=", "^=", "|=",
     ".", "+", "-", "!", "~", "*", "&", "*", "/", "%", "+", "-", "<", ">", "&", "^", "|", "?", ":", "=",
     ",", ";",
     #",", "sizeof", "_Alignof", "(",")", "[","]", "(type)", ";",
-]
+)
+
+reg_member_access = regex.compile(r"^\.|->", re_flags)
 
 # reg_c_operators = regex.compile(r"(?:" + "|".join([regex.escape(op) for op in c_operators_1c_no_star]) + r")", re_flags)
 
@@ -89,3 +91,33 @@ reg_cr = regex.compile(r"""[^\n]""", re_flags)
 def file_content(fname: str) -> str:
     with open(fname) as file:
         return file.read()
+
+
+TokenKind: TypeAlias = Literal[
+        "",   # undefined
+        " ",  # space
+        "/",  # comment
+        "w",  # word
+        "+",  # operator
+        "'",  # string
+        "(",  # ()
+        "{",  # {}
+        "[",  # []
+        "#",  # preproc
+        ";"]  # end of expression: , or ;
+
+_re_word_char = regex.compile(r"\w", re_flags)
+
+def getTokenKind(txt: str) -> TokenKind:
+    return \
+        " " if txt.startswith((" ", "\t", "\n")) else \
+        "/" if txt.startswith(("//", "/*")) else \
+        "'" if txt.startswith(("'", '"')) else \
+        "(" if txt.startswith("(") else \
+        "{" if txt.startswith("{") else \
+        "[" if txt.startswith("[") else \
+        "#" if txt.startswith("#") else \
+        ";" if txt in [",", ";"] else \
+        "+" if txt in c_ops_all else \
+        "w" if _re_word_char.match(txt) else \
+        ""

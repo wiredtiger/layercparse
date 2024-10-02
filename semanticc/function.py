@@ -42,7 +42,7 @@ class FunctionParts:
         while i < len(tokens):
             if tokens[i].value in ignore_macros:
                 tokens.pop(i)
-                if tokens[i].value[0] == "(":
+                if tokens[i].getKind() == "(":
                     tokens.pop(i)
             i += 1
 
@@ -54,12 +54,12 @@ class FunctionParts:
         argsList = None
         for i in range(i, len(tokens)):
             token = tokens[i]
-            if token.value[0] == "(":
+            if token.getKind() == "(":
                 if retType:
                     funcName = retType.pop()
                 argsList = Token(token.idx, (token.range[0]+1, token.range[1]-1), token.value[1:-1])
                 break
-            if token.value[0] not in [" ", "\t", "\n", "#", "/"]:
+            if token.getKind() not in [" ", "#", "/"]:
                 retType.append(token)
         if funcName is None or argsList is None:
             return None
@@ -94,7 +94,7 @@ class FunctionParts:
             t = st.getKind()
             if saved_type is None and (t.is_statement or (t.is_expression and not t.is_initialization)):
                 break
-            if saved_type is not None or (t.is_decl and not t.is_function):
+            if saved_type is not None or (t.is_decl and not t.is_function and not t.is_record):
                 var = Variable.fromVarDef(st.tokens)
                 if var:
                     if not var.typename:

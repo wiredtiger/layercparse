@@ -1,4 +1,5 @@
 import enum
+import regex
 from dataclasses import dataclass, field
 from typing import Iterable
 
@@ -11,6 +12,13 @@ class Token:
     idx: int = field(compare=False)     # Index in the original stream of tokens
     range: Range = field(compare=False) # Character range in the original text
     value: str                          # Text value
+    kind: TokenKind | None = field(default=None, repr=False)
+
+    def getKind(self) -> TokenKind:
+        if self.kind is not None:
+            return self.kind
+        self.kind = getTokenKind(self.value)
+        return self.kind
 
 class TokenList(list[Token]):
     """List of tokens"""
@@ -46,7 +54,7 @@ class TokenList(list[Token]):
     @staticmethod
     def xxFilterCode(tokens: Iterable[Token]) -> Iterable[Token]:
         for t in tokens:
-            if t.value[0] not in [" ", "\t", "\n", "#", "/", ",", ";"]:
+            if t.getKind() not in [" ", "#", "/", ";"]:
                 yield t
     def xFilterCode(self) -> Iterable[Token]:
         return TokenList.xxFilterCode(self)
@@ -55,7 +63,7 @@ class TokenList(list[Token]):
 
     def xFilterCode_r(self) -> Iterable[Token]:
         for t in reversed(self):
-            if t.value[0] not in [" ", "\t", "\n", "#", "/", ",", ";"]:
+            if t.getKind() not in [" ", "#", "/", ";"]:
                 yield t
     def filterCode_r(self) -> 'TokenList':
         return TokenList(self.xFilterCode_r())
@@ -64,9 +72,9 @@ class TokenList(list[Token]):
 def get_pre_comment(tokens: TokenList) -> tuple[Token | None, int]:
     for i in range(len(tokens)):
         token = tokens[i]
-        if token.value[0] in [" ", "\t", "\n"]:
+        if token.getKind() == " ":
             continue
-        if token.value[0] == "/":
+        if token.getKind() == "/":
             return (token, i+1)
         return (None, i)
     return (None, i+1)
@@ -74,9 +82,9 @@ def get_pre_comment(tokens: TokenList) -> tuple[Token | None, int]:
 
 def get_post_comment(tokens: TokenList) -> Token | None:
     for token in reversed(tokens):
-        if token.value[0] in [" ", "\t", "\n"]:
+        if token.getKind() == " ":
             continue
-        if token.value[0] == "/":
+        if token.getKind() == "/":
             return token
         return None
     return None

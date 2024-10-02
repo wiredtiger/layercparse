@@ -183,7 +183,7 @@ class Codebase:
                     elif st.getKind().is_decl:
                         pass # TODO: global function and variable declarations
                     elif st.getKind().is_extern_c:
-                        body = next((t for t in st.tokens if t.value[0] == "{"), None)
+                        body = next((t for t in st.tokens if t.value.startswith("{")), None)
                         if body:
                             self.updateFromText(body.value[1:-1], offset=body.range[0]+1)
 
@@ -250,8 +250,6 @@ class AccessCheck:
 
         # If locals_dict is present, checking local names. Otherwise, checking global names.
         def _check_names_re(reg_name: Any, locals_dict: dict[str, Definition] | None) -> Iterable[str]:
-            if not reg_name:
-                return
             nonlocal self, body_clean, module
             for match in reg_name.finditer(body_clean):  # it's ok is some expressions overla: x1(x2->zz)->yy
                 name = match.group()
@@ -284,7 +282,7 @@ class AccessCheck:
                             ret = True
                             end = match.span()[1]
                             tmp = body_clean[begin:end]
-                            if match.group()[0] not in ["[", "(", "{", " ", "\t", "\n", "/"]:
+                            if getTokenKind(match.group()) not in ["[", "(", "{", " ", "/"]:
                                 break
                         return ret
 
@@ -296,7 +294,7 @@ class AccessCheck:
                             ret = True
                             begin = match.span()[0]
                             tmp = body_clean[begin:end]
-                            if match.group()[0] not in ["[", "{", " ", "\t", "\n", "/"]:
+                            if getTokenKind(match.group()) not in ["[", "{", " ", "/"]:
                                 break
                         return ret
 
@@ -308,21 +306,15 @@ class AccessCheck:
                             ret = True
                             end = match.span()[1]
                             tmp = body_clean[begin:end]
-                            if match.group()[0] not in [" ", "\t", "\n", "/"]:
+                            if getTokenKind(match.group()) not in [" ", "/"]:
                                 break
                         return ret
 
                     if expand_right():
-                        if match and match[0][0] in [";", ","]:
+                        if match and match[0] in [";", ","]:
                             break
                         did_expand = True
-                        if match and match[0][0] in c_operators_1c_no_dash:
-                            while expand_right() and match and match[0][0] not in [";", ",", "?", "{"]:
-                                print(f"<{match[0]}>")
-                                pass # Expand to the end of the expression to try to get up a level
-                            if match and match[0][0] in [";", ",", "?", "{"]:
-                                break
-                        elif match := regex.match(r"^\.|->", body_clean, pos=end-1):
+                        if match and match[0] in [".", "->"]:
                             end = match.span()[1]
                             if read_next():
                                 name = match.group() # should be a word
@@ -342,16 +334,22 @@ class AccessCheck:
                                     end = match.span()[1] if match else len(body_clean)
                                     continue
                                 prev_type = self._globals.untypedef(get_base_type(defn.details.typename))
+                        elif match and match[0] in c_ops_all:
+                            while expand_right() and match and not match[0].startswith((";", ",", "?", "{")):
+                                print(f"<{match[0]}>")
+                                pass # Expand to the end of the expression to try to get up a level
+                            if match and match[0].startswith((";", ",", "?", "{")):
+                                break
                     elif expand_left():
-                        if match and match[0][0] in [";", ",", "?", ":", "{"]:
+                        if match and match[0].startswith((";", ",", "?", ":", "{")):
                             break
                         did_expand = True
-                        if match and match[0][0] == "(":
+                        if match and match[0].startswith("("):
                             # type cast
                             type_txt = match[0][1:-1]
                             type_end = len(type_txt)
                             while match := reg_token_r.match(type_txt, endpos=type_end):
-                                if match.group()[0] not in ["[", "(", "{", " ", "\t", "\n", "*"]:
+                                if not match.group().startswith(("[", "(", "{", " ", "\t", "\n", "*")):
                                     break
                                 type_end = match.span()[0]
                             if match:
@@ -373,10 +371,13 @@ class AccessCheck:
 
         # Check global names
         reg_name = self.getInvisibleNamesForModule(module)
-        yield from _check_names_re(reg_name, {})
-        # reg_name = regex.compile(r"\b(" + "|".join((v for v in localvars)) + r")\s*+(?:->|\.|\()", re_flags)
-        reg_name = regex.compile(r"(?<!(?:->|\.)\s*+)\b(" + "|".join((v for v in localvars)) + r")\b", re_flags)
-        yield from _check_names_re(reg_name, localvars)
+        if reg_name:
+            yield from _check_names_re(reg_name, {})
+
+        if localvars:
+            # reg_name = regex.compile(r"\b(" + "|".join((v for v in localvars)) + r")\s*+(?:->|\.|\()", re_flags)
+            reg_name = regex.compile(r"(?<!(?:->|\.)\s*+)\b(" + "|".join((v for v in localvars)) + r")\b", re_flags)
+            yield from _check_names_re(reg_name, localvars)
 
     # Go through function bodies. Check calls and struct member accesses.
     def checkAccess(self) -> Iterable[str]:

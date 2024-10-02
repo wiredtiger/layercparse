@@ -30,6 +30,8 @@ x = 5 + 8;
 
 int x = 5 + 8;
 
+__vector unsigned long long __v = {__a, __b};
+
 /* comment */
 /*
  * block comment

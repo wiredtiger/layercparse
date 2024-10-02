@@ -29,19 +29,19 @@ class StatementKind:
         if not tokens:
             return ret
         for token in tokens:
-            if token.value[0] in [" ", "\t", "\n"]:
+            if token.getKind() == " ":
                 continue
-            if token.value[0] == "/":
+            if token.getKind() == "/":
                 ret.is_comment = True
                 ret.preComment = token
                 continue
-            if token.value[0] == "#":
+            if token.getKind() == "#":
                 ret.is_preproc = True
                 return ret
             if token.value in c_statement_keywords:
                 ret.is_statement = True
                 return ret
-            if token.value[0] not in [" ", "\t", "\n", "#", "/"]:
+            if token.getKind() not in [" ", "#", "/"]:
                 break
         else:
             # we get here if "break" was not executed
@@ -54,7 +54,7 @@ class StatementKind:
         while i < len(clean_tokens):
             if clean_tokens[i].value in ignore_macros:
                 clean_tokens.pop(i)
-                if clean_tokens[i].value[0] == "(":
+                if clean_tokens[i].getKind() == "(":
                     clean_tokens.pop(i)
             i += 1
 
@@ -75,7 +75,7 @@ class StatementKind:
             ret.is_extern_c = True
             return ret
 
-        curly = next((True for token in clean_tokens if token.value[0] == "{"), False)
+        curly = next((True for token in clean_tokens if token.getKind() == "{"), False)
         if clean_tokens[0].value == "typedef":
             ret.is_typedef = True
             clean_tokens.pop(0)
@@ -94,11 +94,6 @@ class StatementKind:
         first_is_type = bool(reg_identifier.match(clean_tokens[0].value))
 
         if len(clean_tokens) == 1:
-            # if first_is_type:
-            #     # ret.is_decl = True
-            #     ret.is_expression = True
-            # elif clean_tokens[0].value in ["(", "[", "{"] or clean_tokens[0].value in c_operators_all:
-            #     ret.is_expression = True
             ret.is_expression = True
             return ret
 
@@ -110,12 +105,12 @@ class StatementKind:
                 next_next_word = next((token for token in clean_tokens if token.idx > next_word.idx and token.value != "*"), None)
                 if reg_type.match(next_word.value):
                     ret.is_decl = True
-                elif next_word.value in ["(", "[", "{"] and next_next_word and reg_type.match(next_next_word.value):
+                elif next_word.value.startswith(("(", "[", "{")) and next_next_word and reg_type.match(next_next_word.value):
                     ret.is_decl = True
 
         for i in range(1, len(clean_tokens)):
             token = clean_tokens[i]
-            if token.value[0] == "(":
+            if token.value.startswith("("):
                 if reg_identifier.match(clean_tokens[i-1].value):   # word followed by (
                     ret.is_function = True
                     if ret.is_decl:
@@ -126,7 +121,7 @@ class StatementKind:
 
         for i in range(1, len(clean_tokens)-1):
             token = clean_tokens[i]
-            if token.value[0] == "=":
+            if token.value == "=":
                 ret.is_expression = True
                 if ret.is_decl:
                     ret.is_initialization = True
@@ -204,20 +199,20 @@ class StatementList(list[Statement]):
                     if tokens[ii].value == "else":
                         else_idx = ii
                         return True
-                    if tokens[ii].value[0] == ";" or tokens[ii].value[0] not in [" ", "\t", "\n", "#", "/"]:
+                    if tokens[ii].value.startswith(";") or tokens[ii].getKind() not in [" ", "#", "/"]:
                         else_idx = ii
                         return False
 
             token = tokens[i]
-            if (complete and token.value[0] not in ["/", " ", "\t", "\n"]) or \
-               (comment_only and token.value[0] == "/"):
+            if (complete and token.getKind() not in [" ", "/"]) or \
+               (comment_only and token.getKind() == "/"):
                     yield push_statement()
 
-            if comment_only is None and token.value[0] == "/":
+            if comment_only is None and token.getKind() == "/":
                 comment_only = True
-            elif comment_only is not False and token.value[0] not in ["/", " ", "\t", "\n"]:
+            elif comment_only is not False and token.getKind() not in [" ", "/"]:
                 comment_only = False
-            if not is_expr and token.value in c_operators_1c_all and i < len(tokens)-1 and tokens[i+1].value in [" ", "\t", "\n"]:
+            if not is_expr and token.value in c_operators_1c_all and i < len(tokens)-1 and tokens[i+1].getKind() == " ":
                 is_expr = True
 
             # print(f"i={i}, stype={stype}, token=<{token.value}>, is_thing={is_thing}, is_word={is_word}, is_type={is_type}")
@@ -233,16 +228,16 @@ class StatementList(list[Statement]):
 
             cur.append(token)
 
-            if (complete and token.value == "\n") or token.value[0] == "#": # preproc is always a single token
+            if (complete and token.value == "\n") or token.getKind() == "#": # preproc is always a single token
                 yield push_statement()
                 continue
 
             if token.value[0] not in [";", ",", "{"]:  # Any statement ends with one of these
                 continue
 
-            if token.value[0] == "{":
+            if token.value.startswith("{"):
                 curly = True
-            elif token.value[0] in [";", ","] and statement_special == 2:
+            elif token.value in [";", ","] and statement_special == 2:
                 if is_record and not curly:
                     is_record = False
                     statement_special = 0

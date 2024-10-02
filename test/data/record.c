@@ -9,7 +9,7 @@ struct S2 {
 };
 
 /* #private */
-S1 *__wti_module2_func1(S2 * s2) {
+S1 *__wti_module2_func1(S2 *s2) {
     return &s2->s;
 }
 

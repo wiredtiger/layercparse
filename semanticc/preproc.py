@@ -13,7 +13,7 @@ class PreprocParts:
     @staticmethod
     def fromStatement(statement: Statement) -> 'PreprocParts':
         for token in statement.tokens:
-            if token.value[0] in [" ", "\t", "\n", "/"]:
+            if token.getKind() in [" ", "/"]:
                 continue
             if token.value.startswith("#define ") or token.value.startswith("#define\t"):
                 return PreprocParts(is_define=True)
@@ -33,10 +33,10 @@ class DefineParts:
     def fromStatement(statement: Statement) -> 'DefineParts | None':
         preComment = None
         for token in statement.tokens:
-            if not preComment and token.value[0] == "/":
+            if not preComment and token.getKind() == "/":
                 preComment = token
                 continue
-            if token.value[0] in [" ", "\t", "\n", "/"]:
+            if token.getKind() in [" ", "/"]:
                 continue
             if token.value.startswith("#define ") or token.value.startswith("#define\t"):
                 break
@@ -48,7 +48,7 @@ class DefineParts:
         # Find name
         i = 0
         for token in TokenList.xFromText(txt):
-            if token.value[0] in [" ", "\t", "\n"]:
+            if token.getKind() == " ":
                 continue
             if reg_identifier.match(token.value):
                 ret = DefineParts(name=token, preComment=preComment)
@@ -65,7 +65,7 @@ class DefineParts:
         if token is None:
             return ret
 
-        if token.value[0] == "(":
+        if token.getKind() == "(":
             ret.args = token
             txt = txt[token.range[1]:]
 

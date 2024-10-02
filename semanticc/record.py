@@ -93,10 +93,10 @@ class RecordParts:
             elif reg_identifier.match(token.value):
                 ret.name = token
                 ret.typename = TokenList([token])
-            elif token.value[0] == "{":
+            elif token.getKind() == "{":
                 ret.body = Token(token.idx, (token.range[0]+1, token.range[1]-1), token.value[1:-1])
                 break
-            elif token.value[0] in [";", ","]:
+            elif token.getKind() == ";":
                 return None
 
         if not ret.body:

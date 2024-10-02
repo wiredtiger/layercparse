@@ -74,6 +74,10 @@ class TestCaseLocal(unittest.TestCase):
                     self.assertIsNotNone(body)
                     if body:
                         a.append(self.parseDetailsFromText(body.value[1:-1], offset=body.range[0]+1))
+                elif st.getKind().is_decl and not st.getKind().is_function and not st.getKind().is_record:
+                    var = Variable.fromVarDef(st.tokens)
+                    if var:
+                        a.extend(["Variable:", pf(var)])
         return "\n".join(a)
 
     def parseDetailsFromFile(self, fname: str) -> str:

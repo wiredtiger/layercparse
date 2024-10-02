@@ -20,9 +20,9 @@ def linepos(txt: str, pos: int | None = None) -> int:
 # Remove comments and preprocessor directives, preserving newlines and text size
 def clean_text_sz(txt: str):
     return reg_clean.sub(
-        lambda match: reg_cr.sub(" ", match[0]) if match[0][0] in ["#", "/"] else match[0],
+        lambda match: reg_cr.sub(" ", match[0]) if getTokenKind(match[0]) in ["#", "/"] else match[0],
         txt)
 
 # Remove comments and preprocessor directives
 def clean_text(txt: str):
-    return reg_clean.sub(lambda match: " " if match[0][0] in ["#", "/"] else match[0], txt)
+    return reg_clean.sub(lambda match: " " if getTokenKind(match[0]) in ["#", "/"] else match[0], txt)

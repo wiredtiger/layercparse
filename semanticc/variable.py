@@ -35,19 +35,26 @@ class Variable:
     @staticmethod
     def fromVarDef(vardef: TokenList) -> 'Variable | None':
         """Get the variable name from C declaration."""
-        clean_tokens = list(itertools.takewhile(
-            lambda x: x.value[0] not in ["=", "+", "-", "/", "%", ">", "<", "!", "&", "|", "^", "~", "?", ":", ",", ";"],
-            vardef.xFilterCode()))
-        if len(clean_tokens) == 1 and clean_tokens[0].value in ["...", "void"]:
+        # clean_tokens = list(itertools.takewhile(
+        #     lambda x: x.value[0] not in ["=", "+", "-", "/", "%", ">", "<", "!", "&", "|", "^", "~", "?", ":", ",", ";"],
+        #     vardef.xFilterCode()))
+        clean_tokens = vardef.filterCode()
+        for i in range(1, len(clean_tokens)-1):
+            if clean_tokens[i].getKind() == "+" and \
+                    clean_tokens[i-1].getKind() in ["w", "("] and \
+                    clean_tokens[i+1].idx - clean_tokens[i].idx > 1:
+                clean_tokens = TokenList(clean_tokens[:i])
+                break
+        if not clean_tokens or (len(clean_tokens) == 1 and clean_tokens[0].value in ["...", "void"]):
             return None
         # find some words, skip standalone []s and *s
-        while clean_tokens and clean_tokens[-1].value[0] in ["*", "["]:
+        while clean_tokens and clean_tokens[-1].value.startswith(("*", "[")):
             clean_tokens.pop()
         # skip function arguments
         if clean_tokens and clean_tokens[-1].value[0].startswith("("):
             clean_tokens.pop()
         # find some words, skip standalone []s and *s
-        while clean_tokens and clean_tokens[-1].value[0] in ["*", "["]:
+        while clean_tokens and clean_tokens[-1].value.startswith(("*", "[")):
             clean_tokens.pop()
 
         # The last token contains the arg name
@@ -61,7 +68,7 @@ class Variable:
 
         end = None
         for token in reversed(vardef):
-            if token.value[0] in [" ", "\t", "\n", "/"]:
+            if token.getKind() in [" ", "/"]:
                 continue
             end = token.value if token.value in [",", ";"] else None
             break
