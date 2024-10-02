@@ -284,7 +284,7 @@ class AccessCheck:
                             ret = True
                             end = match.span()[1]
                             tmp = body_clean[begin:end]
-                            if match.group()[0] not in ["[", "(", "{", " ", "\t", "\n"]:
+                            if match.group()[0] not in ["[", "(", "{", " ", "\t", "\n", "/"]:
                                 break
                         return ret
 
@@ -296,7 +296,7 @@ class AccessCheck:
                             ret = True
                             begin = match.span()[0]
                             tmp = body_clean[begin:end]
-                            if match.group()[0] not in ["[", "{", " ", "\t", "\n"]:
+                            if match.group()[0] not in ["[", "{", " ", "\t", "\n", "/"]:
                                 break
                         return ret
 
@@ -308,7 +308,7 @@ class AccessCheck:
                             ret = True
                             end = match.span()[1]
                             tmp = body_clean[begin:end]
-                            if match.group()[0] not in [" ", "\t", "\n"]:
+                            if match.group()[0] not in [" ", "\t", "\n", "/"]:
                                 break
                         return ret
 
@@ -316,9 +316,12 @@ class AccessCheck:
                         if match and match[0][0] in [";", ","]:
                             break
                         did_expand = True
-                        if match and match[0][0] in c_operators_no_dash:
-                            while expand_right():
+                        if match and match[0][0] in c_operators_1c_no_dash:
+                            while expand_right() and match and match[0][0] not in [";", ",", "?", "{"]:
+                                print(f"<{match[0]}>")
                                 pass # Expand to the end of the expression to try to get up a level
+                            if match and match[0][0] in [";", ",", "?", "{"]:
+                                break
                         elif match := regex.match(r"^\.|->", body_clean, pos=end-1):
                             end = match.span()[1]
                             if read_next():
@@ -340,7 +343,7 @@ class AccessCheck:
                                     continue
                                 prev_type = self._globals.untypedef(get_base_type(defn.details.typename))
                     elif expand_left():
-                        if match and match[0][0] in [";", ","]:
+                        if match and match[0][0] in [";", ",", "?", ":", "{"]:
                             break
                         did_expand = True
                         if match and match[0][0] == "(":

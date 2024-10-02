@@ -114,6 +114,8 @@ class TestRegex(TestCaseLocal):
         self.assertListEqual(reg_token_r.findall(r"""int main(int argc, char *argv[]) {\n  int a = 1;\n  return a;\n}"""),
             list(reversed(['int', ' ', 'main', '(int argc, char *argv[])', ' ', '{\\n  int a = 1;\\n  return a;\\n}'])))
 
+print("qwer"[:1])
+
 
 class TestToken(TestCaseLocal):
     def test_token(self):

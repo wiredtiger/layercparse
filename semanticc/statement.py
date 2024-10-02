@@ -131,7 +131,7 @@ class StatementKind:
                 if ret.is_decl:
                     ret.is_initialization = True
                 break
-            elif token.value in c_operators_all:
+            elif token.value in c_operators_1c_all:
                 if token.value == "*" and clean_tokens[i+1].idx - token.idx == 1:
                     pass # pointer dereference
                 else:
@@ -217,7 +217,7 @@ class StatementList(list[Statement]):
                 comment_only = True
             elif comment_only is not False and token.value[0] not in ["/", " ", "\t", "\n"]:
                 comment_only = False
-            if not is_expr and token.value in c_operators_all and i < len(tokens)-1 and tokens[i+1].value in [" ", "\t", "\n"]:
+            if not is_expr and token.value in c_operators_1c_all and i < len(tokens)-1 and tokens[i+1].value in [" ", "\t", "\n"]:
                 is_expr = True
 
             # print(f"i={i}, stype={stype}, token=<{token.value}>, is_thing={is_thing}, is_word={is_word}, is_type={is_type}")
