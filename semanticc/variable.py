@@ -8,6 +8,9 @@ def get_base_type(clean_tokens: TokenList) -> str:
     type = TokenList((filter(lambda x: x.value not in c_type_keywords and x.value != "*", clean_tokens)))
     return type[-1].value if type else ""
 
+def get_base_type_str(clean_txt: str) -> str:
+    return get_base_type(TokenList(TokenList.xxFilterCode(TokenList.xFromText(clean_txt))))
+
 @dataclass
 class Variable:
     name: Token

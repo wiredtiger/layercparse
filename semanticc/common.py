@@ -26,3 +26,21 @@ def clean_text_sz(txt: str):
 # Remove comments and preprocessor directives
 def clean_text(txt: str):
     return reg_clean.sub(lambda match: " " if getTokenKind(match[0]) in ["#", "/"] else match[0], txt)
+
+class LogLevel(enum.IntEnum):
+    QUIET   = 0
+    FATAL   = 1
+    ERROR   = DEFAULT = 2
+    WARNING = 3
+    INFO    = 4
+    DEBUG   = DEBUG1 = 5
+    DEBUG2  = 6
+    DEBUG3  = 7
+    DEBUG4  = 8
+    DEBUG5  = 9
+
+logLevel = LogLevel.DEFAULT
+
+def setLogLevel(level: LogLevel):
+    global logLevel
+    logLevel = level

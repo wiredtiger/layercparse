@@ -31,8 +31,8 @@ class TokenList(list[Token]):
     @staticmethod
     def xFromText(txt: str) -> Iterable[Token]:
         i = 0
-        for x in reg_token.finditer(txt):
-            yield Token(i, x.span(), x[0])
+        for match in reg_token.finditer(txt):
+            yield Token(i, match.span(), match[0])
             i += 1
     @staticmethod
     def fromText(txt: str) -> 'TokenList':

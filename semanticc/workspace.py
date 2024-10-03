@@ -1,8 +1,11 @@
-from dataclasses import dataclass
+import regex
+from dataclasses import dataclass, field
 from typing import Iterable
 import itertools
 from glob import glob
 from os import path
+from bisect import bisect_left
+# print(bisect_left([10,20,30,40,50], 15))
 
 
 def get_file_priority(fname: str) -> int:
@@ -60,19 +63,45 @@ class File:
     name: str
     module: str | None = None
     # txt: str = ""
+    lineOffsets: list[int] | None = field(default=None, repr=False)
 
     def getModule(self) -> str:
         if self.module is None:
             self.module = fname_to_module(self.name)
         return self.module
 
+    # Create a mapping from offset to line number
+    def lineNumbers(self, txt: str) -> list[int]:
+        if self.lineOffsets is None:
+            self.lineOffsets = []
+            for match in regex.finditer(r"\n", txt):
+                self.lineOffsets.append(match.start())
+        return self.lineOffsets
+
+    def offsetToLinePos(self, offset: int) -> tuple[int, int]:
+        if not self.lineOffsets:
+            return (0, offset)
+        line = bisect_left(self.lineOffsets, offset)
+        return (line + 1,
+                offset - self.lineOffsets[line-1] if line > 0 else offset)
+
+    def offsetToLinePosStr(self, offset: int) -> str:
+        line, pos = self.offsetToLinePos(offset)
+        return f"{line}:{pos}"
+
+    def locationStr(self, offset: int) -> str:
+        return f"{self.name}:{self.offsetToLinePosStr(offset)}"
 
 @dataclass
 class _Scope:
     file: File
-    offset: int
+    offset: int  # Offset in the file
     # txt: str | None = None
 
+    def offsetToLinePos(self, offset: int) -> tuple[int, int]:
+        return self.file.offsetToLinePos(self.offset + offset)
+    def offsetToLinePosStr(self, offset: int) -> str:
+        return self.file.offsetToLinePosStr(self.offset + offset)
 
 @dataclass
 class _ScopeStack:

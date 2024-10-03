@@ -106,7 +106,7 @@ TokenKind: TypeAlias = Literal[
         "#",  # preproc
         ";"]  # end of expression: , or ;
 
-_re_word_char = regex.compile(r"\w", re_flags)
+reg_word_char = regex.compile(r"\w", re_flags)
 
 def getTokenKind(txt: str) -> TokenKind:
     return \
@@ -119,5 +119,5 @@ def getTokenKind(txt: str) -> TokenKind:
         "#" if txt.startswith("#") else \
         ";" if txt in [",", ";"] else \
         "+" if txt in c_ops_all else \
-        "w" if _re_word_char.match(txt) else \
+        "w" if reg_word_char.match(txt) else \
         ""
