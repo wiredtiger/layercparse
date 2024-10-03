@@ -48,6 +48,8 @@ def print_statement_from_file(fname: str) -> str:
 
 
 def main():
+    # setLogLevel(LogLevel.DEBUG5)
+
     # for fname in get_files(sys.argv[1]):
     #     print_statement_from_file(fname)
 
@@ -62,7 +64,6 @@ def main():
 
     # pprint(globals, width=120, compact=False)
 
-    # setLogLevel(LogLevel.DEBUG5)
     # print(" ===== Access check:")
     access = AccessCheck(globals)
     for err in access.checkAccess():

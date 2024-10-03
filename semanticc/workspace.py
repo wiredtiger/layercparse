@@ -102,6 +102,8 @@ class _Scope:
         return self.file.offsetToLinePos(self.offset + offset)
     def offsetToLinePosStr(self, offset: int) -> str:
         return self.file.offsetToLinePosStr(self.offset + offset)
+    def locationStr(self, offset: int) -> str:
+        return self.file.locationStr(self.offset + offset)
 
 @dataclass
 class _ScopeStack:
@@ -135,6 +137,9 @@ def scope_offset() -> int:
 
 def scope_module() -> str:
     return stack.stack[-1].file.getModule() if stack.stack else ""
+
+def locationStr(offset: int) -> str:
+    return stack.stack[-1].locationStr(offset) if stack.stack else f"-:0:{offset}"
 
 class ScopePush:
     def __init__(self, offset: int = 0, file: File | str | None = None, relative: bool = True):

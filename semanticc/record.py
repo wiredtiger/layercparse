@@ -105,7 +105,7 @@ class RecordParts:
         # vars or types list
         names: list[Variable] = []
         if not ret.name.value:
-            ret.name = Token(ret.body.idx, ret.body.range, f"({scope_filename()}:{ret._getBodyOffset()})")
+            ret.name = Token(ret.body.idx, ret.body.range, f"({locationStr(ret._getBodyOffset())})")
             ret.typename = TokenList([ret.name])
         for stt in StatementList.xFromTokens(TokenList(tokens[i+1:])):
             var = Variable.fromVarDef(stt.tokens)

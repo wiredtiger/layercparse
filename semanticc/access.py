@@ -146,7 +146,7 @@ class AccessCheck:
 
         def _check_access_to_defn(defn2: Definition, prefix: str = "") -> Iterable[str]:
             if defn2.is_private and defn2.module and defn2.module != module:
-                yield f"{_locationStr('error', chain[2])}: Access to private {defn2.kind} '{prefix}{defn2.name}' of [{defn2.module}]"
+                yield f"{_locationStr('error', chain[2])}: Invalid access to private {defn2.kind} '{prefix}{defn2.name}' of [{defn2.module}]"
 
         def _check_access_to_type(type: str) -> Iterable[str]:
             if common.logLevel >= LogLevel.DEBUG:
@@ -164,12 +164,12 @@ class AccessCheck:
             if common.logLevel >= LogLevel.DEBUG:
                 yield f"{_locationStr('debug', 0)}: Access field: {rec_type}.{field}"
             if rec_type in self._globals.fields and field in self._globals.fields[rec_type]:
-                yield from _check_access_to_defn(self._globals.fields[rec_type][field], prefix=f"{rec_type}.")
+                yield from _check_access_to_defn(self._globals.fields[rec_type][field], prefix=f"{rec_type} :: ")
 
         if invisible_names := self._get_invisible_global_names_for_module(module):
             for match in invisible_names.finditer(body_clean):
                 name = match[0]
-                yield f"{_locationStr('error', match.start())}: Access to invisible global '{name}' of [{self._globals.names_restricted[name].module}]"
+                yield f"{_locationStr('error', match.start())}: Invalid access to private name '{name}' of [{self._globals.names_restricted[name].module}]"
 
         for chain in get_access_chains(body_clean):
             if common.logLevel >= LogLevel.DEBUG:
