@@ -62,14 +62,6 @@ def _dict_upsert_def(d: dict[str, Definition], other: Definition) -> None:
 
 # private: None -> not defined -> public
 def _get_is_private(thing: Details, default_private: bool | None = None, default_module: str = "") -> tuple[bool | None, str]:
-    if thing.name.value.startswith(("__wti_", "WTI_")):
-        if match := regex.match(r"^(?>__wti_|WT_)([a-zA-Z0-9]++)", thing.name.value, flags=re_flags): # no underscore
-            return (True, match.group(1))
-        return (True, default_module)
-    if thing.name.value.startswith("__wt_"):
-        if match := regex.match(r"^__wt_([a-zA-Z0-9]++)", thing.name.value, flags=re_flags): # no underscore
-            return (False, match.group(1))
-        return (False, default_module)
     if thing.preComment is not None:
         if thing.preComment.value.find("#private") >= 0:
             if match := regex.search(r"\#private\((\w++)\)", thing.preComment.value, flags=re_flags):
@@ -88,6 +80,14 @@ def _get_is_private(thing: Details, default_private: bool | None = None, default
             if match := regex.search(r"\#public\((\w++)\)", thing.postComment.value, flags=re_flags):
                 return (False, match.group(1))
             return (False, default_module)
+    if thing.name.value.startswith(("__wti_", "WTI_")):
+        if match := regex.match(r"^(?>__wti_|WT_)([a-zA-Z0-9]++)", thing.name.value, flags=re_flags): # no underscore
+            return (True, match.group(1))
+        return (True, default_module)
+    if thing.name.value.startswith("__wt_"):
+        if match := regex.match(r"^__wt_([a-zA-Z0-9]++)", thing.name.value, flags=re_flags): # no underscore
+            return (False, match.group(1))
+        return (False, default_module)
     return (default_private, default_module)
 
 
