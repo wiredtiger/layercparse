@@ -48,7 +48,7 @@ def print_statement_from_file(fname: str) -> str:
 
 
 def main():
-    # setLogLevel(LogLevel.DEBUG5)
+    setLogLevel(LogLevel.WARNING)
 
     # for fname in get_files(sys.argv[1]):
     #     print_statement_from_file(fname)

@@ -78,6 +78,8 @@ class AccessCheck:
                     module="",
                     is_private=False,
                     details=var)
+            elif common.logLevel >= LogLevel.WARNING:
+                yield f"{_locationStr('warning', var.name.range[0])}: Missing type for local variable '{var.name.value}'"
 
         if localvars and common.logLevel >= LogLevel.DEBUG2:
             if logLevel >= LogLevel.DEBUG4:
@@ -97,8 +99,10 @@ class AccessCheck:
                     ""
             return ""
 
+        errors: list[str] = []
+
         # Get the un-typedefed type of an expression
-        def _get_type_of_expr(tokens: TokenList) -> str:
+        def _get_type_of_expr(tokens: TokenList, root_offset: int = 0) -> str:
             while tokens and tokens[0].getKind() == "+":  # remove any prefix ops
                 tokens.pop(0)
             if not tokens:
@@ -110,9 +114,9 @@ class AccessCheck:
                     for j in range(i+1, len(tokens)):
                         if tokens[j].value == ":":
                             break
-                    if ret := _get_type_of_expr(TokenList(tokens[i:j-1])):
+                    if ret := _get_type_of_expr(TokenList(tokens[i:j-1]), root_offset + tokens[i].range[0]):
                         return ret
-                    return _get_type_of_expr(TokenList(tokens[j+1:])) if j < len(tokens) else ""
+                    return _get_type_of_expr(TokenList(tokens[j+1:]), root_offset + tokens[j+1].range[0]) if j < len(tokens) else ""
 
             # Not a ternary - the type is the type of the first token
             token = tokens[0]
@@ -120,10 +124,12 @@ class AccessCheck:
                 if len(tokens) > 1 and tokens[1].getKind() in ["w", "("]:  # type cast
                     token_type = self._globals.untypedef(get_base_type_str(token.value[1:-1]))
                 else:
-                    token_type = _get_type_of_expr_str(token.value[1:-1])  # expression
+                    token_type = _get_type_of_expr_str(token.value[1:-1], root_offset + token.range[0] + 1)  # expression
             elif reg_word_char.match(token.value):
                 token_type = _get_type_of_name(token.value)
             else: # Something weird
+                if common.logLevel >= LogLevel.WARNING:
+                    errors.append(f"{_locationStr('warning', root_offset + token.range[0])}: Unexpected token in expression: {token.value}")
                 return ""
 
             # Check for member access chain, return the type of the last member
@@ -133,6 +139,8 @@ class AccessCheck:
                     break
                 i += 1
                 if i >= len(tokens):
+                    if common.logLevel >= LogLevel.WARNING:
+                        errors.append(f"{_locationStr('warning', root_offset + tokens[-1].range[0])}: Unexpected end of expression")
                     break  # syntax error - stop the chain
                 token_type = self._globals.get_field_type(token_type, tokens[i].value)
                 i += 1
@@ -141,8 +149,8 @@ class AccessCheck:
 
         chain: AccessChain
 
-        def _get_type_of_expr_str(clean_txt: str) -> str:
-            return _get_type_of_expr(TokenList(TokenList.xxFilterCode(TokenList.xFromText(clean_txt))))
+        def _get_type_of_expr_str(clean_txt: str, root_offset: int = 0) -> str:
+            return _get_type_of_expr(TokenList(TokenList.xxFilterCode(TokenList.xFromText(clean_txt))), root_offset)
 
         def _check_access_to_defn(defn2: Definition, prefix: str = "") -> Iterable[str]:
             if defn2.is_private and defn2.module and defn2.module != module:
@@ -174,7 +182,10 @@ class AccessCheck:
         for chain in get_access_chains(body_clean):
             if common.logLevel >= LogLevel.DEBUG:
                 yield f"{_locationStr('debug', 0)}: Access chain: {chain}"
-            expr_type = _get_type_of_expr_str(chain[0])
+            errors = []
+            expr_type = _get_type_of_expr_str(chain[0], chain[2])
+            for err in errors:
+                yield err
             if expr_type:
                 yield from _check_access_to_type(expr_type)
                 for field in chain[1]:
