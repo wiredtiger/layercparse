@@ -61,34 +61,34 @@ def _dict_upsert_def(d: dict[str, Definition], other: Definition) -> None:
 
 
 # private: None -> not defined -> public
-def _get_is_private(thing: Details, default_private: bool | None = None, defaule_module: str = "") -> tuple[bool | None, str]:
-    if thing.name.value.startswith("__wti_"):
-        if match := regex.match(r"^__wti_([a-zA-Z0-9]++)", thing.name.value, flags=re_flags): # no underscore
+def _get_is_private(thing: Details, default_private: bool | None = None, default_module: str = "") -> tuple[bool | None, str]:
+    if thing.name.value.startswith(("__wti_", "WTI_")):
+        if match := regex.match(r"^(?>__wti_|WT_)([a-zA-Z0-9]++)", thing.name.value, flags=re_flags): # no underscore
             return (True, match.group(1))
-        return (True, defaule_module)
+        return (True, default_module)
     if thing.name.value.startswith("__wt_"):
         if match := regex.match(r"^__wt_([a-zA-Z0-9]++)", thing.name.value, flags=re_flags): # no underscore
             return (False, match.group(1))
-        return (False, defaule_module)
+        return (False, default_module)
     if thing.preComment is not None:
         if thing.preComment.value.find("#private") >= 0:
             if match := regex.search(r"\#private\((\w++)\)", thing.preComment.value, flags=re_flags):
                 return (True, match.group(1))
-            return (True, defaule_module)
+            return (True, default_module)
         if thing.preComment.value.find("#public") >= 0:
             if match := regex.search(r"\#public\((\w++)\)", thing.preComment.value, flags=re_flags):
                 return (False, match.group(1))
-            return (False, defaule_module)
+            return (False, default_module)
     if thing.postComment is not None:
         if thing.postComment.value.find("#private") >= 0:
             if match := regex.search(r"\#private\((\w++)\)", thing.postComment.value, flags=re_flags):
                 return (True, match.group(1))
-            return (True, defaule_module)
+            return (True, default_module)
         if thing.postComment.value.find("#public") >= 0:
             if match := regex.search(r"\#public\((\w++)\)", thing.postComment.value, flags=re_flags):
                 return (False, match.group(1))
-            return (False, defaule_module)
-    return (default_private, defaule_module)
+            return (False, default_module)
+    return (default_private, default_module)
 
 
 @dataclass
@@ -126,7 +126,7 @@ class Codebase:
 
     def _add_record(self, record: RecordParts):
         record.getMembers()
-        is_private_record, local_module = _get_is_private(record, defaule_module=scope_module())
+        is_private_record, local_module = _get_is_private(record, default_module=scope_module())
         # TODO: check the parent record's access
         _dict_upsert_def(self.types, Definition(
             name=record.name.value,
@@ -140,7 +140,7 @@ class Codebase:
             self.types_restricted[record.name.value] = self.types[record.name.value]
         if record.members:
             for member in record.members:
-                is_private_field, local_module = _get_is_private(record, defaule_module=scope_module())
+                is_private_field, local_module = _get_is_private(record, default_module=scope_module())
                 if record.name.value not in self.fields:
                     self.fields[record.name.value] = {}
                 _dict_upsert_def(self.fields[record.name.value], Definition(
@@ -177,7 +177,7 @@ class Codebase:
                     if st.getKind().is_function_def:
                         func = FunctionParts.fromStatement(st)
                         if func and func.body:
-                            is_private, local_module = _get_is_private(func, defaule_module=scope_module())
+                            is_private, local_module = _get_is_private(func, default_module=scope_module())
                             _dict_upsert_def(self.names, Definition(
                                 name=func.name.value,
                                 kind="function",

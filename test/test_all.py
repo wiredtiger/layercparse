@@ -78,6 +78,10 @@ class TestCaseLocal(unittest.TestCase):
                     var = Variable.fromVarDef(st.tokens)
                     if var:
                         a.extend(["Variable:", pf(var)])
+                elif st.getKind().is_preproc:
+                    macro = MacroParts.fromStatement(st)
+                    if macro:
+                        a.extend(["Macro:", pf(macro)])
         return "\n".join(a)
 
     def parseDetailsFromFile(self, fname: str) -> str:

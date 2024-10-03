@@ -40,6 +40,8 @@ reg_token = regex.compile(r"(?&TOKEN)"+re_token, re_flags)
 reg_token_r = regex.compile(r"(?&TOKEN)"+re_token, re_flags | regex.RegexFlag.REVERSE)
 
 Range: TypeAlias = tuple[int, int]
+def rangeShift(rng: Range, offset: int) -> Range:
+    return (rng[0]+offset, rng[1]+offset)
 
 reg_identifier = regex.compile(r"^[a-zA-Z_]\w++$", re_flags)
 reg_type = regex.compile(r"^[\w\[\]\(\)\*\, ]++$", re_flags)

@@ -36,6 +36,10 @@ def print_statement_from_text(txt: str, offset: int = 0) -> str:
                 body = next((t for t in st.tokens if t.value[0] == "{"), None)
                 if body:
                     a.append(print_statement_from_text(body.value[1:-1], offset=body.range[0]+1))
+            elif st.getKind().is_preproc:
+                macro = MacroParts.fromStatement(st)
+                if macro:
+                    a.extend(["Macro:", pf(macro)])
     return "\n".join(a)
 
 def print_statement_from_file(fname: str) -> str:

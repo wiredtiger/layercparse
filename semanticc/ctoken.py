@@ -20,6 +20,10 @@ class Token:
         self.kind = getTokenKind(self.value)
         return self.kind
 
+    @staticmethod
+    def fromMatch(match: regex.Match, base_offset: int = 0, match_group: int = 0, idx: int = 0, kind: TokenKind | None = None) -> 'Token':
+        return Token(idx, rangeShift(match.span(match_group), base_offset), match[match_group], kind)
+
 class TokenList(list[Token]):
     """List of tokens"""
     def range(self) -> Range:
@@ -28,6 +32,12 @@ class TokenList(list[Token]):
     def short_repr(self) -> str:
         return " ".join([t.value for t in self])
 
+    @staticmethod
+    def xFromMatches(matches: Iterable[regex.Match], base_offset: int = 0, match_group: int = 0, kind: TokenKind | None = None) -> Iterable[Token]:
+        i = 0
+        for match in matches:
+            yield Token.fromMatch(match, base_offset, match_group, idx=i, kind=kind)
+            i += 1
     @staticmethod
     def xFromText(txt: str) -> Iterable[Token]:
         i = 0

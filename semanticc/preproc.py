@@ -1,3 +1,4 @@
+import regex
 from typing import Iterable, Any
 from dataclasses import dataclass
 
@@ -6,31 +7,19 @@ from .ctoken import *
 from .statement import *
 from .variable import *
 
-@dataclass
-class PreprocParts:
-    is_define: bool = False
-
-    @staticmethod
-    def fromStatement(statement: Statement) -> 'PreprocParts':
-        for token in statement.tokens:
-            if token.getKind() in [" ", "/"]:
-                continue
-            if token.value.startswith("#define ") or token.value.startswith("#define\t"):
-                return PreprocParts(is_define=True)
-            break
-        return PreprocParts()
-
+reg_define = regex.compile(r"^\#define\s++(\w++)\s*+(?>\(([^)]*+)\))?\s*+(.*)$", re_flags)
+reg_whole_word = regex.compile(r"\w++", re_flags)
 
 @dataclass
-class DefineParts:
+class MacroParts:
     name: Token
-    args: Token | None = None
-    body: str | None = None
+    args: list[Token] | None = None
+    body: Token | None = None
     preComment: Token | None = None
     # postComment: Token | None = None
 
     @staticmethod
-    def fromStatement(statement: Statement) -> 'DefineParts | None':
+    def fromStatement(statement: Statement) -> 'MacroParts | None':
         preComment = None
         for token in statement.tokens:
             if not preComment and token.getKind() == "/":
@@ -38,37 +27,15 @@ class DefineParts:
                 continue
             if token.getKind() in [" ", "/"]:
                 continue
-            if token.value.startswith("#define ") or token.value.startswith("#define\t"):
+            if match := reg_define.match(token.value):
                 break
             return None
 
-        ret = None
-        txt = token.value[8:].replace("\\\n", "\n")
+        offset = token.range[0]
+        args = None if not match[2] else list( # type: ignore # match is not None; match is indexable
+            TokenList.xFromMatches(reg_whole_word.finditer(match[2]), # type: ignore # match is not None; match is indexable
+                                   offset + match.start(2), kind="w")) # type: ignore # match is not None; match is indexable
 
-        # Find name
-        i = 0
-        for token in TokenList.xFromText(txt):
-            if token.getKind() == " ":
-                continue
-            if reg_identifier.match(token.value):
-                ret = DefineParts(name=token, preComment=preComment)
-                i = token.range[1]
-                break
-            return None
-        else:
-            # not finished by break
-            return None
-        txt = txt[i:]
-
-        # Next: args or body
-        token = next(TokenList.xFromText(txt), None)
-        if token is None:
-            return ret
-
-        if token.getKind() == "(":
-            ret.args = token
-            txt = txt[token.range[1]:]
-
-        ret.body = txt
-
-        return ret
+        return MacroParts(preComment=preComment, args=args,
+            name=Token.fromMatch(match, offset, 1, kind="w"), # type: ignore # match is not None; match is indexable
+            body=Token.fromMatch(match, offset, 3)) # type: ignore # match is not None; match is indexable

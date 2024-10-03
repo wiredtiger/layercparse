@@ -158,4 +158,11 @@ extern "C" {
   int func(int a, int b);
 }
 
-
+#define AAA
+#define BBB 5
+#define CCC 5 + 8
+#define DDD() 5 + 8
+#define EEE(x) x + 8
+#define FFF(x, y) x + y
+#define GGG(x, y) x + \
+ y
