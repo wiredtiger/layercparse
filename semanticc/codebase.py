@@ -59,35 +59,18 @@ def _dict_upsert_def(d: dict[str, Definition], other: Definition) -> None:
     else:
         d[other.name] = other
 
-
 # private: None -> not defined -> public
 def _get_is_private(thing: Details, default_private: bool | None = None, default_module: str = "") -> tuple[bool | None, str]:
     if thing.preComment is not None:
-        if thing.preComment.value.find("#private") >= 0:
-            if match := regex.search(r"\#private\((\w++)\)", thing.preComment.value, flags=re_flags):
-                return (True, match.group(1))
-            return (True, default_module)
-        if thing.preComment.value.find("#public") >= 0:
-            if match := regex.search(r"\#public\((\w++)\)", thing.preComment.value, flags=re_flags):
-                return (False, match.group(1))
-            return (False, default_module)
+        if match := regex.search(r"\#(?>(public)|(private))\b(?>\((\w++)\))?", thing.preComment.value, flags=re_flags):
+            return (bool(match[2]), match[3] if match[3] else default_module)
     if thing.postComment is not None:
-        if thing.postComment.value.find("#private") >= 0:
-            if match := regex.search(r"\#private\((\w++)\)", thing.postComment.value, flags=re_flags):
-                return (True, match.group(1))
-            return (True, default_module)
-        if thing.postComment.value.find("#public") >= 0:
-            if match := regex.search(r"\#public\((\w++)\)", thing.postComment.value, flags=re_flags):
-                return (False, match.group(1))
-            return (False, default_module)
-    if thing.name.value.startswith(("__wti_", "WTI_")):
-        if match := regex.match(r"^(?>__wti_|WT_)([a-zA-Z0-9]++)", thing.name.value, flags=re_flags): # no underscore
-            return (True, match.group(1))
-        return (True, default_module)
-    if thing.name.value.startswith("__wt_"):
-        if match := regex.match(r"^__wt_([a-zA-Z0-9]++)", thing.name.value, flags=re_flags): # no underscore
-            return (False, match.group(1))
-        return (False, default_module)
+        if match := regex.search(r"\#(?>(public)|(private))\b(?>\((\w++)\))?", thing.postComment.value, flags=re_flags):
+            return (bool(match[2]), match[3] if match[3] else default_module)
+
+    if match := regex.match(r"^(?>(__wt_)|(__wti_|WT_))([a-zA-Z0-9]++)?", thing.name.value, flags=re_flags):
+        return (bool(match[2]), match[3] if match[3] else default_module)
+
     return (default_private, default_module)
 
 
