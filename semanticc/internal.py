@@ -85,15 +85,6 @@ reg_member_access = regex.compile(r"^\.|->", re_flags)
 
 # reg_c_operators = regex.compile(r"(?:" + "|".join([regex.escape(op) for op in c_operators_1c_no_star]) + r")", re_flags)
 
-re_clean = r'''(
-    (?> (?:\#|\/\/) (?:[^\\\n]|\\.)*+ \n) |
-    (?> \/\* (?:[^*]|\*[^\/])*+ \*\/ ) |
-    (?> " (?>[^\\"]|\\.)* " ) |
-    (?> ' (?>[^\\']|\\.)* ' )
-)''' # /nxs;
-reg_clean = regex.compile(re_clean, re_flags)
-reg_cr = regex.compile(r"""[^\n]""", re_flags)
-
 def file_content(fname: str) -> str:
     with open(fname) as file:
         return file.read()

@@ -122,6 +122,14 @@ class TestRegex(TestCaseLocal):
         self.assertListEqual(reg_token_r.findall(r"""int main(int argc, char *argv[]) {\n  int a = 1;\n  return a;\n}"""),
             list(reversed(['int', ' ', 'main', '(int argc, char *argv[])', ' ', '{\\n  int a = 1;\\n  return a;\\n}'])))
 
+    def test_clean(self):
+        self.assertEqual(clean_text_sz("qwe asd /* zxc\n */ wer"), "qwe asd       \n    wer")
+        self.assertEqual(clean_text("qwe asd /* zxc\n */ wer"), "qwe asd   wer")
+        self.assertEqual(clean_text_compact("qwe asd /* zxc\n */ wer"), "qwe asd wer")
+        self.assertEqual(clean_text_sz("qwe 'QQQ  /* WWW */ ' asd /* zxc\n */ wer"), "qwe 'QQQ  /* WWW */ ' asd       \n    wer")
+        self.assertEqual(clean_text("qwe 'QQQ  /* WWW */ ' asd /* zxc\n */ wer"), "qwe 'QQQ  /* WWW */ ' asd   wer")
+        self.assertEqual(clean_text_compact("qwe 'QQQ  /* WWW */ ' asd /* zxc\n */ wer"), "qwe 'QQQ  /* WWW */ ' asd wer")
+
 
 class TestToken(TestCaseLocal):
     def test_token(self):

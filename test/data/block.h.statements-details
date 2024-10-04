@@ -91,7 +91,8 @@ MacroParts(name=Token(idx=0, range=(392, 415), value='WT_BLOCK_INVALID_OFFSET'),
                                   " * The file's description is written into the first block of the file, which means "
                                   'we can use an\n'
                                   ' * offset of 0 as an invalid offset.\n'
-                                  ' */'))
+                                  ' */'),
+           is_wellformed=True)
 Statement(tokens=[418:1686] 〈
 ⌇/*
  * The block manager maintains three per-checkpoint extent lists:
@@ -617,7 +618,8 @@ MacroParts(name=Token(idx=0, range=(3778, 3792), value='WT_EXT_FOREACH'),
                                   ' * WT_EXT_FOREACH_OFF --\n'
                                   ' *\tWalk a block manager skiplist where the WT_EXT.next entries are offset\n'
                                   ' * by the depth.\n'
-                                  ' */'))
+                                  ' */'),
+           is_wellformed=True)
 Statement(tokens=[3878:4002] 〈#define WT_EXT_FOREACH_OFF(skip, head) \
     for ((skip) = (head)[0]; (skip) != NULL; (skip) = (skip)->next[(skip)->depth])
 〉,
@@ -642,7 +644,8 @@ MacroParts(name=Token(idx=0, range=(3886, 3904), value='WT_EXT_FOREACH_OFF'),
            body=Token(idx=0,
                       range=(3917, 4002),
                       value='for ((skip) = (head)[0]; (skip) != NULL; (skip) = (skip)->next[(skip)->depth])'),
-           preComment=None)
+           preComment=None,
+           is_wellformed=True)
 Statement(tokens=[4002:4372] 〈
 ⌇/*
  * WT_EXT_FOREACH_FROM_OFFSET_INCL --
@@ -691,7 +694,8 @@ MacroParts(name=Token(idx=0, range=(4181, 4212), value='WT_EXT_FOREACH_FROM_OFFS
                                   ' *\tWalk a by-offset skiplist from the given offset, starting with the extent that '
                                   'contains the\n'
                                   ' * given offset if available.\n'
-                                  ' */'))
+                                  ' */'),
+           is_wellformed=True)
 Statement(tokens=[4372:4764] 〈
 ⌇/*
  * Checkpoint cookie: carries a version number as I don't want to rev the schema
@@ -742,7 +746,8 @@ MacroParts(name=Token(idx=0, range=(4703, 4727), value='WT_BM_CHECKPOINT_VERSION
                                   ' * Version #1 checkpoint cookie format:\n'
                                   ' *\t[1] [root addr] [alloc addr] [avail addr] [discard addr]\n'
                                   ' *\t    [file size] [checkpoint size] [write generation]\n'
-                                  ' */'))
+                                  ' */'),
+           is_wellformed=True)
 Statement(tokens=[4764:4823] 〈#define WT_BLOCK_EXTLIST_MAGIC 71002 /* Identify a list */
 〉,
           kind=StatementKind(is_comment=None,
@@ -764,7 +769,8 @@ Macro:
 MacroParts(name=Token(idx=0, range=(4772, 4794), value='WT_BLOCK_EXTLIST_MAGIC'),
            args=None,
            body=Token(idx=0, range=(4795, 4823), value='71002 /* Identify a list */'),
-           preComment=None)
+           preComment=None,
+           is_wellformed=True)
 Statement(tokens=[4823:5060] 〈
 ⌇/*
  * There are two versions of the extent list blocks: the original, and a second version where
@@ -804,7 +810,8 @@ MacroParts(name=Token(idx=0, range=(5005, 5034), value='WT_BLOCK_EXTLIST_VERSION
                                   ' * There are two versions of the extent list blocks: the original, and a second '
                                   'version where\n'
                                   ' * current checkpoint information is appended to the avail extent list.\n'
-                                  ' */'))
+                                  ' */'),
+           is_wellformed=True)
 Statement(tokens=[5060:5133] 〈#define WT_BLOCK_EXTLIST_VERSION_CKPT 1 /* Checkpoint in avail output */
 〉,
           kind=StatementKind(is_comment=None,
@@ -826,7 +833,8 @@ Macro:
 MacroParts(name=Token(idx=0, range=(5068, 5097), value='WT_BLOCK_EXTLIST_VERSION_CKPT'),
            args=None,
            body=Token(idx=0, range=(5098, 5133), value='1 /* Checkpoint in avail output */'),
-           preComment=None)
+           preComment=None,
+           is_wellformed=True)
 Statement(tokens=[5133:5309] 〈
 ⌇/*
  * Maximum buffer required to store a checkpoint: 1 version byte followed by
@@ -866,7 +874,8 @@ MacroParts(name=Token(idx=0, range=(5250, 5276), value='WT_BLOCK_CHECKPOINT_BUFF
                             value='/*\n'
                                   ' * Maximum buffer required to store a checkpoint: 1 version byte followed by\n'
                                   ' * 14 packed 8B values.\n'
-                                  ' */'))
+                                  ' */'),
+           is_wellformed=True)
 Statement(tokens=[5309:6183] 〈
 ⌇struct⌇ ⌇__wt_block_ckpt⌇ ⌇{
     uint8_t version; /* Version */
@@ -2097,7 +2106,8 @@ MacroParts(name=Token(idx=0, range=(14301, 14319), value='WT_BLOCK_DESC_SIZE'),
                                   'allocation-size block\n'
                                   ' * of the file for this information, but it would be worth investigation, '
                                   'regardless).\n'
-                                  ' */'))
+                                  ' */'),
+           is_wellformed=True)
 Statement(tokens=[14323:14757] 〈
 ⌇/*
  * __wt_block_desc_byteswap --
@@ -2369,7 +2379,8 @@ MacroParts(name=Token(idx=0, range=(16511, 16531), value='WT_BLOCK_HEADER_SIZE')
                                   ' * WT_BLOCK_HEADER_SIZE is the number of bytes we allocate for the structure: if '
                                   'the compiler\n'
                                   ' * inserts padding it will break the world.\n'
-                                  ' */'))
+                                  ' */'),
+           is_wellformed=True)
 Statement(tokens=[16535:16943] 〈
 ⌇/*
  * __wt_block_header_byteswap_copy --
@@ -2546,7 +2557,8 @@ MacroParts(name=Token(idx=0, range=(17377, 17402), value='WT_BLOCK_HEADER_BYTE_S
                                   ' * WT_BLOCK_HEADER_BYTE\n'
                                   ' * WT_BLOCK_HEADER_BYTE_SIZE --\n'
                                   ' *\tThe first usable data byte on the block (past the combined headers).\n'
-                                  ' */'))
+                                  ' */'),
+           is_wellformed=True)
 Statement(tokens=[17448:17539] 〈#define WT_BLOCK_HEADER_BYTE(dsk) ((void *)((uint8_t *)(dsk) + WT_BLOCK_HEADER_BYTE_SIZE))
 〉,
           kind=StatementKind(is_comment=None,
@@ -2568,7 +2580,8 @@ Macro:
 MacroParts(name=Token(idx=0, range=(17456, 17476), value='WT_BLOCK_HEADER_BYTE'),
            args=[Token(idx=0, range=(17477, 17480), value='dsk')],
            body=Token(idx=0, range=(17482, 17539), value='((void *)((uint8_t *)(dsk) + WT_BLOCK_HEADER_BYTE_SIZE))'),
-           preComment=None)
+           preComment=None,
+           is_wellformed=True)
 Statement(tokens=[17539:18262] 〈
 ⌇/*
  * We don't compress or encrypt the block's WT_PAGE_HEADER or WT_BLOCK_HEADER structures because we
@@ -2634,7 +2647,8 @@ MacroParts(name=Token(idx=0, range=(18236, 18258), value='WT_BLOCK_COMPRESS_SKIP
                                   'compression\n'
                                   " * engine, and skipping 64B shouldn't make any difference in terms of compression "
                                   'efficiency.\n'
-                                  ' */'))
+                                  ' */'),
+           is_wellformed=True)
 Statement(tokens=[18262:18318] 〈#define WT_BLOCK_ENCRYPT_SKIP WT_BLOCK_HEADER_BYTE_SIZE
 〉,
           kind=StatementKind(is_comment=None,
@@ -2656,7 +2670,8 @@ Macro:
 MacroParts(name=Token(idx=0, range=(18270, 18291), value='WT_BLOCK_ENCRYPT_SKIP'),
            args=None,
            body=Token(idx=0, range=(18292, 18318), value='WT_BLOCK_HEADER_BYTE_SIZE'),
-           preComment=None)
+           preComment=None,
+           is_wellformed=True)
 Statement(tokens=[18318:18530] 〈
 ⌇/*
  * __wt_block_header --

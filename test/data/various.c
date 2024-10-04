@@ -3,7 +3,10 @@
  */
 
 /* pre-comment1 */
-#define qwe /* post-comment1 */
+#define QWE /* post-comment1 */
+
+#define STRUCT_START(name) typedef struct name {
+#define STRUCT_END(name) } name;
 
 /* pre-comment2 */
 int x; /* post-comment2 */
