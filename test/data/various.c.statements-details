@@ -39,7 +39,7 @@ Statement(tokens=[25:76] 〈/* pre-comment1 */⌇
 Macro:
 MacroParts(name=Token(idx=0, range=(52, 55), value='qwe'),
            args=None,
-           body=Token(idx=0, range=(56, 76), value='/* post-comment1 */\n'),
+           body=Token(idx=0, range=(56, 76), value='/* post-comment1 */'),
            preComment=Token(idx=3, range=(25, 43), value='/* pre-comment1 */'))
 Statement(tokens=[76:123] 〈
 ⌇/* pre-comment2 */⌇

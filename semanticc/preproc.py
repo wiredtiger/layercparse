@@ -36,6 +36,9 @@ class MacroParts:
             TokenList.xFromMatches(reg_whole_word.finditer(match[2]), # type: ignore # match is not None; match is indexable
                                    offset + match.start(2), kind="w")) # type: ignore # match is not None; match is indexable
 
+        body = Token.fromMatch(match, offset, 3)
+        body.value = body.value.replace("\\\n", " \n").strip() # space to preserve byte offset
+
         return MacroParts(preComment=preComment, args=args,
             name=Token.fromMatch(match, offset, 1, kind="w"), # type: ignore # match is not None; match is indexable
-            body=Token.fromMatch(match, offset, 3)) # type: ignore # match is not None; match is indexable
+            body=body) # type: ignore # match is not None; match is indexable
