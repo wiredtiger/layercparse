@@ -166,18 +166,18 @@ class StatementList(list[Statement]):
         return self[0].range[0], self[-1].range[1] if len(self) > 0 else (0, 0)
 
     @staticmethod
-    def xFromFile(fname: str) -> Iterable[Statement]:
-        return StatementList.xFromTokens(TokenList.fromFile(fname))
+    def xFromFile(fname: str, **kwargs) -> Iterable[Statement]:
+        return StatementList.xFromTokens(TokenList.fromFile(fname, **kwargs))
     @staticmethod
-    def fromFile(fname: str) -> 'StatementList':
-        return StatementList.fromTokens(TokenList.fromFile(fname))
+    def fromFile(fname: str, **kwargs) -> 'StatementList':
+        return StatementList.fromTokens(TokenList.fromFile(fname, **kwargs))
 
     @staticmethod
-    def xFromText(txt: str) -> Iterable[Statement]:
-        return StatementList.xFromTokens(TokenList.fromText(txt))
+    def xFromText(txt: str, **kwargs) -> Iterable[Statement]:
+        return StatementList.xFromTokens(TokenList.fromText(txt, **kwargs))
     @staticmethod
-    def fromText(txt: str) -> 'StatementList':
-        return StatementList.fromTokens(TokenList.fromText(txt))
+    def fromText(txt: str, **kwargs) -> 'StatementList':
+        return StatementList.fromTokens(TokenList.fromText(txt, **kwargs))
 
     @staticmethod
     def xFromTokens(tokens: TokenList) -> Iterable[Statement]:

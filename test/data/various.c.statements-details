@@ -39,8 +39,9 @@ Statement(tokens=[25:76] 〈/* pre-comment1 */⌇
 Macro:
 MacroParts(name=Token(idx=0, range=(52, 55), value='QWE'),
            args=None,
-           body=Token(idx=0, range=(56, 76), value='/* post-comment1 */'),
+           body=Token(idx=0, range=(56, 76), value='                   '),
            preComment=Token(idx=3, range=(25, 43), value='/* pre-comment1 */'),
+           is_va_args=False,
            is_wellformed=True)
 Statement(tokens=[76:126] 〈
 ⌇#define STRUCT_START(name) typedef struct name {
@@ -65,6 +66,7 @@ MacroParts(name=Token(idx=0, range=(85, 97), value='STRUCT_START'),
            args=[Token(idx=0, range=(98, 102), value='name')],
            body=Token(idx=0, range=(104, 126), value='typedef struct name {'),
            preComment=None,
+           is_va_args=False,
            is_wellformed=False)
 Statement(tokens=[126:159] 〈#define STRUCT_END(name) } name;
 〉,
@@ -88,6 +90,7 @@ MacroParts(name=Token(idx=0, range=(134, 144), value='STRUCT_END'),
            args=[Token(idx=0, range=(145, 149), value='name')],
            body=Token(idx=0, range=(151, 159), value='} name;'),
            preComment=None,
+           is_va_args=False,
            is_wellformed=False)
 Statement(tokens=[159:206] 〈
 ⌇/* pre-comment2 */⌇

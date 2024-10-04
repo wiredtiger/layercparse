@@ -404,8 +404,9 @@ Statement(tokens=[329:382] 〈/* pre comment */⌇
 Macro:
 MacroParts(name=Token(idx=0, range=(355, 358), value='qwe'),
            args=None,
-           body=Token(idx=0, range=(359, 382), value='QWE /* post comment */'),
+           body=Token(idx=0, range=(359, 382), value='QWE                   '),
            preComment=Token(idx=133, range=(329, 346), value='/* pre comment */'),
+           is_va_args=False,
            is_wellformed=True)
 Statement(tokens=[382:432] 〈
 ⌇#define asd(x, y) ASD \
@@ -429,8 +430,9 @@ Statement(tokens=[382:432] 〈
 Macro:
 MacroParts(name=Token(idx=0, range=(391, 394), value='asd'),
            args=[Token(idx=0, range=(395, 396), value='x'), Token(idx=1, range=(398, 399), value='y')],
-           body=Token(idx=0, range=(401, 432), value='ASD  \n  ZXC /* post comment */'),
+           body=Token(idx=0, range=(401, 432), value='ASD  \n  ZXC                   '),
            preComment=None,
+           is_va_args=False,
            is_wellformed=True)
 Statement(tokens=[432:445] 〈
 ⌇// typedef
@@ -1435,6 +1437,7 @@ MacroParts(name=Token(idx=0, range=(2375, 2378), value='AAA'),
            args=None,
            body=Token(idx=0, range=(2379, 2379), value=''),
            preComment=None,
+           is_va_args=False,
            is_wellformed=True)
 Statement(tokens=[2379:2393] 〈#define BBB 5
 〉,
@@ -1458,6 +1461,7 @@ MacroParts(name=Token(idx=0, range=(2387, 2390), value='BBB'),
            args=None,
            body=Token(idx=0, range=(2391, 2393), value='5'),
            preComment=None,
+           is_va_args=False,
            is_wellformed=True)
 Statement(tokens=[2393:2411] 〈#define CCC 5 + 8
 〉,
@@ -1481,6 +1485,7 @@ MacroParts(name=Token(idx=0, range=(2401, 2404), value='CCC'),
            args=None,
            body=Token(idx=0, range=(2405, 2411), value='5 + 8'),
            preComment=None,
+           is_va_args=False,
            is_wellformed=True)
 Statement(tokens=[2411:2431] 〈#define DDD() 5 + 8
 〉,
@@ -1501,9 +1506,10 @@ Statement(tokens=[2411:2431] 〈#define DDD() 5 + 8
                              postComment=None))
 Macro:
 MacroParts(name=Token(idx=0, range=(2419, 2422), value='DDD'),
-           args=None,
+           args=[],
            body=Token(idx=0, range=(2425, 2431), value='5 + 8'),
            preComment=None,
+           is_va_args=False,
            is_wellformed=True)
 Statement(tokens=[2431:2452] 〈#define EEE(x) x + 8
 〉,
@@ -1527,6 +1533,7 @@ MacroParts(name=Token(idx=0, range=(2439, 2442), value='EEE'),
            args=[Token(idx=0, range=(2443, 2444), value='x')],
            body=Token(idx=0, range=(2446, 2452), value='x + 8'),
            preComment=None,
+           is_va_args=False,
            is_wellformed=True)
 Statement(tokens=[2452:2476] 〈#define FFF(x, y) x + y
 〉,
@@ -1550,6 +1557,7 @@ MacroParts(name=Token(idx=0, range=(2460, 2463), value='FFF'),
            args=[Token(idx=0, range=(2464, 2465), value='x'), Token(idx=1, range=(2467, 2468), value='y')],
            body=Token(idx=0, range=(2470, 2476), value='x + y'),
            preComment=None,
+           is_va_args=False,
            is_wellformed=True)
 Statement(tokens=[2476:2503] 〈#define GGG(x, y) x + \
  y
@@ -1574,4 +1582,5 @@ MacroParts(name=Token(idx=0, range=(2484, 2487), value='GGG'),
            args=[Token(idx=0, range=(2488, 2489), value='x'), Token(idx=1, range=(2491, 2492), value='y')],
            body=Token(idx=0, range=(2494, 2503), value='x +  \n y'),
            preComment=None,
+           is_va_args=False,
            is_wellformed=True)

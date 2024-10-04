@@ -21,7 +21,7 @@ class Token:
         return self.kind
 
     @staticmethod
-    def fromMatch(match: regex.Match, base_offset: int = 0, match_group: int = 0, idx: int = 0, kind: TokenKind | None = None) -> 'Token':
+    def fromMatch(match: regex.Match, base_offset: int = 0, match_group: int | str = 0, idx: int = 0, kind: TokenKind | None = None) -> 'Token':
         return Token(idx, rangeShift(match.span(match_group), base_offset), match[match_group], kind)
 
 class TokenList(list[Token]):
@@ -29,37 +29,41 @@ class TokenList(list[Token]):
     def range(self) -> Range:
         return (self[0].range[0], self[-1].range[1]) if len(self) > 0 else (0, 0)
 
+    def strings(self) -> Iterable[str]:
+        for t in self:
+            yield t.value
+
     def short_repr(self) -> str:
-        return " ".join([t.value for t in self])
+        return " ".join(self.strings())
 
     @staticmethod
-    def xFromMatches(matches: Iterable[regex.Match], base_offset: int = 0, match_group: int = 0, kind: TokenKind | None = None) -> Iterable[Token]:
+    def xFromMatches(matches: Iterable[regex.Match], base_offset: int = 0, match_group: int | str = 0, kind: TokenKind | None = None) -> Iterable[Token]:
         i = 0
         for match in matches:
             yield Token.fromMatch(match, base_offset, match_group, idx=i, kind=kind)
             i += 1
     @staticmethod
-    def xFromText(txt: str) -> Iterable[Token]:
+    def xFromText(txt: str, **kwargs) -> Iterable[Token]:
         i = 0
-        for match in reg_token.finditer(txt):
+        for match in reg_token.finditer(txt, **kwargs):
             yield Token(i, match.span(), match[0])
             i += 1
     @staticmethod
-    def fromText(txt: str) -> 'TokenList':
-        return TokenList(TokenList.xFromText(txt))
+    def fromText(txt: str, **kwargs) -> 'TokenList':
+        return TokenList(TokenList.xFromText(txt, **kwargs))
 
     @staticmethod
-    def xFromFile(fname: str) -> Iterable[Token]:
+    def xFromFile(fname: str, **kwargs) -> Iterable[Token]:
         with open(fname) as file:
-            return TokenList.xFromText(file.read())
+            return TokenList.xFromText(file.read(), **kwargs)
     @staticmethod
-    def fromFile(fname: str) -> 'TokenList':
-        return TokenList(TokenList.xFromFile(fname))
+    def fromFile(fname: str, **kwargs) -> 'TokenList':
+        return TokenList(TokenList.xFromFile(fname, **kwargs))
 
     def __str__(self) -> str:
-        return f"[{self.range()[0]}:{self.range()[1]}] 〈{'⌇'.join([t.value for t in self])}〉"
+        return f"[{self.range()[0]}:{self.range()[1]}] 〈{'⌇'.join(self.strings())}〉"
     def __repr__(self) -> str:
-        return f"[{self.range()[0]}:{self.range()[1]}] 〈{'⌇'.join([t.value for t in self])}〉"
+        return f"[{self.range()[0]}:{self.range()[1]}] 〈{'⌇'.join(self.strings())}〉"
 
     @staticmethod
     def xxFilterCode(tokens: Iterable[Token]) -> Iterable[Token]:

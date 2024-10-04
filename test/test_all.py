@@ -179,6 +179,20 @@ class TestRecordAccess(TestCaseLocal):
         errors = "\n".join(AccessCheck(_globals).checkAccess())
         self.checkStrAgainstFile(errors, "data/record.c.access")
 
+
+class TestMacro(TestCaseLocal):
+    def test_macro(self):
+        _globals = Codebase()
+        _globals.updateFromFile("data/macro.c")
+        # setLogLevel(LogLevel.DEBUG)
+        # pprint(_globals.macros, width=120, compact=False)
+        src = file_content("data/macro.c")
+        expanded = _globals.macros.expand(src)
+        if _globals.macros.errors:
+            print("\n".join(_globals.macros.errors))
+        self.checkStrAgainstFile(expanded, "data/macro.c.macro")
+
+
 # Enable to run as a standalone script
 if __name__ == "__main__":
     unittest.TextTestRunner().run(unittest.TestLoader().discover(os.path.dirname(__file__)))

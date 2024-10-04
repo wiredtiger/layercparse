@@ -5,6 +5,7 @@ from typing import Iterable, Any
 from .common import *
 from .record import *
 from .function import *
+from .preproc import *
 
 Details: TypeAlias = FunctionParts | RecordParts | Variable
 
@@ -85,6 +86,8 @@ class Codebase:
     names_restricted: dict[str, Definition] = field(default_factory=dict)
     # Typedefs
     typedefs: dict[str, str] = field(default_factory=dict)
+    # Macros
+    macros: Macros = field(default_factory=Macros)
 
     def untypedef(self, name: str) -> str:
         name1, name2 = "", ""
@@ -178,6 +181,10 @@ class Codebase:
                         # TODO: add global variables from struct definitions
                     elif st.getKind().is_decl:
                         pass # TODO: global function and variable declarations
+                    elif st.getKind().is_preproc:
+                        macro = MacroParts.fromStatement(st)
+                        if macro:
+                            self.macros.upsert(macro)
                     elif st.getKind().is_extern_c:
                         body = next((t for t in st.tokens if t.value.startswith("{")), None)
                         if body:
