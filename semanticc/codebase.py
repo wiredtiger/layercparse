@@ -5,7 +5,7 @@ from typing import Iterable, Any
 from .common import *
 from .record import *
 from .function import *
-from .preproc import *
+from .macro import *
 
 Details: TypeAlias = FunctionParts | RecordParts | Variable
 
