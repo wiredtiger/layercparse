@@ -1,3 +1,4 @@
+import enum
 import regex
 from dataclasses import dataclass, field
 from typing import Iterable
@@ -5,8 +6,12 @@ import itertools
 from glob import glob
 from os import path
 from bisect import bisect_left
-# print(bisect_left([10,20,30,40,50], 15))
 
+###### TODO::
+# 1. split preprocessor from everything else
+# 2. load preprocessor
+# 3. load everything else, expanding macros
+# No need to remove preprocessor - it's ignored anyway
 
 def get_file_priority(fname: str) -> int:
     return 3 if fname.endswith(".c") else \
@@ -33,6 +38,8 @@ def get_h_inline_files(root: str) -> list[str]:
 def get_c_files(root: str) -> list[str]:
     return sorted(glob(path.join(root, "src/**/*.[c]"), recursive=True))
 
+# def scan_include_order(root: str, start: list[str]) -> Iterable[str]:
+#     pass # TODO
 
 def _fname_to_module_raw(fname: str) -> str:
     i = fname.rfind("/src/")
@@ -153,3 +160,28 @@ class ScopePush:
 
     def __exit__(self, exc_type, exc_value, traceback):
         scope_pop()
+
+class LogLevel(enum.IntEnum):
+    QUIET   = 0
+    FATAL   = 1
+    ERROR   = DEFAULT = 2
+    WARNING = 3
+    INFO    = 4
+    DEBUG   = DEBUG1 = 5
+    DEBUG2  = 6
+    DEBUG3  = 7
+    DEBUG4  = 8
+    DEBUG5  = 9
+
+logLevel = LogLevel.DEFAULT
+
+def setLogLevel(level: LogLevel):
+    global logLevel
+    logLevel = level
+
+def log(level: LogLevel, *args, **kwargs):
+    if level <= logLevel:
+        for i in range(len(args)):
+            if callable(args[i]):
+                args[i] = args[i]()  # type: ignore # Unsupported target for indexed assignment ("tuple[Any, ...]")  [index]
+        print(*args, **kwargs)

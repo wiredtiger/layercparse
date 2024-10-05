@@ -183,10 +183,15 @@ class TestRecordAccess(TestCaseLocal):
 class TestMacro(TestCaseLocal):
     def test_macro(self):
         _globals = Codebase()
-        _globals.updateFromFile("data/macro.c")
+        src = file_content("data/macro.c")
+        for p in StatementList.preprocFromText(src):
+            macro = MacroParts.fromStatement(p)
+            pprint(macro)
+            if macro:
+                _globals.macros.upsert(macro)
+        # _globals.updateFromFile("data/macro.c")
         # setLogLevel(LogLevel.DEBUG)
         # pprint(_globals.macros, width=120, compact=False)
-        src = file_content("data/macro.c")
         expanded = _globals.macros.expand(src)
         if _globals.macros.errors:
             print("\n".join(_globals.macros.errors))

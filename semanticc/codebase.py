@@ -60,8 +60,9 @@ def _dict_upsert_def(d: dict[str, Definition], other: Definition) -> None:
     else:
         d[other.name] = other
 
-# private: None -> not defined -> public
-def _get_is_private(thing: Details, default_private: bool | None = None, default_module: str = "") -> tuple[bool | None, str]:
+# Returns tuple of (is_private, module)
+#   if is_private is None -> privacy not specified -> public
+def _get_visibility_and_module(thing: Details, default_private: bool | None = None, default_module: str = "") -> tuple[bool | None, str]:
     if thing.preComment is not None:
         if match := regex.search(r"\#(?>(public)|(private))\b(?>\((\w++)\))?", thing.preComment.value, flags=re_flags):
             return (bool(match[2]), match[3] if match[3] else default_module)
@@ -112,7 +113,7 @@ class Codebase:
 
     def _add_record(self, record: RecordParts):
         record.getMembers()
-        is_private_record, local_module = _get_is_private(record, default_module=scope_module())
+        is_private_record, local_module = _get_visibility_and_module(record, default_module=scope_module())
         # TODO: check the parent record's access
         _dict_upsert_def(self.types, Definition(
             name=record.name.value,
@@ -126,7 +127,7 @@ class Codebase:
             self.types_restricted[record.name.value] = self.types[record.name.value]
         if record.members:
             for member in record.members:
-                is_private_field, local_module = _get_is_private(record, default_module=scope_module())
+                is_private_field, local_module = _get_visibility_and_module(record, default_module=scope_module())
                 if record.name.value not in self.fields:
                     self.fields[record.name.value] = {}
                 _dict_upsert_def(self.fields[record.name.value], Definition(
@@ -163,7 +164,7 @@ class Codebase:
                     if st.getKind().is_function_def:
                         func = FunctionParts.fromStatement(st)
                         if func and func.body:
-                            is_private, local_module = _get_is_private(func, default_module=scope_module())
+                            is_private, local_module = _get_visibility_and_module(func, default_module=scope_module())
                             _dict_upsert_def(self.names, Definition(
                                 name=func.name.value,
                                 kind="function",
@@ -195,3 +196,22 @@ class Codebase:
             txt = file_content(fname)
             scope_file().lineNumbers(txt)
             self.updateFromText(txt)
+
+    # def updateMacroFromText(self, txt: str, offset: int = 0) -> None:
+    #     with ScopePush(offset=offset):
+    #         for st in StatementList.preprocFromText(src):
+    #             macro = MacroParts.fromStatement(st)
+    #             if macro:
+    #                 self.macros.upsert(macro)
+    #         ************
+
+
+
+    #         for st in StatementList.fromText(txt):
+    #             st.getKind()
+    #             if st.getKind().is_preproc:
+    #                 macro = MacroParts.fromStatement(st)
+    #                 if macro:
+    #                     self.macros.upsert(macro)
+
+

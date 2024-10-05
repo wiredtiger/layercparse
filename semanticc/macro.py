@@ -11,9 +11,35 @@ from .variable import *
 reg_define = regex.compile(r"^\#define\s++(?P<name>\w++)\s*+(?P<args>\((?P<args_in>[^)]*+)\))?\s*+(?P<body>.*)$", re_flags)
 reg_whole_word = regex.compile(r"[\w\.]++", re_flags)
 
+# The difference from re_token is that # and ## are operators rather than preprocessor directives
+re_token_preproc = r'''(?(DEFINE)(?<TOKEN>
+    (?> \/\/ (?: [^\\\n] | \\. )*+ \n) |
+    (?> \/\* (?: [^*] | \*[^\/] )*+ \*\/ ) |
+    (?> " (?> [^\\"] | \\. )* " ) |
+    (?> ' (?> [^\\'] | \\. )* ' ) |
+    (?> \{ (?&TOKEN)* \} ) |
+    (?> \( (?&TOKEN)* \) ) |
+    (?> \[ (?&TOKEN)* \] ) |
+    (?>\n) |
+    [\r\t ]++ |
+    (?>\\.) |
+    (?> , | ; | \? | : |
+        ! | \~ |
+        <<= | >>= |
+        \#\# | \+\+ | \-\- | \-> | \+\+ | \-\- | << | >> | <= | >= | == | != |
+        \&\& | \|\| | \+= | \-= | \*= | /= | %= | \&= | \^= | \|= |
+        \# | \. | \+ | \- | \* | \& | / | % | \+ | \- | < | > |
+        \& | \^ | \| | = |
+        \@ # invalid charachter
+    ) |
+    \w++
+))''' # /nxs;
+
+reg_token_preproc = regex.compile(r"(?&TOKEN)"+re_token_preproc, re_flags)
+
 def is_wellformed(txt: str) -> bool:
     offset = 0
-    for match in reg_token.finditer(txt):
+    for match in reg_token_preproc.finditer(txt):
         if match.start() != offset:
             return False
         offset = match.end()

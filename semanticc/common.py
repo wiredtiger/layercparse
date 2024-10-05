@@ -47,21 +47,3 @@ reg_clean2 = regex.compile(re_clean2, re_flags)
 # Remove comments and preprocessor directives and compact spaces
 def clean_text_compact(txt: str):
     return reg_clean2.sub(lambda match: " " if match["s"] else match[0], txt)
-
-class LogLevel(enum.IntEnum):
-    QUIET   = 0
-    FATAL   = 1
-    ERROR   = DEFAULT = 2
-    WARNING = 3
-    INFO    = 4
-    DEBUG   = DEBUG1 = 5
-    DEBUG2  = 6
-    DEBUG3  = 7
-    DEBUG4  = 8
-    DEBUG5  = 9
-
-logLevel = LogLevel.DEFAULT
-
-def setLogLevel(level: LogLevel):
-    global logLevel
-    logLevel = level

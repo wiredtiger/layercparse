@@ -24,6 +24,10 @@ class Token:
     def fromMatch(match: regex.Match, base_offset: int = 0, match_group: int | str = 0, idx: int = 0, kind: TokenKind | None = None) -> 'Token':
         return Token(idx, rangeShift(match.span(match_group), base_offset), match[match_group], kind)
 
+    @staticmethod
+    def empty() -> 'Token':
+        return Token(0, (0, 0), "")
+
 class TokenList(list[Token]):
     """List of tokens"""
     def range(self) -> Range:

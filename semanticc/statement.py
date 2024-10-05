@@ -160,6 +160,17 @@ class Statement:
         return self.kind
 
 
+_reg_preproc_only = regex.compile(r"""
+    (?> (?: \# | \/\/ ) (?: [^\\\n] | \\. )*+ \n) |
+    (?> \/\* (?: [^*] | \*[^\/] )*+ \*\/ ) |
+    (?> " (?> [^\\"] | \\. )* " ) |
+    (?> ' (?> [^\\'] | \\. )* ' ) |
+    (?>\s++) |
+    (?>[^\/\#"']++) |
+    .
+""", re_flags)
+
+
 # class StatementList: ...
 class StatementList(list[Statement]):
     def range(self):
@@ -267,4 +278,30 @@ class StatementList(list[Statement]):
             yield st.filterCode_r()
     def filterCode_r(self) -> 'StatementList':
         return StatementList(self.xFilterCode_r())
+
+    @staticmethod
+    def preprocFromText(txt: str) -> Iterable[Statement]:
+        prev: list[Token] = [Token.empty(), Token.empty()]  # previous 2 tokens
+        cur_prev = 0
+        i = 0
+        ret = TokenList([])
+        for match in _reg_preproc_only.finditer(txt):
+            i += 1
+            if match[0].startswith("#"):
+                token = Token.fromMatch(match, kind="#", idx=i)
+                prev_tokens = [prev[1-cur_prev], prev[cur_prev]]
+                if prev_tokens[0].getKind() == "/" and prev_tokens[1].getKind() == " ":
+                    yield Statement(TokenList([prev_tokens[0], prev_tokens[1], token]), StatementKind(is_comment=True, is_preproc=True))
+                else:
+                    yield Statement(TokenList([token]), StatementKind(is_preproc=True))
+            cur_prev = 1 - cur_prev
+            prev[cur_prev] = Token.fromMatch(match, idx=i)
+
+    @staticmethod
+    def preprocFromFile(fname: str) -> Iterable[Statement]:
+        with open(fname) as file:
+            return StatementList.preprocFromText(file.read())
+
+
+
 

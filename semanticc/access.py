@@ -7,6 +7,7 @@ from .common import *
 from .record import *
 from .function import *
 from .codebase import *
+from .workspace import *
 
 _reg_member_access_chain = regex.compile(r"""
     # ((?<!\w)\((?&TOKEN)++\))*                        # Possible type conversions - not needed
@@ -19,14 +20,14 @@ _reg_member_access_chain = regex.compile(r"""
 
 AccessChain: TypeAlias = tuple[str, list[str], int]  # name, chain of members, offset
 
-def get_access_chains(txt: str, offset_in_parent: int = 0) -> Iterable[AccessChain]:
+def member_access_chains(txt: str, offset_in_parent: int = 0) -> Iterable[AccessChain]:
     for match in _reg_member_access_chain.finditer(txt):
         offset = match.start() + offset_in_parent
         if match[1]:
             yield (match[1], match.allcaptures()[3], offset)  # type: ignore[misc] # Tuple index out of range
         elif match[2]:
             yield (match[2], match.allcaptures()[3], offset)  # type: ignore[misc] # Tuple index out of range
-            yield from get_access_chains(match[2][1:-1], offset_in_parent + match.start(2) + 1)
+            yield from member_access_chains(match[2][1:-1], offset_in_parent + match.start(2) + 1)
 
 
 @dataclass
@@ -61,7 +62,7 @@ class AccessCheck:
             return (defn.file.locationStr(defn.details.body.range[0] + offset) + # type: ignore[union-attr]
                     f": {msgtype}: [{module}] {defn.name}")
 
-        if common.logLevel >= LogLevel.DEBUG5:
+        if logLevel >= LogLevel.DEBUG5:
             yield f"{_locationStr('debug5', 0)}: === body:\n{body_clean}\n==="
 
         module = defn.module
@@ -78,10 +79,10 @@ class AccessCheck:
                     module="",
                     is_private=False,
                     details=var)
-            elif common.logLevel >= LogLevel.WARNING:
+            elif logLevel >= LogLevel.WARNING:
                 yield f"{_locationStr('warning', var.name.range[0])}: Missing type for local variable '{var.name.value}'"
 
-        if localvars and common.logLevel >= LogLevel.DEBUG2:
+        if localvars and logLevel >= LogLevel.DEBUG2:
             if logLevel >= LogLevel.DEBUG4:
                 yield _locationStr('debug4', 0) + ": locals vars:\n" + pformat(localvars, width=120, compact=False)
             else:
@@ -128,7 +129,7 @@ class AccessCheck:
             elif reg_word_char.match(token.value):
                 token_type = _get_type_of_name(token.value)
             else: # Something weird
-                if common.logLevel >= LogLevel.WARNING:
+                if logLevel >= LogLevel.WARNING:
                     errors.append(f"{_locationStr('warning', root_offset + token.range[0])}: Unexpected token in expression: {token.value}")
                 return ""
 
@@ -139,7 +140,7 @@ class AccessCheck:
                     break
                 i += 1
                 if i >= len(tokens):
-                    if common.logLevel >= LogLevel.WARNING:
+                    if logLevel >= LogLevel.WARNING:
                         errors.append(f"{_locationStr('warning', root_offset + tokens[-1].range[0])}: Unexpected end of expression")
                     break  # syntax error - stop the chain
                 token_type = self._globals.get_field_type(token_type, tokens[i].value)
@@ -157,19 +158,19 @@ class AccessCheck:
                 yield f"{_locationStr('error', chain[2])}: Invalid access to private {defn2.kind} '{prefix}{defn2.name}' of [{defn2.module}]"
 
         def _check_access_to_type(type: str) -> Iterable[str]:
-            if common.logLevel >= LogLevel.DEBUG:
+            if logLevel >= LogLevel.DEBUG:
                 yield f"{_locationStr('debug', 0)}: Access type: {type}"
             if type in self._globals.types_restricted:
                 yield from _check_access_to_defn(self._globals.types_restricted[type])
 
         def _check_access_to_global_name(name: str) -> Iterable[str]:
-            if common.logLevel >= LogLevel.DEBUG:
+            if logLevel >= LogLevel.DEBUG:
                 yield f"{_locationStr('debug', 0)}: Access global name: {name}"
             if name in self._globals.names_restricted:
                 yield from _check_access_to_defn(self._globals.names_restricted[name])
 
         def _check_access_to_field(rec_type: str, field: str) -> Iterable[str]:
-            if common.logLevel >= LogLevel.DEBUG:
+            if logLevel >= LogLevel.DEBUG:
                 yield f"{_locationStr('debug', 0)}: Access field: {rec_type}.{field}"
             if rec_type in self._globals.fields and field in self._globals.fields[rec_type]:
                 yield from _check_access_to_defn(self._globals.fields[rec_type][field], prefix=f"{rec_type} :: ")
@@ -179,8 +180,8 @@ class AccessCheck:
                 name = match[0]
                 yield f"{_locationStr('error', match.start())}: Invalid access to private name '{name}' of [{self._globals.names_restricted[name].module}]"
 
-        for chain in get_access_chains(body_clean):
-            if common.logLevel >= LogLevel.DEBUG:
+        for chain in member_access_chains(body_clean):
+            if logLevel >= LogLevel.DEBUG:
                 yield f"{_locationStr('debug', 0)}: Access chain: {chain}"
             errors = []
             expr_type = _get_type_of_expr_str(chain[0], chain[2])
@@ -196,8 +197,8 @@ class AccessCheck:
     # Go through function bodies. Check calls and struct member accesses.
     def checkAccess(self) -> Iterable[str]:
         for defn in self._globals.names.values():
-            if common.logLevel >= LogLevel.DEBUG:
-                if common.logLevel >= LogLevel.DEBUG3:
+            if logLevel >= LogLevel.DEBUG:
+                if logLevel >= LogLevel.DEBUG3:
                     yield f"{defn.file.locationStr(0)}: debug3: Checking {defn.short_repr()}"
                 else:
                     yield f"{defn.file.locationStr(0)}: debug: Checking {defn.kind} [{defn.module}] {defn.name}"
