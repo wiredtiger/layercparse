@@ -10,6 +10,7 @@ from copy import deepcopy
 
 from semanticc import *
 from pprint import pprint, pformat
+from io import StringIO
 
 import difflib
 
@@ -175,9 +176,11 @@ class TestRecordAccess(TestCaseLocal):
     def test_record(self):
         _globals = Codebase()
         _globals.updateFromFile("data/record.c")
+        workspace.logStream = StringIO()
         # setLogLevel(LogLevel.DEBUG)
-        errors = "\n".join(AccessCheck(_globals).checkAccess())
-        self.checkStrAgainstFile(errors, "data/record.c.access")
+        AccessCheck(_globals).checkAccess()
+        self.checkStrAgainstFile(workspace.logStream.getvalue(), "data/record.c.access")
+        workspace.logStream = None
 
 
 class TestMacro(TestCaseLocal):

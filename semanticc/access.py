@@ -50,7 +50,7 @@ class AccessCheck:
                 self._perModuleInvisibleNamesRe[module] = regex.compile(reg_name, re_flags)
         return self._perModuleInvisibleNamesRe[module]
 
-    def _check_function(self, defn: Definition) -> Iterable[str]:
+    def _check_function(self, defn: Definition) -> None:
         if defn.kind != "function" or \
                 not defn.details or \
                 not isinstance(defn.details, FunctionParts) or \
@@ -62,8 +62,10 @@ class AccessCheck:
             return (defn.file.locationStr(defn.details.body.range[0] + offset) + # type: ignore[union-attr]
                     f": {msgtype}: [{module}] {defn.name}")
 
-        if logLevel >= LogLevel.DEBUG5:
-            yield f"{_locationStr('debug5', 0)}: === body:\n{body_clean}\n==="
+        def _LOC(msgtype: str, offset: int) -> Callable[[], str]:
+            return lambda: _locationStr(msgtype, offset)
+
+        DEBUG5(_LOC('debug5', 0), f"=== body:\n{body_clean}\n===")
 
         module = defn.module
 
@@ -79,16 +81,12 @@ class AccessCheck:
                     module="",
                     is_private=False,
                     details=var)
-            elif logLevel >= LogLevel.WARNING:
-                yield f"{_locationStr('warning', var.name.range[0])}: Missing type for local variable '{var.name.value}'"
-
-        if localvars and logLevel >= LogLevel.DEBUG2:
-            if logLevel >= LogLevel.DEBUG4:
-                yield _locationStr('debug4', 0) + ": locals vars:\n" + pformat(localvars, width=120, compact=False)
             else:
-                yield _locationStr('debug2', 0) + ": locals vars:"
-                for name, d in localvars.items():
-                    yield f"    {name}: {cast(Details, d.details).typename.short_repr()}"
+                WARNING(_LOC("warning", var.name.range[0]), f"Missing type for local variable '{var.name.value}'")
+
+        if localvars:
+            DEBUG4(_LOC('debug4', 0), f"locals vars:\n{pformat(localvars, width=120, compact=False)}") or \
+            DEBUG2(_LOC('debug2', 0), f"locals vars:\n" + "\n".join(f"    {name}: {cast(Details, d.details).typename.short_repr()}" for name, d in localvars.items()))
 
         def _get_type_of_name(name: str) -> str:
             if name in localvars:
@@ -99,8 +97,6 @@ class AccessCheck:
                     if self._globals.names[name].details else \
                     ""
             return ""
-
-        errors: list[str] = []
 
         # Get the un-typedefed type of an expression
         def _get_type_of_expr(tokens: TokenList, root_offset: int = 0) -> str:
@@ -129,8 +125,7 @@ class AccessCheck:
             elif reg_word_char.match(token.value):
                 token_type = _get_type_of_name(token.value)
             else: # Something weird
-                if logLevel >= LogLevel.WARNING:
-                    errors.append(f"{_locationStr('warning', root_offset + token.range[0])}: Unexpected token in expression: {token.value}")
+                WARNING(_LOC('warning', root_offset + token.range[0]), f"Unexpected token in expression: {token.value}")
                 return ""
 
             # Check for member access chain, return the type of the last member
@@ -140,8 +135,7 @@ class AccessCheck:
                     break
                 i += 1
                 if i >= len(tokens):
-                    if logLevel >= LogLevel.WARNING:
-                        errors.append(f"{_locationStr('warning', root_offset + tokens[-1].range[0])}: Unexpected end of expression")
+                    WARNING(_LOC('warning', root_offset + tokens[-1].range[0]), "Unexpected end of expression")
                     break  # syntax error - stop the chain
                 token_type = self._globals.get_field_type(token_type, tokens[i].value)
                 i += 1
@@ -153,54 +147,44 @@ class AccessCheck:
         def _get_type_of_expr_str(clean_txt: str, root_offset: int = 0) -> str:
             return _get_type_of_expr(TokenList(TokenList.xxFilterCode(TokenList.xFromText(clean_txt))), root_offset)
 
-        def _check_access_to_defn(defn2: Definition, prefix: str = "") -> Iterable[str]:
+        def _check_access_to_defn(defn2: Definition, prefix: str = "") -> None:
             if defn2.is_private and defn2.module and defn2.module != module:
-                yield f"{_locationStr('error', chain[2])}: Invalid access to private {defn2.kind} '{prefix}{defn2.name}' of [{defn2.module}]"
+                ERROR(_locationStr('error', defn2.offset), f"Invalid access to private {defn2.kind} '{prefix}{defn2.name}' of [{defn2.module}]")
 
-        def _check_access_to_type(type: str) -> Iterable[str]:
-            if logLevel >= LogLevel.DEBUG:
-                yield f"{_locationStr('debug', 0)}: Access type: {type}"
+        def _check_access_to_type(type: str) -> None:
+            DEBUG(_locationStr('debug', 0), f"Access type: {type}")
             if type in self._globals.types_restricted:
-                yield from _check_access_to_defn(self._globals.types_restricted[type])
+                _check_access_to_defn(self._globals.types_restricted[type])
 
-        def _check_access_to_global_name(name: str) -> Iterable[str]:
-            if logLevel >= LogLevel.DEBUG:
-                yield f"{_locationStr('debug', 0)}: Access global name: {name}"
+        def _check_access_to_global_name(name: str) -> None:
+            DEBUG(_locationStr('debug', 0), f"Access global name: {name}")
             if name in self._globals.names_restricted:
-                yield from _check_access_to_defn(self._globals.names_restricted[name])
+                _check_access_to_defn(self._globals.names_restricted[name])
 
-        def _check_access_to_field(rec_type: str, field: str) -> Iterable[str]:
-            if logLevel >= LogLevel.DEBUG:
-                yield f"{_locationStr('debug', 0)}: Access field: {rec_type}.{field}"
+        def _check_access_to_field(rec_type: str, field: str) -> None:
+            DEBUG(_locationStr('debug', 0), f"Access field: {rec_type}.{field}")
             if rec_type in self._globals.fields and field in self._globals.fields[rec_type]:
-                yield from _check_access_to_defn(self._globals.fields[rec_type][field], prefix=f"{rec_type} :: ")
+                _check_access_to_defn(self._globals.fields[rec_type][field], prefix=f"{rec_type} :: ")
 
         if invisible_names := self._get_invisible_global_names_for_module(module):
             for match in invisible_names.finditer(body_clean):
                 name = match[0]
-                yield f"{_locationStr('error', match.start())}: Invalid access to private name '{name}' of [{self._globals.names_restricted[name].module}]"
+                ERROR(_locationStr('error', match.start()), f"Invalid access to private name '{name}' of [{self._globals.names_restricted[name].module}]")
 
         for chain in member_access_chains(body_clean):
-            if logLevel >= LogLevel.DEBUG:
-                yield f"{_locationStr('debug', 0)}: Access chain: {chain}"
-            errors = []
+            DEBUG(_locationStr('debug', 0), f"Access chain: {chain}")
             expr_type = _get_type_of_expr_str(chain[0], chain[2])
-            for err in errors:
-                yield err
             if expr_type:
-                yield from _check_access_to_type(expr_type)
+                _check_access_to_type(expr_type)
                 for field in chain[1]:
-                    yield from _check_access_to_field(expr_type, field)
+                    _check_access_to_field(expr_type, field)
                     if not (expr_type := self._globals.get_field_type(expr_type, field)):
                         break  # error
 
     # Go through function bodies. Check calls and struct member accesses.
-    def checkAccess(self) -> Iterable[str]:
+    def checkAccess(self) -> None:
         for defn in self._globals.names.values():
-            if logLevel >= LogLevel.DEBUG:
-                if logLevel >= LogLevel.DEBUG3:
-                    yield f"{defn.file.locationStr(0)}: debug3: Checking {defn.short_repr()}"
-                else:
-                    yield f"{defn.file.locationStr(0)}: debug: Checking {defn.kind} [{defn.module}] {defn.name}"
-            yield from self._check_function(defn)
+            DEBUG3(defn.file.locationStr(0), f"debug3: Checking {defn.short_repr()}") or \
+            DEBUG(defn.file.locationStr(0), f"debug: Checking {defn.kind} [{defn.module}] {defn.name}")
+            self._check_function(defn)
 

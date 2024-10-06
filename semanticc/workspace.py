@@ -1,7 +1,7 @@
 import enum
 import regex
 from dataclasses import dataclass, field
-from typing import Iterable
+from typing import Callable, IO
 import itertools
 from glob import glob
 from os import path
@@ -174,14 +174,32 @@ class LogLevel(enum.IntEnum):
     DEBUG5  = 9
 
 logLevel = LogLevel.DEFAULT
+logStream: IO | None = None
 
 def setLogLevel(level: LogLevel):
     global logLevel
     logLevel = level
 
-def log(level: LogLevel, *args, **kwargs):
+def LOG(level: LogLevel, location: str | Callable[[], str] | int, *args, **kwargs) -> bool:
     if level <= logLevel:
+        if isinstance(location, int):
+            location = locationStr(location)
+        elif callable(location):
+            location = location()
         for i in range(len(args)):
             if callable(args[i]):
                 args[i] = args[i]()  # type: ignore # Unsupported target for indexed assignment ("tuple[Any, ...]")  [index]
-        print(*args, **kwargs)
+        print(location, *args, **kwargs, file=logStream)
+        return True
+    return False
+
+def FATAL(*args, **kwargs): LOG(LogLevel.FATAL, *args, **kwargs)
+def ERROR(*args, **kwargs): LOG(LogLevel.ERROR, *args, **kwargs)
+def WARNING(*args, **kwargs): LOG(LogLevel.WARNING, *args, **kwargs)
+def INFO(*args, **kwargs): LOG(LogLevel.INFO, *args, **kwargs)
+def DEBUG(*args, **kwargs): LOG(LogLevel.DEBUG, *args, **kwargs)
+def DEBUG1(*args, **kwargs): LOG(LogLevel.DEBUG1, *args, **kwargs)
+def DEBUG2(*args, **kwargs): LOG(LogLevel.DEBUG2, *args, **kwargs)
+def DEBUG3(*args, **kwargs): LOG(LogLevel.DEBUG3, *args, **kwargs)
+def DEBUG4(*args, **kwargs): LOG(LogLevel.DEBUG4, *args, **kwargs)
+def DEBUG5(*args, **kwargs): LOG(LogLevel.DEBUG5, *args, **kwargs)

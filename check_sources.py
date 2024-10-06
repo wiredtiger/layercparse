@@ -69,9 +69,7 @@ def main():
     # pprint(globals, width=120, compact=False)
 
     # print(" ===== Access check:")
-    access = AccessCheck(globals)
-    for err in access.checkAccess():
-        print(err)
+    AccessCheck(globals).checkAccess()
 
 if __name__ == "__main__":
     main()
