@@ -97,7 +97,7 @@ class File:
         return f"{line}:{pos}"
 
     def locationStr(self, offset: int) -> str:
-        return f"{self.name}:{self.offsetToLinePosStr(offset)}"
+        return f"{self.name}:{self.offsetToLinePosStr(offset)}:"
 
 @dataclass
 class _Scope:
@@ -146,7 +146,7 @@ def scope_module() -> str:
     return stack.stack[-1].file.getModule() if stack.stack else ""
 
 def locationStr(offset: int) -> str:
-    return stack.stack[-1].locationStr(offset) if stack.stack else f"-:0:{offset}"
+    return stack.stack[-1].locationStr(offset) if stack.stack else f"-:0:{offset}:"
 
 class ScopePush:
     def __init__(self, offset: int = 0, file: File | str | None = None, relative: bool = True):

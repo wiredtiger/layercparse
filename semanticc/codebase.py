@@ -60,9 +60,11 @@ def _dict_upsert_def(d: dict[str, Definition], other: Definition) -> None:
     else:
         d[other.name] = other
 
-# Returns tuple of (is_private, module)
-#   if is_private is None -> privacy not specified -> public
-def _get_visibility_and_module(thing: Details, default_private: bool | None = None, default_module: str = "") -> tuple[bool | None, str]:
+def _get_visibility_and_module(thing: Details, default_private: bool | None = None, default_module: str = "", is_nested = False) -> tuple[bool | None, str]:
+    """ Returns tuple of (is_private, module).
+        If is_private is None -> privacy not specified -> public.
+        NOTE: The name can only include one module name is it's not top-level.
+    """
     if thing.preComment is not None:
         if match := regex.search(r"\#(?>(public)|(private))\b(?>\((\w++)\))?", thing.preComment.value, flags=re_flags):
             return (bool(match[2]), match[3] if match[3] else default_module)
@@ -70,8 +72,9 @@ def _get_visibility_and_module(thing: Details, default_private: bool | None = No
         if match := regex.search(r"\#(?>(public)|(private))\b(?>\((\w++)\))?", thing.postComment.value, flags=re_flags):
             return (bool(match[2]), match[3] if match[3] else default_module)
 
-    if match := regex.match(r"^(?>(__wt_)|(__wti_|WT_))([a-zA-Z0-9]++)?", thing.name.value, flags=re_flags):
-        return (bool(match[2]), match[3] if match[3] else default_module)
+    if is_nested:
+        if match := regex.match(r"^(?>(__wt_)|(__wti_|WT_))([a-zA-Z0-9]++)?", thing.name.value, flags=re_flags):
+            return (bool(match[2]), match[3] if match[3] else default_module)
 
     return (default_private, default_module)
 
@@ -113,7 +116,7 @@ class Codebase:
 
     def _add_record(self, record: RecordParts):
         record.getMembers()
-        is_private_record, local_module = _get_visibility_and_module(record, default_module=scope_module())
+        is_private_record, local_module = _get_visibility_and_module(record, default_module=scope_module(), is_nested=bool(record.parent))
         # TODO: check the parent record's access
         _dict_upsert_def(self.types, Definition(
             name=record.name.value,
@@ -127,7 +130,7 @@ class Codebase:
             self.types_restricted[record.name.value] = self.types[record.name.value]
         if record.members:
             for member in record.members:
-                is_private_field, local_module = _get_visibility_and_module(record, default_module=scope_module())
+                is_private_field, local_module = _get_visibility_and_module(record, default_module=scope_module(), is_nested=True)
                 if record.name.value not in self.fields:
                     self.fields[record.name.value] = {}
                 _dict_upsert_def(self.fields[record.name.value], Definition(
