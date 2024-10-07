@@ -7,6 +7,8 @@ from glob import glob
 from os import path
 from bisect import bisect_left
 
+from .internal import *
+
 ###### TODO::
 # 1. split preprocessor from everything else
 # 2. load preprocessor
@@ -19,37 +21,83 @@ def get_file_priority(fname: str) -> int:
            1 if fname else \
            0
 
+rootPath = ""
+
+def setRootPath(path: str):
+    global rootPath
+    rootPath = path
+
+@dataclass
+class Module:
+    name: str
+    dirname: str = ""
+    fileAliases: list[str] = field(default_factory=list)
+    sourceAliases: list[str] = field(default_factory=list)
+
+    def __post_init__(self):
+        if not self.dirname:
+            self.dirname = self.name
+
+modules: dict[str, Module] = {}
+moduleDirs: dict[str, str] = {}
+moduleAliasesFile: dict[str, str] = {}
+moduleAliasesSrc: dict[str, str] = {}
+moduleSrcNames: set[str] = set()
+
+def setModules(mods: list[Module]):
+    global modules, moduleDirs, moduleAliasesFile, moduleAliasesSrc, moduleSrcNames
+    for module in mods:
+        name = module.name
+        if name in modules:
+            # TODO: make fatal error?
+            raise ValueError(f"Module {name} already exists")
+        modules[name] = module
+        if module.dirname in moduleDirs:
+            # TODO: make fatal error?
+            raise ValueError(f"Module directory {module.dirname} conflicts with [{moduleDirs[module.dirname]}]")
+        moduleDirs[module.dirname] = name
+        for alias in module.fileAliases:
+            if alias in moduleAliasesFile:
+                # TODO: make fatal error?
+                raise ValueError(f"Module file alias {alias} for [{name}] conflicts with [{moduleAliasesFile[alias]}]")
+            moduleAliasesFile[alias] = name
+        for alias in module.sourceAliases:
+            if alias in moduleAliasesSrc:
+                # TODO: make fatal error?
+                raise ValueError(f"Module source alias {alias} for [{name}] conflicts with [{moduleAliasesSrc[alias]}]")
+            moduleAliasesSrc[alias] = name
+    moduleSrcNames = set(modules.keys()).union(set(moduleAliasesSrc.keys()))
+
 # First go headers, then inlines, then sources
-def get_files(root: str) -> list[str]:
-    return sorted(glob(path.join(root, "src/**/*.[ch]"), recursive=True),
+def get_files() -> list[str]:
+    return sorted(glob(path.join(rootPath, "src/**/*.[ch]"), recursive=True),
                   key=lambda x: ("3" if x.endswith(".c") else
                                  "2" if x.endswith("_inline.h") else
                                  "1")+x)
 
 # Get all headers, excluding inlines
-def get_h_files(root: str) -> list[str]:
-    return sorted((f for f in glob(path.join(root, "src/**/*.h"), recursive=True) if not f.endswith("_inline.h")))
+def get_h_files() -> list[str]:
+    return sorted((f for f in glob(path.join(rootPath, "src/**/*.h"), recursive=True) if not f.endswith("_inline.h")))
 
 # Get all inline headers
-def get_h_inline_files(root: str) -> list[str]:
-    return sorted(glob(path.join(root, "src/**/*_inline.h"), recursive=True))
+def get_h_inline_files() -> list[str]:
+    return sorted(glob(path.join(rootPath, "src/**/*_inline.h"), recursive=True))
 
 # Get all .c sources
-def get_c_files(root: str) -> list[str]:
-    return sorted(glob(path.join(root, "src/**/*.[c]"), recursive=True))
-
-# def scan_include_order(root: str, start: list[str]) -> Iterable[str]:
-#     pass # TODO
+def get_c_files() -> list[str]:
+    return sorted(glob(path.join(rootPath, "src/**/*.[c]"), recursive=True))
 
 def _fname_to_module_raw(fname: str) -> str:
-    i = fname.rfind("/src/")
-    if i >= 0:
-        fname = fname[i+5:]
+    prefix = path.join(rootPath, "src/")
+    if not fname.startswith(prefix):
+        return ""
+    fname = fname[len(prefix):]
     if not fname.startswith("include/"):
         i = fname.find("/")
         if i >= 0:
             fname = fname[:i]
         return fname
+    # A header in include/ directory
     fname = fname[8:]
     ret = path.splitext(path.basename(fname))[0]
     if ret.endswith("_inline"):
@@ -60,9 +108,13 @@ def _fname_to_module_raw(fname: str) -> str:
 
 def fname_to_module(fname: str) -> str:
     ret = _fname_to_module_raw(fname)
-    if ret.startswith("os_") or ret in ["gcc", "clang", "msvc"]:
-        return "os"
-    return ret
+    if not ret:
+        return ""
+    if ret in moduleAliasesFile:
+        ret = moduleAliasesFile[ret]
+    if ret in modules:
+        return ret
+    return ""
 
 
 @dataclass
@@ -175,12 +227,16 @@ class LogLevel(enum.IntEnum):
 
 logLevel = LogLevel.DEFAULT
 logStream: IO | None = None
+errors: int = 0
 
 def setLogLevel(level: LogLevel):
     global logLevel
     logLevel = level
 
 def LOG(level: LogLevel, location: str | Callable[[], str] | int, *args, **kwargs) -> bool:
+    if level <= LogLevel.ERROR:
+        global errors
+        errors += 1
     if level <= logLevel:
         if isinstance(location, int):
             location = locationStr(location)

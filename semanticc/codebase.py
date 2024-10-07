@@ -73,7 +73,8 @@ def _get_visibility_and_module(thing: Details, default_private: bool | None = No
             return (bool(match[2]), match[3] if match[3] else default_module)
 
     if is_nested:
-        if match := regex.match(r"^(?>(__wt_)|(__wti_|WT_))([a-zA-Z0-9]++)?", thing.name.value, flags=re_flags):
+        if match := regex.match(r"^(?>(__wt_)|(__wti_|WT_))(\L<names>)?", thing.name.value, flags=re_flags,
+                                names=moduleSrcNames):
             return (bool(match[2]), match[3] if match[3] else default_module)
 
     return (default_private, default_module)

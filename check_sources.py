@@ -51,19 +51,53 @@ def print_statement_from_file(fname: str) -> str:
     return "\n".join(a)
 
 
+def addModules():
+    setModules([
+        Module("block"),
+        Module("block_cache", sourceAliases = ["blkcache", "bm"]),
+        Module("bloom"),
+        Module("btree"),
+        Module("call_log"),
+        # Module("checksum"),
+        Module("conf"),
+        Module("config"),
+        Module("conn"),
+        Module("cursor", sourceAliases=["cur"]),
+        Module("evict"),
+        Module("history", sourceAliases = ["hs"]),
+        Module("log"),
+        Module("lsm", sourceAliases=["clsm"]),
+        Module("meta", sourceAliases=["metadata"]),
+        Module("optrack"),
+        # Module("os", fileAliases = ["os_common", "os_darwin", "os_linux", "os_posix", "os_win"]),
+        Module("packing", sourceAliases=["pack", "struct"]),
+        Module("reconcile", sourceAliases = ["rec"]),
+        Module("rollback_to_stable", sourceAliases = ["rts"]),
+        Module("schema"),
+        Module("session"),
+        # Module("support"),
+        Module("tiered"),
+        Module("txn"),
+        # Module("utilities"),
+    ])
+
+
 def main():
-    setLogLevel(LogLevel.WARNING)
+    # setLogLevel(LogLevel.WARNING)
+
+    setRootPath(os.path.realpath(sys.argv[1]))
+    addModules()
 
     # for fname in get_files(sys.argv[1]):
     #     print_statement_from_file(fname)
 
     # multiprocessing.set_start_method('fork')  # 'fork' is faster than 'spawn'
     # with multiprocessing.Pool() as pool:
-    #     for res in pool.starmap(print_statement_from_file, ((f,) for f in get_files(sys.argv[1]))):
+    #     for res in pool.starmap(print_statement_from_file, ((f,) for f in get_files())):
     #         print(res)
 
     globals = Codebase()
-    for fname in get_files(sys.argv[1]):
+    for fname in get_files():
         globals.updateFromFile(fname)
 
     # pprint(globals, width=120, compact=False)
