@@ -308,6 +308,3 @@ class StatementList(list[Statement]):
         with open(fname) as file:
             return StatementList.preprocFromText(file.read())
 
-
-
-

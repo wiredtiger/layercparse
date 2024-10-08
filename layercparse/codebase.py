@@ -159,7 +159,7 @@ class Codebase:
             for rec in record.nested:
                 self._add_record(rec)
 
-    def updateFromText(self, txt: str, offset: int = 0, do_preproc = False) -> None:
+    def updateFromText(self, txt: str, offset: int = 0, do_preproc: bool = True) -> None:
         DEBUG3(" ---", f"Scope: {offset}")
         with ScopePush(offset=offset):
             saved_type: Any = None
@@ -204,10 +204,13 @@ class Codebase:
                         if body:
                             self.updateFromText(body.value[1:-1], offset=body.range[0]+1)
 
-    def updateFromFile(self, fname: str) -> None:
+    def updateFromFile(self, fname: str, expand_preproc = True) -> None:
         DEBUG2(" ---", f"File: {fname}")
         with ScopePush(file=File(fname)):
-            self.updateFromText(scope_file().read())
+            if expand_preproc:
+                self.updateFromText(self.macros.expand(scope_file().read()), do_preproc=False)
+            else:
+                self.updateFromText(scope_file().read(), do_preproc=True)
 
     def updateMacroFromText(self, txt: str, offset: int = 0) -> None:
         with ScopePush(offset=offset):
@@ -220,9 +223,15 @@ class Codebase:
         with ScopePush(file=File(fname)):
             self.updateMacroFromText(scope_file().read())
 
-    def scanFiles(self, files: Iterable[str]) -> None:
-        for fname in files:
-            self.updateMacroFromFile(fname)
-        for fname in files:
-            self.updateFromFile(fname)
+    def scanFiles(self, files: Iterable[str], twopass = True) -> None:
+        if twopass:
+            for fname in files:
+                # if get_file_priority(fname) <= 1:
+                self.updateMacroFromFile(fname)
+            for fname in files:
+                # if fname == "/Users/y.ershov/src/wt-mod/src/conn/conn_handle.c":
+                self.updateFromFile(fname, expand_preproc=True)
+        else:
+            for fname in files:
+                self.updateFromFile(fname, expand_preproc=False)
 

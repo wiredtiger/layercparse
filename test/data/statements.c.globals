@@ -1409,7 +1409,7 @@ Codebase(types={'(data/statements.c:127:11:)': Definition(name='(data/statements
                                'qwe': MacroParts(name=Token(idx=0, range=(355, 358), value='qwe'),
                                                  args=None,
                                                  body=Token(idx=0, range=(359, 382), value='QWE                   '),
-                                                 preComment=Token(idx=15, range=(329, 346), value='/* pre comment */'),
+                                                 preComment=Token(idx=133, range=(329, 346), value='/* pre comment */'),
                                                  is_va_args=False,
                                                  is_wellformed=True)},
                        errors=[]))

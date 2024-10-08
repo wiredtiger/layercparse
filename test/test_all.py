@@ -176,7 +176,7 @@ class TestStatementDetails(TestCaseLocal):
 class TestRecordAccess(TestCaseLocal):
     def test_record(self):
         _globals = Codebase()
-        _globals.updateFromFile("data/record.c")
+        _globals.updateFromFile("data/record.c", expand_preproc=False)
         workspace.logStream = StringIO()
         # setLogLevel(LogLevel.DEBUG)
         AccessCheck(_globals).checkAccess()
@@ -205,7 +205,7 @@ class TestMacro(TestCaseLocal):
 class TestCodebase(TestCaseLocal):
     def test_codebase(self):
         _globals = Codebase()
-        _globals.scanFiles(["data/statements.c"])
+        _globals.scanFiles(["data/statements.c"], twopass=False)
         self.checkStrAgainstFile(pformat(_globals, width=120, compact=False), "data/statements.c.globals")
 
 
