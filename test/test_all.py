@@ -190,7 +190,7 @@ class TestMacro(TestCaseLocal):
         src = file_content("data/macro.c")
         for p in StatementList.preprocFromText(src):
             macro = MacroParts.fromStatement(p)
-            pprint(macro)
+            # pprint(macro)
             if macro:
                 _globals.macros.upsert(macro)
         # _globals.updateFromFile("data/macro.c")
@@ -205,7 +205,7 @@ class TestMacro(TestCaseLocal):
 class TestCodebase(TestCaseLocal):
     def test_codebase(self):
         _globals = Codebase()
-        _globals.updateFromFile("data/statements.c")
+        _globals.scanFiles(["data/statements.c"])
         self.checkStrAgainstFile(pformat(_globals, width=120, compact=False), "data/statements.c.globals")
 
 

@@ -23,9 +23,9 @@ def get_file_priority(fname: str) -> int:
 
 rootPath = ""
 
-def setRootPath(path: str):
+def setRootPath(p: str):
     global rootPath
-    rootPath = path
+    rootPath = path.realpath(p)
 
 @dataclass
 class Module:

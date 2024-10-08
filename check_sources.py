@@ -83,12 +83,15 @@ def addModules():
 
 
 def main():
-    setLogLevel(LogLevel.DEBUG5)
+    # setLogLevel(LogLevel.DEBUG4)
 
-    setRootPath(os.path.realpath(sys.argv[1]))
+    rootPath = os.path.realpath(sys.argv[1])
+    setRootPath(rootPath)
     addModules()
+    files = get_files()
+    files.insert(0, os.path.join(os.path.realpath(rootPath), "src/include/wiredtiger.in"))
 
-    # for fname in get_files(sys.argv[1]):
+    # for fname in get_files(rootPath):
     #     print_statement_from_file(fname)
 
     # multiprocessing.set_start_method('fork')  # 'fork' is faster than 'spawn'
@@ -97,12 +100,13 @@ def main():
     #         print(res)
 
     _globals = Codebase()
-    for fname in get_files():
-        _globals.updateFromFile(fname)
+    _globals.scanFiles(files)
+    # for fname in files:
+    #     _globals.updateFromFile(fname)
 
-    print(" ===== Globals:")
-    pprint(_globals, width=120, compact=False)
-    print(" =====")
+    # print(" ===== Globals:")
+    # pprint(_globals, width=120, compact=False)
+    # print(" =====")
 
     # print(" ===== Access check:")
     AccessCheck(_globals).checkAccess()

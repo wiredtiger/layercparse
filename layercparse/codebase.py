@@ -106,14 +106,11 @@ class Codebase:
     macros: Macros = field(default_factory=Macros)
 
     def untypedef(self, name: str) -> str:
-        name1, name2 = "", ""
-        while name in self.typedefs:
-            if name in self.types:
-                name1 = self.typedefs[name]
-            if name in self.fields:
-                name2 = self.typedefs[name]
+        seen: set[str] = set()
+        while name not in self.types and name in self.typedefs and name not in seen:
+            seen.add(name)
             name = self.typedefs[name]
-        return name2 if name2 else name1 if name1 else name
+        return name
 
     # Get the un-typedefed type of a field or ""
     def get_field_type(self, rec_type: str, field_name: str) -> str:
@@ -162,7 +159,8 @@ class Codebase:
             for rec in record.nested:
                 self._add_record(rec)
 
-    def updateFromText(self, txt: str, offset: int = 0) -> None:
+    def updateFromText(self, txt: str, offset: int = 0, do_preproc = False) -> None:
+        DEBUG3(" ---", f"Scope: {offset}")
         with ScopePush(offset=offset):
             saved_type: Any = None
             for st in StatementList.fromText(txt):
@@ -197,7 +195,7 @@ class Codebase:
                         # TODO: add global variables from struct definitions
                     elif st.getKind().is_decl:
                         pass # TODO: global function and variable declarations
-                    elif st.getKind().is_preproc:
+                    elif do_preproc and st.getKind().is_preproc:
                         macro = MacroParts.fromStatement(st)
                         if macro:
                             self.macros.upsert(macro)
@@ -207,25 +205,24 @@ class Codebase:
                             self.updateFromText(body.value[1:-1], offset=body.range[0]+1)
 
     def updateFromFile(self, fname: str) -> None:
+        DEBUG2(" ---", f"File: {fname}")
         with ScopePush(file=File(fname)):
-            txt = scope_file().read()
-            self.updateFromText(txt)
+            self.updateFromText(scope_file().read())
 
-    # def updateMacroFromText(self, txt: str, offset: int = 0) -> None:
-    #     with ScopePush(offset=offset):
-    #         for st in StatementList.preprocFromText(src):
-    #             macro = MacroParts.fromStatement(st)
-    #             if macro:
-    #                 self.macros.upsert(macro)
-    #         ************
+    def updateMacroFromText(self, txt: str, offset: int = 0) -> None:
+        with ScopePush(offset=offset):
+            for st in StatementList.preprocFromText(txt):
+                macro = MacroParts.fromStatement(st)
+                if macro:
+                    self.macros.upsert(macro)
 
+    def updateMacroFromFile(self, fname: str) -> None:
+        with ScopePush(file=File(fname)):
+            self.updateMacroFromText(scope_file().read())
 
-
-    #         for st in StatementList.fromText(txt):
-    #             st.getKind()
-    #             if st.getKind().is_preproc:
-    #                 macro = MacroParts.fromStatement(st)
-    #                 if macro:
-    #                     self.macros.upsert(macro)
-
+    def scanFiles(self, files: Iterable[str]) -> None:
+        for fname in files:
+            self.updateMacroFromFile(fname)
+        for fname in files:
+            self.updateFromFile(fname)
 

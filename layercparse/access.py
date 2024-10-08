@@ -12,10 +12,10 @@ from .workspace import *
 _reg_member_access_chain = regex.compile(r"""
     # ((?<!\w)\((?&TOKEN)++\))*                        # Possible type conversions - not needed
     (?>
-        (\w++)(?>\((?&TOKEN)*+\))? |  # (1) variable or function call
+        ([a-zA-Z_]\w*+)(?>\((?&TOKEN)*+\))? |  # (1) variable or function call
         (\((?&TOKEN)++\))             # (2) expression
     )
-    (?>(?>->|\.)(\w++))++             # (3) member access chain via -> or .
+    (?>(?>->|\.)([a-zA-Z_]\w*+))++             # (3) member access chain via -> or .
 """+re_token, re_flags)
 
 @dataclass
@@ -23,6 +23,9 @@ class AccessChain:
     name: str
     members: list[str]
     offset: int
+
+    def __str__(self) -> str:
+        return f"{self.name}->{'.'.join(self.members)}"
 
 def member_access_chains(txt: str, offset_in_parent: int = 0) -> Iterable[AccessChain]:
     for match in _reg_member_access_chain.finditer(txt):
@@ -69,9 +72,9 @@ class AccessCheck:
         def _LOC(offset: int) -> Callable[[], str]:
             return lambda: _locationStr(offset)
 
-        DEBUG5(_LOC(0), f"=== body:\n{body_clean}\n===")
-
         module = defn.module
+
+        DEBUG5(_LOC(0), f"=== body:\n{body_clean}\n===")
 
         # Check local names
         localvars: dict[str, Definition] = {} # name -> type
@@ -155,17 +158,17 @@ class AccessCheck:
                 ERROR(_locationStr(defn2.offset), f"Invalid access to private {defn2.kind} '{prefix}{defn2.name}' of [{defn2.module}]")
 
         def _check_access_to_type(type: str) -> None:
-            DEBUG(_locationStr(0), f"Access type: {type}")
+            DEBUG3(_locationStr(0), f"Access type: {type}")
             if type in self._globals.types_restricted:
                 _check_access_to_defn(self._globals.types_restricted[type])
 
         def _check_access_to_global_name(name: str) -> None:
-            DEBUG(_locationStr(0), f"Access global name: {name}")
+            DEBUG3(_locationStr(0), f"Access global name: {name}")
             if name in self._globals.names_restricted:
                 _check_access_to_defn(self._globals.names_restricted[name])
 
         def _check_access_to_field(rec_type: str, field: str) -> None:
-            DEBUG(_locationStr(0), f"Access field: {rec_type}.{field}")
+            DEBUG3(_locationStr(0), f"Access field: {rec_type}.{field}")
             if rec_type in self._globals.fields and field in self._globals.fields[rec_type]:
                 _check_access_to_defn(self._globals.fields[rec_type][field], prefix=f"{rec_type} :: ")
 
@@ -179,11 +182,15 @@ class AccessCheck:
             expr_type = _get_type_of_expr_str(chain.name, chain.offset)
             if expr_type:
                 _check_access_to_type(expr_type)
+                DEBUG3(_locationStr(chain.offset), f"Field access chain: {chain}")
                 for field in chain.members:
+                    DEBUG4(_locationStr(chain.offset), f"Field access: {expr_type}->{field}")
                     _check_access_to_field(expr_type, field)
                     if not (expr_type := self._globals.get_field_type(expr_type, field)):
-                        WARNING(_locationStr(chain.offset), f"Can't deduce the type of member '{field}'")
+                        WARNING(_locationStr(chain.offset), f"Can't deduce type of member '{field}' in {chain}")
                         break  # error
+            else:
+                WARNING(_locationStr(chain.offset), f"Can't deduce type of expression {chain}")
 
     # Go through function bodies. Check calls and struct member accesses.
     def checkAccess(self) -> None:

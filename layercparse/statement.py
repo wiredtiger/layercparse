@@ -215,6 +215,12 @@ class StatementList(list[Statement]):
                         return False
 
             token = tokens[i]
+
+            if token.getKind() == "@":  # invalid token
+                if cur:
+                    yield push_statement()
+                yield Statement(TokenList([token]))
+
             if (complete and token.getKind() not in [" ", "/"]) or \
                (comment_only and token.getKind() == "/"):
                     yield push_statement()
