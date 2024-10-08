@@ -153,24 +153,22 @@ class AccessCheck:
         def _get_type_of_expr_str(clean_txt: str, root_offset: int = 0) -> str:
             return self._globals.untypedef(_get_type_of_expr(TokenList(TokenList.xxFilterCode(TokenList.xFromText(clean_txt))), root_offset))
 
-        def _check_access_to_defn(defn2: Definition, prefix: str = "") -> None:
+        def _check_access_to_defn(defn2: Definition, offset: int, prefix: str = "") -> None:
             if defn2.is_private and defn2.module and defn2.module != module:
-                ERROR(_locationStr(defn2.offset), f"Invalid access to private {defn2.kind} '{prefix}{defn2.name}' of [{defn2.module}]")
+                ERROR(_locationStr(offset), f"Invalid access to private {defn2.kind} '{prefix}{defn2.name}' of [{defn2.module}]")
 
-        def _check_access_to_type(type: str) -> None:
-            DEBUG3(_locationStr(0), f"Access type: {type}")
+        def _check_access_to_type(type: str, offset: int) -> None:
             if type in self._globals.types_restricted:
-                _check_access_to_defn(self._globals.types_restricted[type])
+                _check_access_to_defn(self._globals.types_restricted[type], offset)
 
-        def _check_access_to_global_name(name: str) -> None:
+        def _check_access_to_global_name(name: str, offset: int) -> None:
             DEBUG3(_locationStr(0), f"Access global name: {name}")
             if name in self._globals.names_restricted:
-                _check_access_to_defn(self._globals.names_restricted[name])
+                _check_access_to_defn(self._globals.names_restricted[name], offset)
 
-        def _check_access_to_field(rec_type: str, field: str) -> None:
-            DEBUG3(_locationStr(0), f"Access field: {rec_type}.{field}")
+        def _check_access_to_field(rec_type: str, field: str, offset: int) -> None:
             if rec_type in self._globals.fields and field in self._globals.fields[rec_type]:
-                _check_access_to_defn(self._globals.fields[rec_type][field], prefix=f"{rec_type} :: ")
+                _check_access_to_defn(self._globals.fields[rec_type][field], offset, prefix=f"{rec_type} :: ")
 
         if invisible_names := self._get_invisible_global_names_for_module(module):
             for match in invisible_names.finditer(body_clean):
@@ -178,16 +176,17 @@ class AccessCheck:
                 ERROR(_locationStr(match.start()), f"Invalid access to private name '{name}' of [{self._globals.names_restricted[name].module}]")
 
         for chain in member_access_chains(body_clean):
-            DEBUG(_locationStr(0), f"Access chain: {chain}")
+            DEBUG2(_LOC(chain.offset), f"Access chain: {chain}")
             expr_type = _get_type_of_expr_str(chain.name, chain.offset)
             if expr_type:
-                _check_access_to_type(expr_type)
-                DEBUG3(_locationStr(chain.offset), f"Field access chain: {chain}")
+                DEBUG3(_LOC(chain.offset), f"Access type: {expr_type}")
+                _check_access_to_type(expr_type, chain.offset)
+                DEBUG3(_LOC(chain.offset), f"Field access chain: {chain}")
                 for field in chain.members:
-                    DEBUG4(_locationStr(chain.offset), f"Field access: {expr_type}->{field}")
-                    _check_access_to_field(expr_type, field)
+                    DEBUG3(_LOC(chain.offset), f"Field access: {expr_type}->{field}")
+                    _check_access_to_field(expr_type, field, chain.offset)
                     if not (expr_type := self._globals.get_field_type(expr_type, field)):
-                        WARNING(_locationStr(chain.offset), f"Can't deduce type of member '{field}' in {chain}")
+                        WARNING(_LOC(chain.offset), f"Can't deduce type of member '{field}' in {chain}")
                         break  # error
             else:
                 WARNING(_locationStr(chain.offset), f"Can't deduce type of expression {chain}")

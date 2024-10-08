@@ -207,6 +207,23 @@ class TestMacro(TestCaseLocal):
             print("\n".join(_globals.macros.errors))
         self.checkStrAgainstFile(expanded, "data/macro.c.macro-noconst")
 
+    def test_macro_expand(self):
+        setModules([Module("mod1"), Module("mod2")])
+
+        workspace.logStream = StringIO()
+        _globals1 = Codebase()
+        _globals1.scanFiles(["data/macro-expand-offsets.c"], twopass=True)
+        AccessCheck(_globals1).checkAccess()
+        check1 = workspace.logStream.getvalue()
+
+        workspace.logStream = StringIO()
+        _globals2 = Codebase()
+        _globals2.scanFiles(["data/macro-expand-offsets.c"], twopass=False)
+        AccessCheck(_globals2).checkAccess()
+        check2 = workspace.logStream.getvalue()
+
+        self.assertTrue(check1.find("Invalid access") != -1)
+        self.assertMultiLineEqualDiff(check1, check2)
 
 class TestCodebase(TestCaseLocal):
     def test_codebase(self):

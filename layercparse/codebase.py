@@ -208,7 +208,9 @@ class Codebase:
         DEBUG2(" ---", f"File: {fname}")
         with ScopePush(file=File(fname)):
             if expand_preproc:
-                self.updateFromText(self.macros.expand(scope_file().read()), do_preproc=False)
+                txt = self.macros.expand(scope_file().read())
+                scope_file().updateLineInfoWithInsertList(self.macros.insert_list)
+                self.updateFromText(txt, do_preproc=False)
             else:
                 self.updateFromText(scope_file().read(), do_preproc=True)
 

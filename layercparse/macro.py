@@ -156,37 +156,47 @@ class Macros:
             r"""(?> ' (?> [^\\'] | \\. )* ' )""",
         ]
         kwargs = {}
+        self._has_obj_like_names, self._has_fn_like_names = False, False
         if names := [k for k, v in self.macros.items() if v.args is None]:
             if not expand_const:
                 names = [k for k in names if not self.macros[k].is_const]
             kwargs["names_obj"] = names
             names_re_a.append(r"""(?P<name> \b(?:\L<names_obj>)\b )""")
+            self._has_obj_like_names = True
         if names := [k for k, v in self.macros.items() if v.args is not None]:
             if not expand_const:
                 names = [k for k in names if not self.macros[k].is_const]
             kwargs["names_func"] = names
             names_re_a.append(r"""(?P<name> \b(?:\L<names_func>)\b )(?P<args>(?P<spc>\s*+)\((?P<list>(?&TOKEN)*+)\))""" + re_token)
+            self._has_fn_like_names = True
 
         self._names_reg = regex.compile(" | ".join(names_re_a), re_flags, **kwargs)  # type: ignore # **kwargs
         self._in_use: set[str] = set()
         self._in_use_stack: list[str] = []
+        self.insert_list: list[tuple[int, int]] = []  # (offset, delta)
 
         self.errors = []
         return self._expand_fragment(txt)
 
+    def __update_insert_list(self, replacement: str, match: regex.Match, base_offset) -> str:
+        if self._in_use:
+            return replacement
+        self.insert_list.append((match.start() + base_offset, len(replacement) - len(match[0])))
+        return replacement
+
     def _expand_fragment(self, txt: str, base_offset: int = 0) -> str:
         return self._names_reg.sub(
-            lambda match: self._expand_fn_like(match, base_offset + base_offset) if match["args"] else \
-                          self._expand_obj_like(match, base_offset + base_offset) if match["name"] else \
+            lambda match: self._expand_fn_like(match, base_offset + base_offset) if self._has_fn_like_names and match["args"] else \
+                          self._expand_obj_like(match, base_offset + base_offset) if self._has_obj_like_names and match["name"] else \
                           match[0],
             txt)
 
     def _expand_obj_like(self, match: regex.Match, base_offset: int = 0) -> str:
         name = match["name"]
         if name in self._in_use:
-            return match[0]
+            return self.__update_insert_list(match[0], match, base_offset)
         if not self.macros[name].body:
-            return ""
+            return self.__update_insert_list("", match, base_offset)
 
         self._in_use.add(name)
         self._in_use_stack.append(name)
@@ -195,15 +205,15 @@ class Macros:
         self._in_use_stack.pop()
         self._in_use.remove(name)
 
-        return replacement
+        return self.__update_insert_list(replacement, match, base_offset)
 
     def _expand_fn_like(self, match: regex.Match, base_offset: int = 0) -> str:
         name = match["name"]
         if name in self._in_use:
-            return match[0]
+            return self.__update_insert_list(match[0], match, base_offset)
         macro = self.macros[name]
         if not macro.body:
-            return ""
+            return self.__update_insert_list("", match, base_offset)
 
         # Parse args
         args_val: list[TokenList] = [TokenList([])]
@@ -221,7 +231,7 @@ class Macros:
             args_val[-1].append(token_arg)
         if len(args_val) < len(macro.args):  # type: ignore # macro has args
             self.errors.append(f"error: macro {name}: got only {len(args_val)} arguments, expected {len(macro.args)}")   # type: ignore # macro has args # TODO: better error reporting
-            return match[0]
+            return self.__update_insert_list(match[0], match, base_offset)
 
         replacement = macro.body.value  # type: ignore # match is not None
 
@@ -257,4 +267,4 @@ class Macros:
         self._in_use_stack.pop()
         self._in_use.remove(name)
 
-        return replacement
+        return self.__update_insert_list(replacement, match, base_offset)

@@ -83,7 +83,7 @@ def addModules():
 
 
 def main():
-    # setLogLevel(LogLevel.DEBUG4)
+    # setLogLevel(LogLevel.WARNING)
 
     rootPath = os.path.realpath(sys.argv[1])
     setRootPath(rootPath)

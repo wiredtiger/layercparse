@@ -136,6 +136,25 @@ class File:
                 self.lineOffsets.append(match.start())
         return self.lineOffsets
 
+    def updateLineInfoWithInsertList(self, insertList: list[tuple[int, int]]) -> None:
+        if not self.lineOffsets or not insertList:
+            return
+        cur_delta, cur_line = 0, 0
+        for offset, delta in insertList:
+            if offset >= self.lineOffsets[-1]:
+                break
+            if not cur_delta:
+                cur_line = bisect_left(self.lineOffsets, offset) + 1
+                cur_delta = delta
+                continue
+            while cur_line < len(self.lineOffsets) and self.lineOffsets[cur_line] < offset:
+                self.lineOffsets[cur_line] += cur_delta
+                cur_line += 1
+            cur_delta += delta
+        if cur_delta:
+            for i in range(cur_line, len(self.lineOffsets)):
+                self.lineOffsets[i] += cur_delta
+
     def offsetToLinePos(self, offset: int) -> tuple[int, int]:
         if not self.lineOffsets:
             return (0, offset)
