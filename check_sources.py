@@ -100,7 +100,7 @@ def main():
     #         print(res)
 
     _globals = Codebase()
-    _globals.scanFiles(files, twopass=False)
+    _globals.scanFiles(files, twopass=True)
     # for fname in files:
     #     _globals.updateFromFile(fname)
 

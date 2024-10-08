@@ -196,10 +196,16 @@ class TestMacro(TestCaseLocal):
         # _globals.updateFromFile("data/macro.c")
         # setLogLevel(LogLevel.DEBUG)
         # pprint(_globals.macros, width=120, compact=False)
-        expanded = _globals.macros.expand(src)
+
+        expanded = _globals.macros.expand(src, expand_const=True)
         if _globals.macros.errors:
             print("\n".join(_globals.macros.errors))
-        self.checkStrAgainstFile(expanded, "data/macro.c.macro")
+        self.checkStrAgainstFile(expanded, "data/macro.c.macro-full")
+
+        expanded = _globals.macros.expand(src, expand_const=False)
+        if _globals.macros.errors:
+            print("\n".join(_globals.macros.errors))
+        self.checkStrAgainstFile(expanded, "data/macro.c.macro-noconst")
 
 
 class TestCodebase(TestCaseLocal):

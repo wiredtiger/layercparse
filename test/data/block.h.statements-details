@@ -93,7 +93,8 @@ MacroParts(name=Token(idx=0, range=(392, 415), value='WT_BLOCK_INVALID_OFFSET'),
                                   ' * offset of 0 as an invalid offset.\n'
                                   ' */'),
            is_va_args=False,
-           is_wellformed=True)
+           is_wellformed=True,
+           is_const=True)
 Statement(tokens=[418:1686] 〈
 ⌇/*
  * The block manager maintains three per-checkpoint extent lists:
@@ -621,7 +622,8 @@ MacroParts(name=Token(idx=0, range=(3778, 3792), value='WT_EXT_FOREACH'),
                                   ' * by the depth.\n'
                                   ' */'),
            is_va_args=False,
-           is_wellformed=True)
+           is_wellformed=True,
+           is_const=False)
 Statement(tokens=[3878:4002] 〈#define WT_EXT_FOREACH_OFF(skip, head) \
     for ((skip) = (head)[0]; (skip) != NULL; (skip) = (skip)->next[(skip)->depth])
 〉,
@@ -648,7 +650,8 @@ MacroParts(name=Token(idx=0, range=(3886, 3904), value='WT_EXT_FOREACH_OFF'),
                       value='for ((skip) = (head)[0]; (skip) != NULL; (skip) = (skip)->next[(skip)->depth])'),
            preComment=None,
            is_va_args=False,
-           is_wellformed=True)
+           is_wellformed=True,
+           is_const=False)
 Statement(tokens=[4002:4372] 〈
 ⌇/*
  * WT_EXT_FOREACH_FROM_OFFSET_INCL --
@@ -699,7 +702,8 @@ MacroParts(name=Token(idx=0, range=(4181, 4212), value='WT_EXT_FOREACH_FROM_OFFS
                                   ' * given offset if available.\n'
                                   ' */'),
            is_va_args=False,
-           is_wellformed=True)
+           is_wellformed=True,
+           is_const=False)
 Statement(tokens=[4372:4764] 〈
 ⌇/*
  * Checkpoint cookie: carries a version number as I don't want to rev the schema
@@ -752,7 +756,8 @@ MacroParts(name=Token(idx=0, range=(4703, 4727), value='WT_BM_CHECKPOINT_VERSION
                                   ' *\t    [file size] [checkpoint size] [write generation]\n'
                                   ' */'),
            is_va_args=False,
-           is_wellformed=True)
+           is_wellformed=True,
+           is_const=True)
 Statement(tokens=[4764:4823] 〈#define WT_BLOCK_EXTLIST_MAGIC 71002 /* Identify a list */
 〉,
           kind=StatementKind(is_comment=None,
@@ -776,7 +781,8 @@ MacroParts(name=Token(idx=0, range=(4772, 4794), value='WT_BLOCK_EXTLIST_MAGIC')
            body=Token(idx=0, range=(4795, 4823), value='71002                      '),
            preComment=None,
            is_va_args=False,
-           is_wellformed=True)
+           is_wellformed=True,
+           is_const=True)
 Statement(tokens=[4823:5060] 〈
 ⌇/*
  * There are two versions of the extent list blocks: the original, and a second version where
@@ -818,7 +824,8 @@ MacroParts(name=Token(idx=0, range=(5005, 5034), value='WT_BLOCK_EXTLIST_VERSION
                                   ' * current checkpoint information is appended to the avail extent list.\n'
                                   ' */'),
            is_va_args=False,
-           is_wellformed=True)
+           is_wellformed=True,
+           is_const=True)
 Statement(tokens=[5060:5133] 〈#define WT_BLOCK_EXTLIST_VERSION_CKPT 1 /* Checkpoint in avail output */
 〉,
           kind=StatementKind(is_comment=None,
@@ -842,7 +849,8 @@ MacroParts(name=Token(idx=0, range=(5068, 5097), value='WT_BLOCK_EXTLIST_VERSION
            body=Token(idx=0, range=(5098, 5133), value='1                                 '),
            preComment=None,
            is_va_args=False,
-           is_wellformed=True)
+           is_wellformed=True,
+           is_const=True)
 Statement(tokens=[5133:5309] 〈
 ⌇/*
  * Maximum buffer required to store a checkpoint: 1 version byte followed by
@@ -873,10 +881,8 @@ Statement(tokens=[5133:5309] 〈
                              postComment=None))
 Macro:
 MacroParts(name=Token(idx=0, range=(5250, 5276), value='WT_BLOCK_CHECKPOINT_BUFFER'),
-           args=[Token(idx=0, range=(5278, 5279), value='1'),
-                 Token(idx=1, range=(5282, 5284), value='14'),
-                 Token(idx=2, range=(5287, 5307), value='WT_INTPACK64_MAXSIZE')],
-           body=Token(idx=0, range=(5309, 5309), value=''),
+           args=None,
+           body=Token(idx=0, range=(5277, 5309), value='(1 + 14 * WT_INTPACK64_MAXSIZE)'),
            preComment=Token(idx=76,
                             range=(5134, 5241),
                             value='/*\n'
@@ -884,7 +890,8 @@ MacroParts(name=Token(idx=0, range=(5250, 5276), value='WT_BLOCK_CHECKPOINT_BUFF
                                   ' * 14 packed 8B values.\n'
                                   ' */'),
            is_va_args=False,
-           is_wellformed=True)
+           is_wellformed=True,
+           is_const=False)
 Statement(tokens=[5309:6183] 〈
 ⌇struct⌇ ⌇__wt_block_ckpt⌇ ⌇{
     uint8_t version; /* Version */
@@ -2117,7 +2124,8 @@ MacroParts(name=Token(idx=0, range=(14301, 14319), value='WT_BLOCK_DESC_SIZE'),
                                   'regardless).\n'
                                   ' */'),
            is_va_args=False,
-           is_wellformed=True)
+           is_wellformed=True,
+           is_const=True)
 Statement(tokens=[14323:14757] 〈
 ⌇/*
  * __wt_block_desc_byteswap --
@@ -2391,7 +2399,8 @@ MacroParts(name=Token(idx=0, range=(16511, 16531), value='WT_BLOCK_HEADER_SIZE')
                                   ' * inserts padding it will break the world.\n'
                                   ' */'),
            is_va_args=False,
-           is_wellformed=True)
+           is_wellformed=True,
+           is_const=True)
 Statement(tokens=[16535:16943] 〈
 ⌇/*
  * __wt_block_header_byteswap_copy --
@@ -2559,9 +2568,8 @@ Statement(tokens=[17233:17448] 〈
                              postComment=None))
 Macro:
 MacroParts(name=Token(idx=0, range=(17377, 17402), value='WT_BLOCK_HEADER_BYTE_SIZE'),
-           args=[Token(idx=0, range=(17404, 17423), value='WT_PAGE_HEADER_SIZE'),
-                 Token(idx=1, range=(17426, 17446), value='WT_BLOCK_HEADER_SIZE')],
-           body=Token(idx=0, range=(17448, 17448), value=''),
+           args=None,
+           body=Token(idx=0, range=(17403, 17448), value='(WT_PAGE_HEADER_SIZE + WT_BLOCK_HEADER_SIZE)'),
            preComment=Token(idx=176,
                             range=(17234, 17368),
                             value='/*\n'
@@ -2570,7 +2578,8 @@ MacroParts(name=Token(idx=0, range=(17377, 17402), value='WT_BLOCK_HEADER_BYTE_S
                                   ' *\tThe first usable data byte on the block (past the combined headers).\n'
                                   ' */'),
            is_va_args=False,
-           is_wellformed=True)
+           is_wellformed=True,
+           is_const=False)
 Statement(tokens=[17448:17539] 〈#define WT_BLOCK_HEADER_BYTE(dsk) ((void *)((uint8_t *)(dsk) + WT_BLOCK_HEADER_BYTE_SIZE))
 〉,
           kind=StatementKind(is_comment=None,
@@ -2594,7 +2603,8 @@ MacroParts(name=Token(idx=0, range=(17456, 17476), value='WT_BLOCK_HEADER_BYTE')
            body=Token(idx=0, range=(17482, 17539), value='((void *)((uint8_t *)(dsk) + WT_BLOCK_HEADER_BYTE_SIZE))'),
            preComment=None,
            is_va_args=False,
-           is_wellformed=True)
+           is_wellformed=True,
+           is_const=False)
 Statement(tokens=[17539:18262] 〈
 ⌇/*
  * We don't compress or encrypt the block's WT_PAGE_HEADER or WT_BLOCK_HEADER structures because we
@@ -2662,7 +2672,8 @@ MacroParts(name=Token(idx=0, range=(18236, 18258), value='WT_BLOCK_COMPRESS_SKIP
                                   'efficiency.\n'
                                   ' */'),
            is_va_args=False,
-           is_wellformed=True)
+           is_wellformed=True,
+           is_const=True)
 Statement(tokens=[18262:18318] 〈#define WT_BLOCK_ENCRYPT_SKIP WT_BLOCK_HEADER_BYTE_SIZE
 〉,
           kind=StatementKind(is_comment=None,
@@ -2686,7 +2697,8 @@ MacroParts(name=Token(idx=0, range=(18270, 18291), value='WT_BLOCK_ENCRYPT_SKIP'
            body=Token(idx=0, range=(18292, 18318), value='WT_BLOCK_HEADER_BYTE_SIZE'),
            preComment=None,
            is_va_args=False,
-           is_wellformed=True)
+           is_wellformed=True,
+           is_const=False)
 Statement(tokens=[18318:18530] 〈
 ⌇/*
  * __wt_block_header --

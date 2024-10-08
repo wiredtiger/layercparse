@@ -8,7 +8,7 @@ from .ctoken import *
 from .statement import *
 from .variable import *
 
-reg_define = regex.compile(r"^\#define\s++(?P<name>\w++)\s*+(?P<args>\((?P<args_in>[^)]*+)\))?\s*+(?P<body>.*)$", re_flags)
+reg_define = regex.compile(r"^\#define\s++(?P<name>\w++)(?P<args>\((?P<args_in>[^)]*+)\))?\s*+(?P<body>.*)$", re_flags)
 reg_whole_word = regex.compile(r"[\w\.]++", re_flags)
 
 # The difference from re_token is that # and ## are operators rather than preprocessor directives
@@ -55,11 +55,25 @@ class MacroParts:
     is_va_args: bool = False
     is_wellformed: bool = False
     # is_multiple_statements: bool = False
+    is_const: bool | None = None
 
     # TODO: Parse body into a list of tokens. Use special token types for # and ## operators and replacements
 
     def __post_init__(self):
         self.is_wellformed = is_wellformed(self.body.value) if self.body else True
+        if self.body:
+            for token in TokenList.xxFilterCode(TokenList.xFromText(self.body.value)):
+                if token.getKind() in [" ", "#", "/"]:
+                    continue
+                if (self.is_const is None and (
+                        token.getKind() == "'" or
+                        (token.getKind() == "w" and regex.match(r"^\d", token.value)))):
+                    self.is_const = True
+                else:
+                    self.is_const = False
+                    break
+            else:  # Not break
+                self.is_const = True
 
     def update(self, other: 'MacroParts') -> list[str]:
         errors = []
@@ -129,7 +143,7 @@ class Macros:
     #  - https://en.wikipedia.org/wiki/C_preprocessor#Order_of_expansion
     #  - https://stackoverflow.com/questions/45375238/c-preprocessor-macro-expansion
     #  - https://gcc.gnu.org/onlinedocs/cpp/Argument-Prescan.html
-    def expand(self, txt: str) -> str:
+    def expand(self, txt: str, expand_const: bool = False) -> str:
         # TODO: Optimise: compose the result as a list of strings, then join at the end
 
         if not self.macros:
@@ -142,11 +156,15 @@ class Macros:
             r"""(?> ' (?> [^\\'] | \\. )* ' )""",
         ]
         kwargs = {}
-        if obj_like_names := [k for k, v in self.macros.items() if v.args is None]:
-            kwargs["names_obj"] = obj_like_names
+        if names := [k for k, v in self.macros.items() if v.args is None]:
+            if not expand_const:
+                names = [k for k in names if not self.macros[k].is_const]
+            kwargs["names_obj"] = names
             names_re_a.append(r"""(?P<name> \b(?:\L<names_obj>)\b )""")
-        if fn_like_names := [k for k, v in self.macros.items() if v.args is not None]:
-            kwargs["names_func"] = fn_like_names
+        if names := [k for k, v in self.macros.items() if v.args is not None]:
+            if not expand_const:
+                names = [k for k in names if not self.macros[k].is_const]
+            kwargs["names_func"] = names
             names_re_a.append(r"""(?P<name> \b(?:\L<names_func>)\b )(?P<args>(?P<spc>\s*+)\((?P<list>(?&TOKEN)*+)\))""" + re_token)
 
         self._names_reg = regex.compile(" | ".join(names_re_a), re_flags, **kwargs)  # type: ignore # **kwargs
