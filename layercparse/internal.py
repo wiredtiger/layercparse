@@ -116,3 +116,13 @@ def getTokenKind(txt: str) -> TokenKind:
         "w" if reg_word_char.match(txt) else \
         "@" if txt.startswith("@") else \
         ""
+
+_multithreading_initialized = False
+
+def init_multithreading():
+    global _multithreading_initialized
+    if _multithreading_initialized:
+        return
+    _multithreading_initialized = True
+    import multiprocessing
+    multiprocessing.set_start_method('fork')  # 'fork' is faster than 'spawn'

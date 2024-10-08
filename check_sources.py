@@ -100,7 +100,7 @@ def main():
     #         print(res)
 
     _globals = Codebase()
-    _globals.scanFiles(files, twopass=True)
+    _globals.scanFiles(files, twopass=True, multithread=True)
     # for fname in files:
     #     _globals.updateFromFile(fname)
 
@@ -109,7 +109,7 @@ def main():
     # print(" =====")
 
     # print(" ===== Access check:")
-    AccessCheck(_globals).checkAccess()
+    AccessCheck(_globals).checkAccess(multithread=True)
 
 if __name__ == "__main__":
     main()

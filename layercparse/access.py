@@ -1,4 +1,5 @@
 import regex
+import multiprocessing
 from dataclasses import dataclass, field
 from typing import Iterable, Any
 from pprint import pformat
@@ -192,9 +193,22 @@ class AccessCheck:
                 WARNING(_locationStr(chain.offset), f"Can't deduce type of expression {chain}")
 
     # Go through function bodies. Check calls and struct member accesses.
-    def checkAccess(self) -> None:
-        for defn in self._globals.names.values():
-            DEBUG3(defn.scope.locationStr(0), f"debug3: Checking {defn.short_repr()}") or \
-            DEBUG(defn.scope.locationStr(0), f"debug: Checking {defn.kind} [{defn.module}] {defn.name}")
-            self._check_function(defn)
+    def checkAccess(self, multithread = False) -> None:
+        if not multithread:
+            for defn in self._globals.names.values():
+                DEBUG3(defn.scope.locationStr(0), f"debug3: Checking {defn.short_repr()}") or \
+                DEBUG(defn.scope.locationStr(0), f"debug: Checking {defn.kind} [{defn.module}] {defn.name}")
+                self._check_function(defn)
+        else:
+            init_multithreading()
+            with multiprocessing.Pool() as pool:
+                for res in pool.starmap(AccessCheck._check_function_name_for_multi, ((self, n) for n in self._globals.names.keys())):
+                    pass # print(res)
 
+    @staticmethod
+    def _check_function_name_for_multi(self: 'AccessCheck', name: str) -> str:
+        self._check_function(self._globals.names[name])
+        return ""
+        # with LogToStringScope():
+        #     self.updateFromFile(filename)
+        #     ret = logStream.getvalue() # type: ignore # logStream is a StringIO

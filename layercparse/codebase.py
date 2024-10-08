@@ -1,7 +1,9 @@
 import regex
+import multiprocessing
 from dataclasses import dataclass, field
 from typing import Iterable, Any
 
+from .internal import *
 from .common import *
 from .record import *
 from .function import *
@@ -225,15 +227,30 @@ class Codebase:
         with ScopePush(file=File(fname)):
             self.updateMacroFromText(scope_file().read())
 
-    def scanFiles(self, files: Iterable[str], twopass = True) -> None:
+    def scanFiles(self, files: Iterable[str], twopass = True, multithread = False) -> None:
         if twopass:
             for fname in files:
                 # if get_file_priority(fname) <= 1:
                 self.updateMacroFromFile(fname)
-            for fname in files:
-                # if fname == "/Users/y.ershov/src/wt-mod/src/conn/conn_handle.c":
-                self.updateFromFile(fname, expand_preproc=True)
+            if not multithread:
+                for fname in files:
+                    # if fname == "/Users/y.ershov/src/wt-mod/src/conn/conn_handle.c":
+                    self.updateFromFile(fname, expand_preproc=True)
+            else:
+                init_multithreading()
+                with multiprocessing.Pool() as pool:
+                    for fname, txt, insertlist in pool.starmap(
+                                Codebase._preprocess_file_for_multi,
+                                ((self, fname) for fname in files)):
+                        with ScopePush(file=File(fname)):
+                            scope_file().read()
+                            scope_file().updateLineInfoWithInsertList(insertlist)
+                            self.updateFromText(txt, do_preproc=False)
         else:
             for fname in files:
                 self.updateFromFile(fname, expand_preproc=False)
 
+    @staticmethod
+    def _preprocess_file_for_multi(self: 'Codebase', fname: str) -> tuple[str, str, list[tuple[int, int]]]:
+        # Return: (fname, expanded_file_content, insert_list)
+        return (fname, self.macros.expand(file_content(fname)), self.macros.insert_list)

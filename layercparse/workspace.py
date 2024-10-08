@@ -6,6 +6,7 @@ import itertools
 from glob import glob
 from os import path
 from bisect import bisect_left
+from io import StringIO
 
 from .internal import *
 
@@ -254,6 +255,18 @@ class LogLevel(enum.IntEnum):
 logLevel = LogLevel.DEFAULT
 logStream: IO | None = None
 errors: int = 0
+
+class LogToStringScope:
+    def __init__(self):
+        self.oldStream = logStream
+
+    def __enter__(self):
+        global logStream
+        logStream = StringIO()
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        global logStream
+        logStream = self.oldStream
 
 def setLogLevel(level: LogLevel):
     global logLevel
