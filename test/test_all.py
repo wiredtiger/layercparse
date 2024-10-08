@@ -8,7 +8,7 @@ import unittest
 from unittest.util import _common_shorten_repr
 from copy import deepcopy
 
-from semanticc import *
+from layercparse import *
 from pprint import pprint, pformat
 from io import StringIO
 

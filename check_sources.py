@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from dataclasses import dataclass, field
-from semanticc import *
+from layercparse import *
 import sys, os
 from pprint import pprint, pformat
 
