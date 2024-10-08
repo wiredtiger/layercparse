@@ -61,15 +61,17 @@ class MacroParts:
     def __post_init__(self):
         self.is_wellformed = is_wellformed(self.body.value) if self.body else True
 
-    def update(self, other: 'MacroParts') -> None:
+    def update(self, other: 'MacroParts') -> list[str]:
+        errors = []
         if self.name != other.name:
-            print(f"ERROR: macro name mismatch for {self.name.value}: {self.name.value} != {other.name.value}")
+            errors.append(f"macro name mismatch for '{self.name.value}': '{self.name.value}' != '{other.name.value}'")
         if self.args != other.args:
-            print(f"ERROR: macro args mismatch for {self.name.value}: {self.args} != {other.args}")
+            errors.append(f"macro args mismatch for '{self.name.value}': '{self.args}' != '{other.args}'")
         if self.body != other.body:
-            print(f"ERROR: macro redifinition: {self.name.value}")
+            errors.append(f"macro redifinition: '{self.name.value}'")
         if self.preComment is None:
             self.preComment = other.preComment
+        return errors
 
     @staticmethod
     def fromStatement(statement: Statement) -> 'MacroParts | None':

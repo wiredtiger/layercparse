@@ -1375,10 +1375,11 @@ Statement(tokens=[2304:2323] 〈
                              end=None,
                              preComment=None,
                              postComment=None))
-Statement(tokens=[2323:2366] 〈
+Statement(tokens=[2323:2437] 〈
 ⌇
 ⌇extern⌇ ⌇"C"⌇ ⌇{
-  int func(int a, int b);
+  int func_ext_c(int a, int b);
+  struct ext_c_struct; typedef struct ext_c_struct EXT_C_STRUCT;
 }⌇
 〉,
           kind=StatementKind(is_comment=None,
@@ -1396,8 +1397,8 @@ Statement(tokens=[2323:2366] 〈
                              end=None,
                              preComment=None,
                              postComment=None))
-Statement(tokens=[0:27] 〈
-⌇  ⌇int⌇ ⌇func⌇(int a, int b)⌇;⌇
+Statement(tokens=[0:33] 〈
+⌇  ⌇int⌇ ⌇func_ext_c⌇(int a, int b)⌇;⌇
 〉,
           kind=StatementKind(is_comment=None,
                              is_preproc=None,
@@ -1414,7 +1415,46 @@ Statement(tokens=[0:27] 〈
                              end=None,
                              preComment=None,
                              postComment=None))
-Statement(tokens=[2366:2379] 〈
+Statement(tokens=[33:56] 〈  ⌇struct⌇ ⌇ext_c_struct⌇;⌇ 〉,
+          kind=StatementKind(is_comment=None,
+                             is_preproc=None,
+                             is_typedef=None,
+                             is_record=None,
+                             is_function=None,
+                             is_function_def=None,
+                             is_function_decl=None,
+                             is_statement=None,
+                             is_decl=True,
+                             is_expression=None,
+                             is_initialization=None,
+                             is_extern_c=None,
+                             end=None,
+                             preComment=None,
+                             postComment=None))
+Variable:
+Variable(name=Token(idx=11, range=(42, 54), value='ext_c_struct'),
+         typename=[0:0] 〈〉,
+         preComment=None,
+         postComment=None,
+         end=';')
+Statement(tokens=[56:98] 〈typedef⌇ ⌇struct⌇ ⌇ext_c_struct⌇ ⌇EXT_C_STRUCT⌇;⌇
+〉,
+          kind=StatementKind(is_comment=None,
+                             is_preproc=None,
+                             is_typedef=True,
+                             is_record=None,
+                             is_function=None,
+                             is_function_def=None,
+                             is_function_decl=None,
+                             is_statement=None,
+                             is_decl=None,
+                             is_expression=None,
+                             is_initialization=None,
+                             is_extern_c=None,
+                             end=None,
+                             preComment=None,
+                             postComment=None))
+Statement(tokens=[2437:2450] 〈
 ⌇#define AAA
 〉,
           kind=StatementKind(is_comment=None,
@@ -1433,13 +1473,13 @@ Statement(tokens=[2366:2379] 〈
                              preComment=None,
                              postComment=None))
 Macro:
-MacroParts(name=Token(idx=0, range=(2375, 2378), value='AAA'),
+MacroParts(name=Token(idx=0, range=(2446, 2449), value='AAA'),
            args=None,
-           body=Token(idx=0, range=(2379, 2379), value=''),
+           body=Token(idx=0, range=(2450, 2450), value=''),
            preComment=None,
            is_va_args=False,
            is_wellformed=True)
-Statement(tokens=[2379:2393] 〈#define BBB 5
+Statement(tokens=[2450:2464] 〈#define BBB 5
 〉,
           kind=StatementKind(is_comment=None,
                              is_preproc=True,
@@ -1457,13 +1497,13 @@ Statement(tokens=[2379:2393] 〈#define BBB 5
                              preComment=None,
                              postComment=None))
 Macro:
-MacroParts(name=Token(idx=0, range=(2387, 2390), value='BBB'),
+MacroParts(name=Token(idx=0, range=(2458, 2461), value='BBB'),
            args=None,
-           body=Token(idx=0, range=(2391, 2393), value='5'),
+           body=Token(idx=0, range=(2462, 2464), value='5'),
            preComment=None,
            is_va_args=False,
            is_wellformed=True)
-Statement(tokens=[2393:2411] 〈#define CCC 5 + 8
+Statement(tokens=[2464:2482] 〈#define CCC 5 + 8
 〉,
           kind=StatementKind(is_comment=None,
                              is_preproc=True,
@@ -1481,13 +1521,13 @@ Statement(tokens=[2393:2411] 〈#define CCC 5 + 8
                              preComment=None,
                              postComment=None))
 Macro:
-MacroParts(name=Token(idx=0, range=(2401, 2404), value='CCC'),
+MacroParts(name=Token(idx=0, range=(2472, 2475), value='CCC'),
            args=None,
-           body=Token(idx=0, range=(2405, 2411), value='5 + 8'),
+           body=Token(idx=0, range=(2476, 2482), value='5 + 8'),
            preComment=None,
            is_va_args=False,
            is_wellformed=True)
-Statement(tokens=[2411:2431] 〈#define DDD() 5 + 8
+Statement(tokens=[2482:2502] 〈#define DDD() 5 + 8
 〉,
           kind=StatementKind(is_comment=None,
                              is_preproc=True,
@@ -1505,13 +1545,13 @@ Statement(tokens=[2411:2431] 〈#define DDD() 5 + 8
                              preComment=None,
                              postComment=None))
 Macro:
-MacroParts(name=Token(idx=0, range=(2419, 2422), value='DDD'),
+MacroParts(name=Token(idx=0, range=(2490, 2493), value='DDD'),
            args=[],
-           body=Token(idx=0, range=(2425, 2431), value='5 + 8'),
+           body=Token(idx=0, range=(2496, 2502), value='5 + 8'),
            preComment=None,
            is_va_args=False,
            is_wellformed=True)
-Statement(tokens=[2431:2452] 〈#define EEE(x) x + 8
+Statement(tokens=[2502:2523] 〈#define EEE(x) x + 8
 〉,
           kind=StatementKind(is_comment=None,
                              is_preproc=True,
@@ -1529,13 +1569,13 @@ Statement(tokens=[2431:2452] 〈#define EEE(x) x + 8
                              preComment=None,
                              postComment=None))
 Macro:
-MacroParts(name=Token(idx=0, range=(2439, 2442), value='EEE'),
-           args=[Token(idx=0, range=(2443, 2444), value='x')],
-           body=Token(idx=0, range=(2446, 2452), value='x + 8'),
+MacroParts(name=Token(idx=0, range=(2510, 2513), value='EEE'),
+           args=[Token(idx=0, range=(2514, 2515), value='x')],
+           body=Token(idx=0, range=(2517, 2523), value='x + 8'),
            preComment=None,
            is_va_args=False,
            is_wellformed=True)
-Statement(tokens=[2452:2476] 〈#define FFF(x, y) x + y
+Statement(tokens=[2523:2547] 〈#define FFF(x, y) x + y
 〉,
           kind=StatementKind(is_comment=None,
                              is_preproc=True,
@@ -1553,13 +1593,13 @@ Statement(tokens=[2452:2476] 〈#define FFF(x, y) x + y
                              preComment=None,
                              postComment=None))
 Macro:
-MacroParts(name=Token(idx=0, range=(2460, 2463), value='FFF'),
-           args=[Token(idx=0, range=(2464, 2465), value='x'), Token(idx=1, range=(2467, 2468), value='y')],
-           body=Token(idx=0, range=(2470, 2476), value='x + y'),
+MacroParts(name=Token(idx=0, range=(2531, 2534), value='FFF'),
+           args=[Token(idx=0, range=(2535, 2536), value='x'), Token(idx=1, range=(2538, 2539), value='y')],
+           body=Token(idx=0, range=(2541, 2547), value='x + y'),
            preComment=None,
            is_va_args=False,
            is_wellformed=True)
-Statement(tokens=[2476:2503] 〈#define GGG(x, y) x + \
+Statement(tokens=[2547:2574] 〈#define GGG(x, y) x + \
  y
 〉,
           kind=StatementKind(is_comment=None,
@@ -1578,9 +1618,9 @@ Statement(tokens=[2476:2503] 〈#define GGG(x, y) x + \
                              preComment=None,
                              postComment=None))
 Macro:
-MacroParts(name=Token(idx=0, range=(2484, 2487), value='GGG'),
-           args=[Token(idx=0, range=(2488, 2489), value='x'), Token(idx=1, range=(2491, 2492), value='y')],
-           body=Token(idx=0, range=(2494, 2503), value='x +  \n y'),
+MacroParts(name=Token(idx=0, range=(2555, 2558), value='GGG'),
+           args=[Token(idx=0, range=(2559, 2560), value='x'), Token(idx=1, range=(2562, 2563), value='y')],
+           body=Token(idx=0, range=(2565, 2574), value='x +  \n y'),
            preComment=None,
            is_va_args=False,
            is_wellformed=True)

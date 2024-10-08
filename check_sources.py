@@ -83,7 +83,7 @@ def addModules():
 
 
 def main():
-    # setLogLevel(LogLevel.WARNING)
+    setLogLevel(LogLevel.DEBUG5)
 
     setRootPath(os.path.realpath(sys.argv[1]))
     addModules()
@@ -96,14 +96,16 @@ def main():
     #     for res in pool.starmap(print_statement_from_file, ((f,) for f in get_files())):
     #         print(res)
 
-    globals = Codebase()
+    _globals = Codebase()
     for fname in get_files():
-        globals.updateFromFile(fname)
+        _globals.updateFromFile(fname)
 
-    # pprint(globals, width=120, compact=False)
+    print(" ===== Globals:")
+    pprint(_globals, width=120, compact=False)
+    print(" =====")
 
     # print(" ===== Access check:")
-    AccessCheck(globals).checkAccess()
+    AccessCheck(_globals).checkAccess()
 
 if __name__ == "__main__":
     main()

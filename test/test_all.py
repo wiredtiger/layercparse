@@ -41,6 +41,7 @@ class TestCaseLocal(unittest.TestCase):
             self.fail(self._formatMessage(msg, standardMsg))
 
     def checkStrAgainstFile(self, result, fname):
+        result = regex.sub(r" with id=\d++", " with id=*", result, re_flags)
         with open(f"{fname}.test", "w") as f:
             f.write(result)
         self.assertMultiLineEqualDiff(result, file_content(fname))
@@ -199,6 +200,13 @@ class TestMacro(TestCaseLocal):
         if _globals.macros.errors:
             print("\n".join(_globals.macros.errors))
         self.checkStrAgainstFile(expanded, "data/macro.c.macro")
+
+
+class TestCodebase(TestCaseLocal):
+    def test_codebase(self):
+        _globals = Codebase()
+        _globals.updateFromFile("data/statements.c")
+        self.checkStrAgainstFile(pformat(_globals, width=120, compact=False), "data/statements.c.globals")
 
 
 # Enable to run as a standalone script

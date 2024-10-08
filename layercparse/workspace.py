@@ -120,17 +120,16 @@ def fname_to_module(fname: str) -> str:
 @dataclass
 class File:
     name: str
-    module: str | None = None
+    module: str = ""
     # txt: str = ""
     lineOffsets: list[int] | None = field(default=None, repr=False)
 
-    def getModule(self) -> str:
-        if self.module is None:
+    def __post_init__(self):
+        if not self.module:
             self.module = fname_to_module(self.name)
-        return self.module
 
     # Create a mapping from offset to line number
-    def lineNumbers(self, txt: str) -> list[int]:
+    def fillLineInfo(self, txt: str) -> list[int]:
         if self.lineOffsets is None:
             self.lineOffsets = []
             for match in regex.finditer(r"\n", txt):
@@ -151,8 +150,13 @@ class File:
     def locationStr(self, offset: int) -> str:
         return f"{self.name}:{self.offsetToLinePosStr(offset)}:"
 
+    def read(self) -> str:
+        txt = file_content(self.name)
+        self.fillLineInfo(txt)
+        return txt
+
 @dataclass
-class _Scope:
+class Scope:
     file: File
     offset: int  # Offset in the file
     # txt: str | None = None
@@ -166,39 +170,42 @@ class _Scope:
 
 @dataclass
 class _ScopeStack:
-    stack: list[_Scope]
+    stack: list[Scope]
 
-    def push(self, scope: _Scope):
+    def push(self, scope: Scope):
         self.stack.append(scope)
 
-    def pop(self) -> _Scope:
+    def pop(self) -> Scope:
         return self.stack.pop()
 
 
-stack = _ScopeStack([])
+scope_stack = _ScopeStack([])
+
+def scope() -> Scope:
+    return scope_stack.stack[-1] if scope_stack.stack else Scope(File(""), 0)
 
 def scope_file() -> File:
-    return stack.stack[-1].file if stack.stack else File("")
+    return scope_stack.stack[-1].file if scope_stack.stack else File("")
 
 def scope_push(offset: int = 0, file: File | None = None) -> None:
-    stack.push(_Scope(
+    scope_stack.push(Scope(
         file if file is not None else scope_file(),
-        offset if not stack.stack else stack.stack[-1].offset + offset))
+        offset if not scope_stack.stack else scope_stack.stack[-1].offset + offset))
 
 def scope_pop() -> None:
-    stack.pop()
+    scope_stack.pop()
 
 def scope_filename() -> str:
-    return stack.stack[-1].file.name if stack.stack else ""
+    return scope_stack.stack[-1].file.name if scope_stack.stack else ""
 
 def scope_offset() -> int:
-    return stack.stack[-1].offset if stack.stack else 0
+    return scope_stack.stack[-1].offset if scope_stack.stack else 0
 
 def scope_module() -> str:
-    return stack.stack[-1].file.getModule() if stack.stack else ""
+    return scope_stack.stack[-1].file.module if scope_stack.stack else ""
 
 def locationStr(offset: int) -> str:
-    return stack.stack[-1].locationStr(offset) if stack.stack else f"-:0:{offset}:"
+    return scope_stack.stack[-1].locationStr(offset) if scope_stack.stack else f"-:0:{offset}:"
 
 class ScopePush:
     def __init__(self, offset: int = 0, file: File | str | None = None, relative: bool = True):
@@ -233,7 +240,7 @@ def setLogLevel(level: LogLevel):
     global logLevel
     logLevel = level
 
-def LOG(level: LogLevel, location: str | Callable[[], str] | int, *args, **kwargs) -> bool:
+def LOG(level: LogLevel, location: str | Callable[[], str] | int | None, *args, **kwargs) -> bool:
     if level <= LogLevel.ERROR:
         global errors
         errors += 1
@@ -242,10 +249,12 @@ def LOG(level: LogLevel, location: str | Callable[[], str] | int, *args, **kwarg
             location = locationStr(location)
         elif callable(location):
             location = location()
+        elif location is None:
+            location = "    "
         for i in range(len(args)):
             if callable(args[i]):
                 args[i] = args[i]()  # type: ignore # Unsupported target for indexed assignment ("tuple[Any, ...]")  [index]
-        print(location, *args, **kwargs, file=logStream)
+        print(location, f"{level.name.lower()}:", *args, **kwargs, file=logStream)
         return True
     return False
 

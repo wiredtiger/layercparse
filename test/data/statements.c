@@ -155,7 +155,8 @@ do {
 
 
 extern "C" {
-  int func(int a, int b);
+  int func_ext_c(int a, int b);
+  struct ext_c_struct; typedef struct ext_c_struct EXT_C_STRUCT;
 }
 
 #define AAA

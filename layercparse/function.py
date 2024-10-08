@@ -21,13 +21,13 @@ class FunctionParts:
     def update(self, other: 'FunctionParts') -> list[str]:
         errors = []
         if self.typename != other.typename:
-            errors.append(f"ERROR: function retType mismatch for {self.name.value}: {self.typename.short_repr()} != {other.typename.short_repr()}")
+            errors.append(f"function retType mismatch for '{self.name.value}': '{self.typename.short_repr()}' != '{other.typename.short_repr()}'")
         if self.name != other.name:
-            errors.append(f"ERROR: function name mismatch for {self.name.value}: {self.name.value} != {other.name.value}")
+            errors.append(f"function name mismatch for '{self.name.value}': '{self.name.value}' != '{other.name.value}'")
         if self.args != other.args:
-            errors.append(f"ERROR: function args mismatch for {self.name.value}: {self.args.value} != {other.args.value}")
+            errors.append(f"function args mismatch for '{self.name.value}': '{self.args.value}' != '{other.args.value}'")
         if self.body is not None and other.body is not None and self.body != other.body:
-            errors.append(f"ERROR: function redifinition: {self.name.value}")
+            errors.append(f"function redifinition: '{self.name.value}'")
         if self.preComment is None:
             self.preComment = other.preComment
         if self.postComment is None:

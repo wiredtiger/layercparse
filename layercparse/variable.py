@@ -25,9 +25,9 @@ class Variable:
     def update(self, other: 'Variable') -> list[str]:
         errors = []
         if self.name != other.name:
-            errors.append(f"ERROR: variable name mismatch for {self.name.value}: {self.name.value} != {other.name.value}")
+            errors.append(f"variable name mismatch for '{self.name.value}': '{self.name.value}' != '{other.name.value}'")
         if self.typename != other.typename:
-            errors.append(f"ERROR: variable type mismatch for {self.name.value}: {self.typename} != {other.typename}")
+            errors.append(f"variable type mismatch for '{self.name.value}': '{self.typename}' != '{other.typename}'")
         if self.preComment is None:
             self.preComment = other.preComment
         if self.postComment is None:

@@ -13,7 +13,7 @@ Details: TypeAlias = FunctionParts | RecordParts | Variable
 class Definition:
     name: str
     kind: str
-    file: File
+    scope: Scope
     offset: int
     module: str
     is_private: bool | None = None
@@ -22,10 +22,13 @@ class Definition:
     postComments: list[Token] = field(default_factory=list)
 
     def short_repr(self) -> str:
-        return f"{self.name} ({self.kind}) {self.file.locationStr(self.offset)} {self.module} {'private' if self.is_private else 'public'} {self.details.short_repr() if self.details else ''}"
+        return f"{self.name} ({self.kind}) {self.scope.locationStr(self.offset)} {self.module} {'private' if self.is_private else 'public'} {self.details.short_repr() if self.details else ''}"
+
+    def locationStr(self) -> str:
+        return f"{self.scope.locationStr(self.offset)} {self.kind}{f' [{self.module}]' if self.module else ''} '{self.name}':"
 
     def get_priority(self) -> int:
-        ret = int(bool(self.is_private)) * 10 + get_file_priority(self.file.name)
+        ret = int(bool(self.is_private)) * 10 + get_file_priority(self.scope.file.name)
         if isinstance(self.details, FunctionParts) or isinstance(self.details, RecordParts):
             ret += int(self.details.body is not None) * 100
         return ret
@@ -33,23 +36,31 @@ class Definition:
     def update(self, other: 'Definition', check_riority: bool = True) -> None:
         if check_riority and self.get_priority() < other.get_priority():
             return other.update(self, check_riority=False)
-        if get_file_priority(self.file.name) < get_file_priority(other.file.name):
-            self.file = other.file
-            self.offset = other.offset
+        # if get_file_priority(self.scope.file.name) < get_file_priority(other.scope.file.name):
+        #     self.scope = other.scope
+        #     self.offset = other.offset
         if self.kind != other.kind:
-            print(f"ERROR: type mismatch for {self.name}: {self.kind} != {other.kind}\n{self.short_repr()}\n{other.short_repr()}")
+            WARNING(self.locationStr, f"conflicting update for 'kind':")
+            WARNING(other.locationStr, f"conflict here:")
+            WARNING(None, f"type mismatch for '{self.name}': {self.kind} != {other.kind}\n{self.short_repr()}\n{other.short_repr()}")
         if self.module != other.module:
-            print(f"ERROR: module mismatch for {self.kind} {self.name}: {self.module} != {other.module}\n{self.short_repr()}\n{other.short_repr()}")
+            WARNING(self.locationStr, f"conflicting update for 'module':")
+            WARNING(other.locationStr, f"conflict here:")
+            WARNING(None, f"module mismatch for {self.kind} '{self.name}': {self.module} != {other.module}\n{self.short_repr()}\n{other.short_repr()}")
         if other.is_private:
             self.is_private = True
         if type(self.details).__name__ != type(other.details).__name__:
-            print(f"ERROR: details type mismatch for '{self.name}: {type(self.details)} != {type(other.details)}\n{self.short_repr()}\n{other.short_repr()}")
+            WARNING(self.locationStr, f"conflicting update for details type:")
+            WARNING(other.locationStr, f"conflict here:")
+            WARNING(None, f"details type mismatch for '{self.name}': {type(self.details)} != {type(other.details)}\n{self.short_repr()}\n{other.short_repr()}")
         else:
             if isinstance(self.details, FunctionParts) or isinstance(self.details, RecordParts) or isinstance(self.details, Variable):
                 errors = self.details.update(other.details)  # type: ignore
                 if errors:
-                    print(f"ERROR: for {self.name}:\n{self.short_repr()}\n{other.short_repr()}")
-                    print("\n".join(errors))
+                    WARNING(self.locationStr, f"conflicting update for details:")
+                    WARNING(other.locationStr, f"conflict here:")
+                    for error in errors:
+                        WARNING(None, error)
         self.preComments += other.preComments
         self.postComments += other.postComments
 
@@ -122,7 +133,7 @@ class Codebase:
         _dict_upsert_def(self.types, Definition(
             name=record.name.value,
             kind="record",
-            file=scope_file(),
+            scope=scope(),
             offset=record.name.range[0],
             module=local_module,
             is_private=is_private_record,
@@ -137,7 +148,7 @@ class Codebase:
                 _dict_upsert_def(self.fields[record.name.value], Definition(
                     name=member.name.value,
                     kind="field",
-                    file=scope_file(),
+                    scope=scope(),
                     offset=member.name.range[0],
                     module=local_module,
                     is_private=is_private_field,
@@ -172,7 +183,7 @@ class Codebase:
                             _dict_upsert_def(self.names, Definition(
                                 name=func.name.value,
                                 kind="function",
-                                file=scope_file(),
+                                scope=scope(),
                                 offset=func.name.range[0],
                                 module=local_module,
                                 is_private=is_private,
@@ -197,8 +208,7 @@ class Codebase:
 
     def updateFromFile(self, fname: str) -> None:
         with ScopePush(file=File(fname)):
-            txt = file_content(fname)
-            scope_file().lineNumbers(txt)
+            txt = scope_file().read()
             self.updateFromText(txt)
 
     # def updateMacroFromText(self, txt: str, offset: int = 0) -> None:

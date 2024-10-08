@@ -33,5 +33,6 @@ int func(int num) {
     (aa->aaa)->bb->cc->dd;
     (5 ? s2 : s3)->s->x;
     (5 ? __wti_module2_func1() : s3)->x;
+
     return num * num;
 }
