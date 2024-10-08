@@ -167,3 +167,15 @@ extern "C" {
 #define FFF(x, y) x + y
 #define GGG(x, y) x + \
  y
+
+qwe asd;
+qwe *asd;
+qwe* asd;
+qwe * asd;
+qwe *;
+
+int asd;
+int *asd;
+int* asd;
+int * asd;
+int *;
