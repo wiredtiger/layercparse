@@ -2180,13 +2180,10 @@ FunctionParts(typename=[14455:14459] 〈void〉,
                                '#else\n'
                                '    WT_UNUSED(desc);\n'
                                '#endif\n'),
-              preComment=Token(idx=121,
-                               range=(14324, 14437),
-                               value='/*\n'
-                                     ' * __wt_block_desc_byteswap --\n'
-                                     ' *     Handle big- and little-endian transformation of a description block.\n'
-                                     ' */'),
-              postComment=None)
+              preComment=None,
+              postComment=None,
+              is_type_const=False,
+              is_type_static=True)
 Args:
 [Variable(name=Token(idx=3, range=(15, 19), value='desc'),
           typename=[0:13] 〈WT_BLOCK_DESC〉,
@@ -2451,15 +2448,10 @@ FunctionParts(typename=[16711:16715] 〈void〉,
                                '    to->disk_size = __wt_bswap32(from->disk_size);\n'
                                '    to->checksum = __wt_bswap32(from->checksum);\n'
                                '#endif\n'),
-              preComment=Token(idx=148,
-                               range=(16536, 16693),
-                               value='/*\n'
-                                     ' * __wt_block_header_byteswap_copy --\n'
-                                     ' *     Handle big- and little-endian transformation of a header block, copying '
-                                     'from a source to a\n'
-                                     ' *     target.\n'
-                                     ' */'),
-              postComment=None)
+              preComment=None,
+              postComment=None,
+              is_type_const=False,
+              is_type_static=True)
 Args:
 [Variable(name=Token(idx=3, range=(17, 21), value='from'),
           typename=[0:15] 〈WT_BLOCK_HEADER〉,
@@ -2521,13 +2513,10 @@ FunctionParts(typename=[17072:17076] 〈void〉,
                                '#else\n'
                                '    WT_UNUSED(blk);\n'
                                '#endif\n'),
-              preComment=Token(idx=162,
-                               range=(16944, 17054),
-                               value='/*\n'
-                                     ' * __wt_block_header_byteswap --\n'
-                                     ' *     Handle big- and little-endian transformation of a header block.\n'
-                                     ' */'),
-              postComment=None)
+              preComment=None,
+              postComment=None,
+              is_type_const=False,
+              is_type_static=True)
 Args:
 [Variable(name=Token(idx=3, range=(17, 20), value='blk'),
           typename=[0:15] 〈WT_BLOCK_HEADER〉,
@@ -2739,13 +2728,10 @@ FunctionParts(typename=[18420:18425] 〈u_int〉,
               body=Token(idx=197,
                          range=(18462, 18528),
                          value='\n    WT_UNUSED(block);\n\n    return ((u_int)WT_BLOCK_HEADER_SIZE);\n'),
-              preComment=Token(idx=186,
-                               range=(18319, 18402),
-                               value='/*\n'
-                                     ' * __wt_block_header --\n'
-                                     ' *     Return the size of the block-specific header.\n'
-                                     ' */'),
-              postComment=None)
+              preComment=None,
+              postComment=None,
+              is_type_const=False,
+              is_type_static=True)
 Args:
 [Variable(name=Token(idx=3, range=(10, 15), value='block'),
           typename=[0:8] 〈WT_BLOCK〉,
@@ -2795,15 +2781,10 @@ FunctionParts(typename=[18726:18730] 〈bool〉,
               body=Token(idx=211,
                          range=(18790, 18867),
                          value='\n    return (!block->remote && block->objectid <= bm->max_flushed_objectid);\n'),
-              preComment=Token(idx=200,
-                               range=(18531, 18708),
-                               value='/*\n'
-                                     ' * __wt_block_eligible_for_sweep --\n'
-                                     ' *     Return true if the block meets requirements for sweeping. The check that '
-                                     'read reference count\n'
-                                     ' *     is zero is made elsewhere.\n'
-                                     ' */'),
-              postComment=None)
+              preComment=None,
+              postComment=None,
+              is_type_const=False,
+              is_type_static=True)
 Args:
 [Variable(name=Token(idx=3, range=(7, 9), value='bm'),
           typename=[0:5] 〈WT_BM〉,

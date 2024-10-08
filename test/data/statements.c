@@ -150,6 +150,13 @@ int func(int a, int b) {
   return (x);
 }
 
+/*
+ * func --
+ *      function description
+ */
+static const int func2(int a, int b) {
+}
+
 do {
 } while (0);
 

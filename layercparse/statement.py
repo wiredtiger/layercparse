@@ -52,7 +52,7 @@ class StatementKind:
 
         i = 0
         while i < len(clean_tokens):
-            if clean_tokens[i].value in ignore_macros:
+            if clean_tokens[i].value in ignore_type_keywords:
                 clean_tokens.pop(i)
                 if clean_tokens[i].getKind() == "(":
                     clean_tokens.pop(i)

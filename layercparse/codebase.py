@@ -102,6 +102,7 @@ class Codebase:
     # Functions, variables, other identifiers
     names: dict[str, Definition] = field(default_factory=dict)
     names_restricted: dict[str, Definition] = field(default_factory=dict)
+    static_names: dict[str, dict[str, Definition]] = field(default_factory=dict) # file -> {name -> GlobalDefn}
     # Typedefs
     typedefs: dict[str, str] = field(default_factory=dict)
     # Macros
