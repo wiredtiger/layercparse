@@ -148,13 +148,12 @@ class AccessCheck:
                 if tokens[i].getKind() in ["(", "["]:
                     i += 1
                     if i >= len(tokens):
-                        WARNING(_LOC(root_offset + tokens[-1].range[1]), "Unexpected end of expression")
-                        break  # syntax error - stop the chain
+                        break
                 if tokens[i].value not in [".", "->"]:
                     break
                 i += 1
                 if i >= len(tokens):
-                    WARNING(_LOC(root_offset + tokens[-1].range[1]), "Unexpected end of expression")
+                    WARNING(_LOC(root_offset + tokens[-1].range[1]), f"Unexpected end of expression: '{tokens.short_repr()}'")
                     break  # syntax error - stop the chain
                 token_type = self._globals.get_field_type(token_type, tokens[i].value)
                 i += 1
