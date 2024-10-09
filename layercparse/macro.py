@@ -170,15 +170,17 @@ class Macros:
         if names := [k for k, v in self.macros.items() if v.args is None]:
             if not expand_const:
                 names = [k for k in names if not self.macros[k].is_const]
-            kwargs["names_obj"] = names
-            names_re_a.append(r"""(?P<name> \b(?:\L<names_obj>)\b )""")
-            self._has_obj_like_names = True
+            if names:
+                kwargs["names_obj"] = names
+                names_re_a.append(r"""(?P<name> \b(?:\L<names_obj>)\b )""")
+                self._has_obj_like_names = True
         if names := [k for k, v in self.macros.items() if v.args is not None]:
             if not expand_const:
                 names = [k for k in names if not self.macros[k].is_const]
-            kwargs["names_func"] = names
-            names_re_a.append(r"""(?P<name> \b(?:\L<names_func>)\b )(?P<args>(?P<spc>\s*+)\((?P<list>(?&TOKEN)*+)\))""" + re_token)
-            self._has_fn_like_names = True
+            if names:
+                kwargs["names_func"] = names
+                names_re_a.append(r"""(?P<name> \b(?:\L<names_func>)\b )(?P<args>(?P<spc>\s*+)\((?P<list>(?&TOKEN)*+)\))""" + re_token)
+                self._has_fn_like_names = True
 
         self._names_reg = regex.compile(" | ".join(names_re_a), re_flags, **kwargs)  # type: ignore # **kwargs
         self._in_use: set[str] = set()

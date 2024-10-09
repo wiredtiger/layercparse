@@ -186,3 +186,16 @@ int *asd;
 int* asd;
 int * asd;
 int *;
+
+qwe = asd * zxc;
+int qwe = asd * zxc;
+qwe asd = {123, 456};
+struct aaa {
+  int a, b;
+} bbb = {123, 456};
+struct aaa bbb = {123, 456};
+
+qwe *func1(int a, int b) {1}
+qwe* func2(int a, int b) {2}
+qwe * func3(int a, int b) {3}
+qwe*func4(int a, int b) {4}

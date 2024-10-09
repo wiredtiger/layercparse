@@ -181,13 +181,16 @@ class Codebase:
             saved_type: Any = None
             for st in StatementList.fromText(txt):
                 st.getKind()
-                if saved_type is not None or (st.getKind().is_typedef and not st.getKind().is_record):
+                if saved_type or (st.getKind().is_typedef and not st.getKind().is_record and not st.getKind().is_function_def):
                     var = Variable.fromVarDef(st.tokens)
                     if var:
                         if not var.typename:
                             var.typename = saved_type
-                        self.typedefs[var.name.value] = get_base_type(var.typename)
-                        saved_type = var.typename if var.end == "," else None
+                        if var.typename:
+                            self.typedefs[var.name.value] = get_base_type(var.typename)
+                            saved_type = var.typename if var.end == "," else None
+                        else:
+                            WARNING(scope().locationStr(var.name.range[0]), f"Invalid typedef near '{var.name.value}'")
                 else:
                     saved_type = None
                     if st.getKind().is_function_def:
@@ -218,7 +221,7 @@ class Codebase:
                             self._add_record(record)
                         # TODO: add global variables from struct definitions
                     elif st.getKind().is_decl:
-                        pass # TODO: global function and variable declarations
+                        pass # TODO: global function and variable declarations - add to global or static names
                     elif do_preproc and st.getKind().is_preproc:
                         macro = MacroParts.fromStatement(st)
                         if macro:

@@ -100,6 +100,7 @@ class FunctionParts:
             t = st.getKind()
             if saved_type is None and (t.is_statement or (t.is_expression and not t.is_initialization)):
                 break
+            # TODO: Add local variables from where t.is_record
             if saved_type is not None or (t.is_decl and not t.is_function and not t.is_record):
                 var = Variable.fromVarDef(st.tokens)
                 if var:
