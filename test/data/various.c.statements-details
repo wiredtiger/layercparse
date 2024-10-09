@@ -169,7 +169,7 @@ FunctionParts(typename=[284:287] 〈int〉,
               body=Token(idx=38,
                          range=(302, 366),
                          value='\n  /* pre comment4 */\n  int a, b; /* post comment4 */\n  char c;\n'),
-              preComment=None,
+              preComment=Token(idx=31, range=(265, 283), value='/* pre-comment3 */'),
               postComment=None,
               is_type_const=False,
               is_type_static=False)
