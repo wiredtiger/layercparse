@@ -211,18 +211,16 @@ class AccessCheck:
                 for res in pool.starmap(
                         AccessCheck._check_function_name_for_multi,
                         itertools.chain(
-                            ((self, n, False) for n in self._globals.names.keys()),
-                            ((self, n, True) for n in self._globals.static_names.keys()))):
-                    pass # print(res)
+                            ((self, n, True) for n in self._globals.static_names.keys()),
+                            ((self, n, False) for n in self._globals.names.keys()))):
+                    print(res, end='')
 
     @staticmethod
     def _check_function_name_for_multi(self: 'AccessCheck', name: str, file: bool) -> str:
-        if not file:
-            self._check_function(self._globals.names[name])
-        else:
-            for defn in self._globals.static_names[name].values():
-                self._check_function(defn)
-        return ""
-        # with LogToStringScope():
-        #     self.updateFromFile(filename)
-        #     ret = logStream.getvalue() # type: ignore # logStream is a StringIO
+        with LogToStringScope():
+            if not file:
+                self._check_function(self._globals.names[name])
+            else:
+                for defn in self._globals.static_names[name].values():
+                    self._check_function(defn)
+            return workspace.logStream.getvalue() # type: ignore # logStream is a StringIO
