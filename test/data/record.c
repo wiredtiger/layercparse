@@ -37,6 +37,7 @@ int func(int num) {
     xxx()->s2;
     xxx.s2;
     __wti_module2_func1()->x;
+    __wti_module2_func1()[5]->x;
     __wti_module2_func1(s2->s, s5)->x;
     s2->s.x;
     aa->bb->cc->dd;

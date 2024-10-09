@@ -14,7 +14,7 @@ from .workspace import *
 _reg_member_access_chain = regex.compile(r"""
     # ((?<!\w)\((?&TOKEN)++\))*                        # Possible type conversions - not needed
     (?>
-        ([a-zA-Z_]\w*+)(?>\((?&TOKEN)*+\))? |  # (1) variable or function call
+        ([a-zA-Z_]\w*+)(?>(?>\((?&TOKEN)*+\))|(?>\[(?&TOKEN)*+\]))*+ |  # (1) variable or function call or array index
         (\((?&TOKEN)++\))             # (2) expression
     )
     (?>(?>->|\.)(?>([a-zA-Z_]\w*+)(?>\[(?&TOKEN)++\])?))++             # (3) member access chain via -> or .
