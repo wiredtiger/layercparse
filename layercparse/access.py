@@ -129,7 +129,7 @@ class AccessCheck:
             # Not a ternary - the type is the type of the first token
             token = tokens[0]
             if token.getKind() == "(": # expression or type cast
-                if len(tokens) > 1 and tokens[1].getKind() in ["w", "("]:  # type cast
+                if len(tokens) > 1 and tokens[1].getKind() in ["w", "(", "{"]:  # type cast
                     return self._globals.untypedef(get_base_type_str(token.value[1:-1]))
                     # token_type = self._globals.untypedef(get_base_type_str(token.value[1:-1])) \
                     #              if reg_word_char.match(token.value[1]) else \
@@ -209,8 +209,8 @@ class AccessCheck:
             for defn in itertools.chain(
                         self._globals.names.values(),
                         *(namedict.values() for namedict in self._globals.static_names.values())):
-                DEBUG3(defn.scope.locationStr(0), f"debug3: Checking {defn.short_repr()}") or \
-                DEBUG(defn.scope.locationStr(0), f"debug: Checking {defn.kind} [{defn.module}] {defn.name}")
+                DEBUG3(defn.scope.locationStr(defn.offset), f"debug3: Checking {defn.short_repr()}") or \
+                DEBUG(defn.scope.locationStr(defn.offset), f"debug: Checking {defn.kind} [{defn.module}] {defn.name}")
                 self._check_function(defn)
         else:
             init_multithreading()

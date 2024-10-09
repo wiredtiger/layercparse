@@ -44,7 +44,7 @@ class FunctionParts:
         while i < len(tokens):
             if tokens[i].value in ignore_type_keywords:
                 tokens.pop(i)
-                if tokens[i].getKind() == "(":
+                if i < len(tokens) and tokens[i].getKind() == "(":
                     tokens.pop(i)
             i += 1
 

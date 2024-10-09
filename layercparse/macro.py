@@ -53,7 +53,7 @@ class MacroParts:
     preComment: Token | None = None
     # postComment: Token | None = None
     is_va_args: bool = False
-    is_wellformed: bool = False
+    is_wellformed: bool = True
     # is_multiple_statements: bool = False
     is_const: bool | None = None
 
@@ -131,6 +131,10 @@ def c_string_escape(txt: str) -> str:
 class Macros:
     macros: dict[str, MacroParts] = field(default_factory=dict)
     errors: list[str] = field(default_factory=list)
+
+    def __post_init__(self):
+        if "__attribute__" not in self.macros:
+            self.macros["__attribute__"] = MacroParts(name=Token(0, (0, 0), "__attribute__"), args=[Token(0, (0, 0), "arg")])
 
     def add(self, macro: MacroParts) -> None:
         self.macros[macro.name.value] = macro

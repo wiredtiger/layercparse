@@ -4,14 +4,14 @@ data/record.c:8:8: error: Module [module2] of a top-level entry 'S1' does not ma
 data/record.c:14:8: error: Module [module1] of a top-level entry 'S2' does not match the file's module []. Assigning it to module [module1].
 data/record.c:19:5: error: Module [module2] of a top-level entry '__wti_module2_func1' does not match the file's module []. Assigning it to module [module2].
 data/record.c:24:5: error: Module [module1] of a top-level entry 'func' does not match the file's module []. Assigning it to module [module1].
-data/record.c:51:12: error: Module [module1] of a top-level entry '__wti_module1_func2' does not match the file's module []. Assigning it to module [module1].
-data/record.c:51:12: function [module1] '__wti_module1_func2': error: Private static function of a foreign module defined in []
-data/record.c:56:12: error: Module [module2] of a top-level entry '__wti_module2_func2' does not match the file's module []. Assigning it to module [module2].
-data/record.c:56:12: function [module2] '__wti_module2_func2': error: Private static function of a foreign module defined in []
-data/record.c:61:5: error: Module [module2] of a top-level entry '__wti_module2_func3' does not match the file's module []. Assigning it to module [module2].
-data/record.c:65:12: error: Module [module1] of a top-level entry '__wti_module1_funcX' does not match the file's module []. Assigning it to module [] because identifier name has lower priority.
-data/record.c:1:0: debug3: debug3: Checking __wti_module2_func1 (function) data/record.c:19:5: module2 private Function(Token(idx=35, range=(167, 186), value='__wti_module2_func1') (Token(idx=36, range=(187, 193), value='S2 *s2'))) : [163:167] 〈S1⌇*〉
-data/record.c:1:0: debug: debug: Checking function [module2] __wti_module2_func1
+data/record.c:52:12: error: Module [module1] of a top-level entry '__wti_module1_func2' does not match the file's module []. Assigning it to module [module1].
+data/record.c:52:12: function [module1] '__wti_module1_func2': error: Private static function of a foreign module defined in []
+data/record.c:57:12: error: Module [module2] of a top-level entry '__wti_module2_func2' does not match the file's module []. Assigning it to module [module2].
+data/record.c:57:12: function [module2] '__wti_module2_func2': error: Private static function of a foreign module defined in []
+data/record.c:62:5: error: Module [module2] of a top-level entry '__wti_module2_func3' does not match the file's module []. Assigning it to module [module2].
+data/record.c:66:12: error: Module [module1] of a top-level entry '__wti_module1_funcX' does not match the file's module []. Assigning it to module [] because identifier name has lower priority.
+data/record.c:19:5: debug3: debug3: Checking __wti_module2_func1 (function) data/record.c:19:5: module2 private Function(Token(idx=35, range=(167, 186), value='__wti_module2_func1') (Token(idx=36, range=(187, 193), value='S2 *s2'))) : [163:167] 〈S1⌇*〉
+data/record.c:19:5: debug: debug: Checking function [module2] __wti_module2_func1
 data/record.c:19:34: [module2] '__wti_module2_func1': debug2: locals vars:
     s2: S2
 data/record.c:20:13: [module2] '__wti_module2_func1': debug2: Access chain: s2->s
@@ -20,8 +20,8 @@ data/record.c:20:13: [module2] '__wti_module2_func1': error: Invalid access to p
 data/record.c:20:13: [module2] '__wti_module2_func1': debug3: Field access chain: s2->s
 data/record.c:20:13: [module2] '__wti_module2_func1': debug3: Field access: S2->s
 data/record.c:20:13: [module2] '__wti_module2_func1': error: Invalid access to private field 'S2 :: s' of [module1]
-data/record.c:1:0: debug3: debug3: Checking func (function) data/record.c:24:5: module1 public Function(Token(idx=45, range=(246, 250), value='func') (Token(idx=46, range=(251, 258), value='int num'))) : [242:245] 〈int〉
-data/record.c:1:0: debug: debug: Checking function [module1] func
+data/record.c:24:5: debug3: debug3: Checking func (function) data/record.c:24:5: module1 public Function(Token(idx=45, range=(246, 250), value='func') (Token(idx=46, range=(251, 258), value='int num'))) : [242:245] 〈int〉
+data/record.c:24:5: debug: debug: Checking function [module1] func
 data/record.c:24:20: [module1] 'func': debug2: locals vars:
     num: int
     s2: S2
@@ -125,17 +125,21 @@ data/record.c:45:5: [module1] 'func': debug2: Access chain: (5 ? __wti_module2_f
 data/record.c:45:5: [module1] 'func': debug3: Access type: S1
 data/record.c:45:5: [module1] 'func': debug3: Field access chain: (5 ? __wti_module2_func1() : s3)->x
 data/record.c:45:5: [module1] 'func': debug3: Field access: S1->x
-data/record.c:1:0: debug3: debug3: Checking __wti_module2_func3 (function) data/record.c:61:5: module2 private Function(Token(idx=80, range=(978, 997), value='__wti_module2_func3') (Token(idx=81, range=(998, 1002), value='void'))) : [974:977] 〈int〉
-data/record.c:1:0: debug: debug: Checking function [module2] __wti_module2_func3
-data/record.c:62:12: [module2] '__wti_module2_func3': debug2: Access chain: __wti_module1_func2->x
-data/record.c:62:12: [module2] '__wti_module2_func3': debug3: Access type: S2
-data/record.c:62:12: [module2] '__wti_module2_func3': error: Invalid access to private record 'S2' of [module1]
-data/record.c:62:12: [module2] '__wti_module2_func3': debug3: Field access chain: __wti_module1_func2->x
-data/record.c:62:12: [module2] '__wti_module2_func3': debug3: Field access: S2->x
-data/record.c:62:12: [module2] '__wti_module2_func3': warning: Can't deduce type of member 'x' in __wti_module1_func2->x
-data/record.c:1:0: debug3: debug3: Checking __wti_module1_func2 (function) data/record.c:51:12: module1 private Function(Token(idx=58, range=(805, 824), value='__wti_module1_func2') (Token(idx=59, range=(825, 829), value='void'))) : [801:805] 〈S2⌇*〉
-data/record.c:1:0: debug: debug: Checking function [module1] __wti_module1_func2
-data/record.c:1:0: debug3: debug3: Checking __wti_module2_func2 (function) data/record.c:56:12: module2 private Function(Token(idx=70, range=(885, 904), value='__wti_module2_func2') (Token(idx=71, range=(905, 909), value='void'))) : [881:884] 〈int〉
-data/record.c:1:0: debug: debug: Checking function [module2] __wti_module2_func2
-data/record.c:1:0: debug3: debug3: Checking __wti_module1_funcX (function) data/record.c:65:12:  public Function(Token(idx=91, range=(1057, 1076), value='__wti_module1_funcX') (Token(idx=92, range=(1077, 1081), value='void'))) : [1053:1057] 〈S2⌇*〉
-data/record.c:1:0: debug: debug: Checking function [] __wti_module1_funcX
+data/record.c:46:5: [module1] 'func': debug2: Access chain: ((S1){.x=5})->x
+data/record.c:46:5: [module1] 'func': debug3: Access type: S1
+data/record.c:46:5: [module1] 'func': debug3: Field access chain: ((S1){.x=5})->x
+data/record.c:46:5: [module1] 'func': debug3: Field access: S1->x
+data/record.c:62:5: debug3: debug3: Checking __wti_module2_func3 (function) data/record.c:62:5: module2 private Function(Token(idx=80, range=(998, 1017), value='__wti_module2_func3') (Token(idx=81, range=(1018, 1022), value='void'))) : [994:997] 〈int〉
+data/record.c:62:5: debug: debug: Checking function [module2] __wti_module2_func3
+data/record.c:63:12: [module2] '__wti_module2_func3': debug2: Access chain: __wti_module1_func2->x
+data/record.c:63:12: [module2] '__wti_module2_func3': debug3: Access type: S2
+data/record.c:63:12: [module2] '__wti_module2_func3': error: Invalid access to private record 'S2' of [module1]
+data/record.c:63:12: [module2] '__wti_module2_func3': debug3: Field access chain: __wti_module1_func2->x
+data/record.c:63:12: [module2] '__wti_module2_func3': debug3: Field access: S2->x
+data/record.c:63:12: [module2] '__wti_module2_func3': warning: Can't deduce type of member 'x' in __wti_module1_func2->x
+data/record.c:52:12: debug3: debug3: Checking __wti_module1_func2 (function) data/record.c:52:12: module1 private Function(Token(idx=58, range=(825, 844), value='__wti_module1_func2') (Token(idx=59, range=(845, 849), value='void'))) : [821:825] 〈S2⌇*〉
+data/record.c:52:12: debug: debug: Checking function [module1] __wti_module1_func2
+data/record.c:57:12: debug3: debug3: Checking __wti_module2_func2 (function) data/record.c:57:12: module2 private Function(Token(idx=70, range=(905, 924), value='__wti_module2_func2') (Token(idx=71, range=(925, 929), value='void'))) : [901:904] 〈int〉
+data/record.c:57:12: debug: debug: Checking function [module2] __wti_module2_func2
+data/record.c:66:12: debug3: debug3: Checking __wti_module1_funcX (function) data/record.c:66:12:  public Function(Token(idx=91, range=(1077, 1096), value='__wti_module1_funcX') (Token(idx=92, range=(1097, 1101), value='void'))) : [1073:1077] 〈S2⌇*〉
+data/record.c:66:12: debug: debug: Checking function [] __wti_module1_funcX
