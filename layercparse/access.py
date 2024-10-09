@@ -65,7 +65,7 @@ class AccessCheck:
                 not isinstance(defn.details, FunctionParts) or \
                 not defn.details.body:
             return
-        body_clean = clean_text_sz(defn.details.body.value)
+        body_clean = clean_text_more_sz(defn.details.body.value)
 
         def _locationStr(offset: int) -> str:
             return (defn.scope.locationStr(defn.details.body.range[0] + offset) + # type: ignore[union-attr]
