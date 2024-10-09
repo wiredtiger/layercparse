@@ -3,6 +3,7 @@
 **/.DS_Store
 **/*.sw?
 **/*.pyc
+**/__pycache__
 build/
 .idea
 .venv
