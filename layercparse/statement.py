@@ -75,8 +75,10 @@ class StatementKind:
 
         ret.postComment = get_post_comment(tokens)
 
-        if len(clean_tokens) > 1 and clean_tokens[0].value == "extern" and clean_tokens[1].value == '"C"':
-            ret.is_extern_c = True
+        if clean_tokens[0].value == "extern":
+            if len(clean_tokens) > 1 and clean_tokens[1].value == '"C"':
+                ret.is_extern_c = True
+            # Ignore any type of "extern" declaration - rely on the actual one
             return ret
 
         if clean_tokens[0].value == "typedef":

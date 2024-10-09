@@ -134,10 +134,10 @@ typedef union aaa {
 } bbb, ccc; /* post comment */
 
 int func(int a, int b);
-extern void func(int a, int b) __attribute__((__noreturn__));
-extern inline void func(int a, int b) __attribute__((__noreturn__));
-extern WT_INLINE void func(int a, int b) __attribute__((__noreturn__));
-extern void func_of_ptr(int *a[100]) {
+void func(int a, int b) __attribute__((__noreturn__));
+inline void func(int a, int b) __attribute__((__noreturn__));
+WT_INLINE void func(int a, int b) __attribute__((__noreturn__));
+void func_of_ptr(int *a[100]) {
 }
 
 /*
