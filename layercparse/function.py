@@ -54,7 +54,7 @@ class FunctionParts:
         retType = TokenList([])
         funcName = None
         argsList = None
-        is_const, is_static = False, False
+        is_type_const, is_type_static = False, False
         for i in range(i, len(tokens)):
             token = tokens[i]
             if token.getKind() == "(":
@@ -65,15 +65,15 @@ class FunctionParts:
             if token.getKind() not in [" ", "#", "/"]:
                 retType.append(token)
             if token.value == "const":
-                is_const = True
+                is_type_const = True
             elif token.value == "static":
-                is_static = True
+                is_type_static = True
         if funcName is None or argsList is None:
             return None
 
         retType = TokenList((filter(lambda x: x.value not in c_type_keywords, retType)))
 
-        ret = FunctionParts(retType, funcName, argsList, preComment=preComment, postComment=get_post_comment(tokens), is_type_const=is_const, is_type_static=is_static)
+        ret = FunctionParts(retType, funcName, argsList, preComment=preComment, postComment=get_post_comment(tokens), is_type_const=is_type_const, is_type_static=is_type_static)
 
         # Function body
         for i in range(i+1, len(tokens)):

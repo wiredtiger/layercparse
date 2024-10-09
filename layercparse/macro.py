@@ -60,20 +60,26 @@ class MacroParts:
     # TODO: Parse body into a list of tokens. Use special token types for # and ## operators and replacements
 
     def __post_init__(self):
-        self.is_wellformed = is_wellformed(self.body.value) if self.body else True
-        if self.body:
-            for token in TokenList.xxFilterCode(TokenList.xFromText(self.body.value)):
-                if token.getKind() in [" ", "#", "/"]:
-                    continue
-                if (self.is_const is None and (
-                        token.getKind() == "'" or
-                        (token.getKind() == "w" and regex.match(r"^\d", token.value)))):
+        if not self.body:
+            self.is_wellformed = True
+            self.is_const = True
+        else:
+            self.is_wellformed = is_wellformed(self.body.value)
+            if not self.is_wellformed:
+                self.is_const = False
+            else:
+                for token in TokenList.xxFilterCode(TokenList.xFromText(self.body.value)):
+                    if token.getKind() in [" ", "#", "/"]:
+                        continue
+                    if (self.is_const is None and (
+                            token.getKind() == "'" or
+                            (token.getKind() == "w" and regex.match(r"^\d", token.value)))):
+                        self.is_const = True
+                    else:
+                        self.is_const = False
+                        break
+                else:  # Not break
                     self.is_const = True
-                else:
-                    self.is_const = False
-                    break
-            else:  # Not break
-                self.is_const = True
 
     def update(self, other: 'MacroParts') -> list[str]:
         errors = []
