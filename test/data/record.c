@@ -77,4 +77,3 @@ int func_local_struct(int a, char b) {
     local_str.s2.s.x = a;
 }
 
-

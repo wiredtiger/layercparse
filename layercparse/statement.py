@@ -19,6 +19,7 @@ class StatementKind:
     is_expression: bool | None = None
     is_initialization: bool | None = None
     is_extern_c: bool | None = None
+    is_unnamed_record: bool | None = None # unnamed struct/union/enum which pulls its members into the parent scope
     end: str | None = None
     preComment: Token | None = None
     postComment: Token | None = None
@@ -96,6 +97,9 @@ class StatementKind:
                             0, 2))
             if len(tokens_decl) < 2:
                 # ret.is_expression = True
+                if len(clean_tokens) == 2 and clean_tokens[0].value in ["struct", "union"] and clean_tokens[1].getKind() == "{":
+                    ret.is_record = True
+                    ret.is_unnamed_record = True
                 return ret
             if ((tokens_decl[0].getKind() == "w" and tokens_decl[1].getKind() == "w") or
                     tokens_decl[0].value in c_type_keywords or

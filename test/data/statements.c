@@ -199,3 +199,10 @@ qwe *func1(int a, int b) {1}
 qwe* func2(int a, int b) {2}
 qwe * func3(int a, int b) {3}
 qwe*func4(int a, int b) {4}
+
+struct StructWithNested {
+    struct {
+        int x;
+        char y;
+    };
+};
