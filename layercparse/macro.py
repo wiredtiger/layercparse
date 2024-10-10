@@ -114,19 +114,21 @@ class MacroParts:
             if match := reg_define.match(token.value):
                 break
             return None
+        else: # not break
+            return None
 
         is_va_args = False
         offset = token.range[0]
         args = None
-        if match["args"]:  # type: ignore # match is not None; match is indexable
+        if match["args"]:
             args = list(
-            TokenList.xFromMatches(reg_whole_word.finditer(match["args_in"]), # type: ignore # match is not None; match is indexable
-                                   offset + match.start("args_in"), kind="w")) # type: ignore # match is not None; match is indexable
+            TokenList.xFromMatches(reg_whole_word.finditer(match["args_in"]),
+                                   offset + match.start("args_in"), kind="w"))
             if args and args[-1].value == "...":
                 args[-1].value = "__VA_ARGS__"
                 is_va_args = True
 
-        body = Token.fromMatch(match, offset, "body") # type: ignore # match is not None; match is indexable
+        body = Token.fromMatch(match, offset, "body")
         body.value = clean_text_sz(body.value.replace("\\\n", " \n").strip()) # space to preserve byte offset
 
         return MacroParts(preComment=preComment, args=args, is_va_args=is_va_args,
