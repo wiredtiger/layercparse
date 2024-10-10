@@ -267,6 +267,7 @@ class Codebase:
                     for fname, txt, insertlist in pool.starmap(
                                 Codebase._preprocess_file_for_multi,
                                 ((self, fname) for fname in files)):
+                        DEBUG2(" ---", f"File: {fname}")
                         with ScopePush(file=File(fname)):
                             scope_file().read()
                             scope_file().updateLineInfoWithInsertList(insertlist)

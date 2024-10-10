@@ -206,3 +206,8 @@ struct StructWithNested {
         char y;
     };
 };
+
+static const struct {
+      int x;
+} qwe = {123};
+

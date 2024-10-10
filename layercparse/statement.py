@@ -57,7 +57,10 @@ class StatementKind:
                 clean_tokens.pop(i)
                 if clean_tokens[i].getKind() == "(":
                     clean_tokens.pop(i)
-            i += 1
+            elif clean_tokens[i].value in ["const", "static"]:
+                clean_tokens.pop(i)
+            else:
+                i += 1
 
         if not clean_tokens:
             return ret
