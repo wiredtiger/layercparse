@@ -175,6 +175,9 @@ class Macros:
     def expand(self, txt: str, expand_const: bool = False) -> str:
         # TODO(later): Optimise: compose the result as a list of strings, then join at the end
 
+        self.insert_list: list[tuple[int, int]] = []  # (offset, delta)
+        self.errors = []
+
         if not self.macros:
             return txt
 
@@ -201,12 +204,13 @@ class Macros:
                 names_re_a.append(r"""(?P<name> \b(?:\L<names_func>)\b )(?P<args>(?P<spc>\s*+)\((?P<list>(?&TOKEN)*+)\))""" + re_token)
                 self._has_fn_like_names = True
 
+        if not self._has_obj_like_names and not self._has_fn_like_names:
+            return txt
+
         self._names_reg = regex.compile(" | ".join(names_re_a), re_flags, **kwargs)  # type: ignore # **kwargs
         self._in_use: set[str] = set()
         self._in_use_stack: list[str] = []
-        self.insert_list: list[tuple[int, int]] = []  # (offset, delta)
 
-        self.errors = []
         return self._expand_fragment(txt)
 
     def __update_insert_list(self, replacement: str, match: regex.Match, base_offset) -> str:

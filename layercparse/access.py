@@ -60,6 +60,8 @@ class AccessCheck:
         return self._perModuleInvisibleNamesRe[module]
 
     def _check_function(self, defn: Definition) -> None:
+        DEBUG3(defn.scope.locationStr(defn.offset), f"Checking {defn.short_repr()}") or \
+        DEBUG(defn.scope.locationStr(defn.offset), f"Checking {defn.kind} [{defn.module}] {defn.name}")
         if defn.kind != "function" or \
                 not defn.details or \
                 not isinstance(defn.details, FunctionParts) or \
@@ -209,8 +211,6 @@ class AccessCheck:
             for defn in itertools.chain(
                         self._globals.names.values(),
                         *(namedict.values() for namedict in self._globals.static_names.values())):
-                DEBUG3(defn.scope.locationStr(defn.offset), f"debug3: Checking {defn.short_repr()}") or \
-                DEBUG(defn.scope.locationStr(defn.offset), f"debug: Checking {defn.kind} [{defn.module}] {defn.name}")
                 self._check_function(defn)
         else:
             init_multithreading()
