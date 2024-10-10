@@ -129,7 +129,7 @@ class AccessCheck:
             # Not a ternary - the type is the type of the first token
             token = tokens[0]
             if token.getKind() == "(": # expression or type cast
-                if len(tokens) > 1 and tokens[1].getKind() in ["w", "(", "{"]:  # type cast
+                if len(tokens) > 1 and (tokens[1].getKind() in ["w", "(", "{"] or tokens[1].value in ["&", "*"]):  # type cast
                     return self._globals.untypedef(get_base_type_str(token.value[1:-1]))
                     # token_type = self._globals.untypedef(get_base_type_str(token.value[1:-1])) \
                     #              if reg_word_char.match(token.value[1]) else \
