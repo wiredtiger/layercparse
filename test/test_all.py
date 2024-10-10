@@ -52,7 +52,7 @@ class TestCaseLocal(unittest.TestCase):
     def parseDetailsFromText(self, txt: str, offset: int = 0) -> str:
         a = []
         with ScopePush(offset=offset):
-            for st in StatementList.fromText(txt):
+            for st in StatementList.fromText(txt, 0):
                 st.getKind()
                 a.append(pf(st))
                 # a.append(pf(StatementKind.fromTokens(st.tokens)))
@@ -140,16 +140,16 @@ class TestToken(TestCaseLocal):
 
 class TestVariable(TestCaseLocal):
     def test_1(self):
-        self.assertMultiLineEqualDiff(repr(Variable.fromVarDef(TokenList.fromText("int a;"))),
+        self.assertMultiLineEqualDiff(repr(Variable.fromVarDef(TokenList.fromText("int a;", 0))),
             r"""Variable(name=Token(idx=2, range=(4, 5), value='a'), typename=[0:3] 〈int〉, preComment=None, postComment=None, end=';')""")
     def test_2(self):
-        self.assertMultiLineEqualDiff(repr(Variable.fromVarDef(TokenList.fromText("int (*a)(void);"))),
+        self.assertMultiLineEqualDiff(repr(Variable.fromVarDef(TokenList.fromText("int (*a)(void);", 0))),
             r"""Variable(name=Token(idx=2, range=(4, 8), value='a'), typename=[0:3] 〈int〉, preComment=None, postComment=None, end=';')""")
     def test_3(self):
-        self.assertMultiLineEqualDiff(repr(Variable.fromVarDef(TokenList.fromText("int a[10];"))),
+        self.assertMultiLineEqualDiff(repr(Variable.fromVarDef(TokenList.fromText("int a[10];", 0))),
             r"""Variable(name=Token(idx=2, range=(4, 5), value='a'), typename=[0:3] 〈int〉, preComment=None, postComment=None, end=';')""")
     def test_4(self):
-        self.assertMultiLineEqualDiff(repr(Variable.fromVarDef(TokenList.fromText("int *a[10];"))),
+        self.assertMultiLineEqualDiff(repr(Variable.fromVarDef(TokenList.fromText("int *a[10];", 0))),
             r"""Variable(name=Token(idx=3, range=(5, 6), value='a'), typename=[0:3] 〈int〉, preComment=None, postComment=None, end=';')""")
 
 

@@ -189,7 +189,7 @@ class Codebase:
         DEBUG3(" ---", f"Scope: {offset}")
         with ScopePush(offset=offset):
             saved_type: Any = None
-            for st in StatementList.fromText(txt):
+            for st in StatementList.fromText(txt, base_offset=0):
                 st.getKind()
                 if saved_type or (st.getKind().is_typedef and not st.getKind().is_record and not st.getKind().is_function_def):
                     var = Variable.fromVarDef(st.tokens)

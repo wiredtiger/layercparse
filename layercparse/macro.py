@@ -69,7 +69,7 @@ class MacroParts:
             if not self.is_wellformed:
                 self.is_const = False
             else:
-                for token in TokenList.xxFilterCode(TokenList.xFromText(self.body.value)):
+                for token in TokenList.xxFilterCode(TokenList.xFromText(self.body.value, base_offset=self.body.range[0])):
                     if token.getKind() in [" ", "#", "/"]:
                         continue
                     if (self.is_const is None and (
@@ -252,7 +252,7 @@ class Macros:
 
         # Parse args
         args_val: list[TokenList] = [TokenList([])]
-        for token_arg in TokenList.xFromText(match["list"]):
+        for token_arg in TokenList.xFromText(match["list"], base_offset=base_offset + match.start("list")):
             # if token_arg.getKind() in ["/", "#"]:
             #     continue
             if token_arg.value == ",":

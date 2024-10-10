@@ -165,7 +165,7 @@ class AccessCheck:
         chain: AccessChain
 
         def _get_type_of_expr_str(clean_txt: str, root_offset: int = 0) -> str:
-            return self._globals.untypedef(_get_type_of_expr(TokenList(TokenList.xxFilterCode(TokenList.xFromText(clean_txt))), root_offset))
+            return self._globals.untypedef(_get_type_of_expr(TokenList(TokenList.xxFilterCode(TokenList.xFromText(clean_txt, 0))), root_offset))
 
         def _check_access_to_defn(defn2: Definition, offset: int, prefix: str = "") -> None:
             if defn2.is_private and defn2.module and defn2.module != module:
