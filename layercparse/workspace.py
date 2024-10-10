@@ -30,8 +30,9 @@ def get_file_kind(fname: str) -> FileKind:
            ""
 
 def get_file_priority(fname: str) -> int:
-    return 3 if fname.endswith(".c") else \
-           2 if fname.endswith("_inline.h") else \
+    return 4 if fname.endswith(".c") else \
+           3 if fname.endswith("_inline.h") else \
+           2 if fname.endswith(".h") else \
            1 if fname else \
            0
 

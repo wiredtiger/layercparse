@@ -18,7 +18,7 @@ def main():
         # Module("checksum"),
         Module("conf"),
         Module("config"),
-        Module("conn"),
+        Module("conn", fileAliases=["connection"], sourceAliases=["connection"]),
         Module("cursor", sourceAliases=["cur", "btcur", "curbackup"]),
         Module("evict"),
         Module("history", sourceAliases = ["hs"]),
