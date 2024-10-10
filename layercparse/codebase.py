@@ -25,7 +25,7 @@ class Definition:
     postComments: list[Token] = field(default_factory=list)
 
     def short_repr(self) -> str:
-        return f"{self.name} ({self.kind}) {self.scope.locationStr(self.offset)} {self.module} {'private' if self.is_private else 'public'} {self.details.short_repr() if self.details else ''}"
+        return f"{self.name} ({self.kind}) {self.scope.locationStr(self.offset)} [{self.module}] {'private' if self.is_private else 'public'} {self.details.short_repr() if self.details else ''}"
 
     def locationStr(self) -> str:
         return f"{self.scope.locationStr(self.offset)} {self.kind}{f' [{self.module}]' if self.module else ''} '{self.name}':"
@@ -93,6 +93,9 @@ def _get_visibility_and_module(thing: Details, default_private: bool | None = No
     if is_nested and match:
         return (bool(match[2]), module_from_name)
 
+    if not default_module:
+        return (default_private, module_from_name)
+
     # Top level
     if module_from_name != default_module:
         ERROR(scope().locationStr(thing.name.range[0]), f"Module [{module_from_name}] of a top-level entry '{thing.name.value}' does not match the file's module [{default_module}]. Assigning it to module [{default_module}] because identifier name has lower priority.")
@@ -101,7 +104,7 @@ def _get_visibility_and_module(thing: Details, default_private: bool | None = No
 
 def _get_visibility_and_module_check(thing: Details, default_private: bool | None = None, default_module: str = "", is_nested = False) -> tuple[bool | None, str]:
     ret = _get_visibility_and_module(thing, default_private=default_private, default_module=default_module, is_nested=is_nested)
-    if not is_nested and ret[1] != default_module:
+    if not is_nested and default_module and ret[1] != default_module:
         ERROR(scope().locationStr(thing.name.range[0]), f"Module [{ret[1]}] of a top-level entry '{thing.name.value}' does not match the file's module [{default_module}]. Assigning it to module [{ret[1]}].")
     return ret
 
