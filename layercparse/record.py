@@ -42,6 +42,9 @@ class RecordParts:
         ret.append(")")
         return "".join(ret)
 
+    def kind(self) -> str:
+        return "record"
+
     def _getBodyOffset(self) -> int:
         ret = 0
         if self.body:

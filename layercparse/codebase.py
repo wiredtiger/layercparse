@@ -86,7 +86,7 @@ def _get_visibility_and_module(thing: Details, default_private: bool | None = No
         if match := regex.search(r"\#(?>(public)|(private))\b(?>\((\w++)\))?", thing.postComment.value, flags=re_flags):
             return (bool(match[2]), match[3] if match[3] else default_module)
 
-    match = regex.match(r"^(?>(__wt_)|(__wti_|WT_))(\L<names>)?", thing.name.value, flags=re_flags,
+    match = regex.match(r"^(?>(__wt_)|(__wti_|WT_))(?>(\L<names>)_)?", thing.name.value, flags=re_flags,
                         names=workspace.moduleSrcNames)
     module_from_name = workspace.moduleAliasesSrc.get(match[3], match[3]) if match and match[3] else default_module
 
@@ -98,14 +98,14 @@ def _get_visibility_and_module(thing: Details, default_private: bool | None = No
 
     # Top level
     if module_from_name != default_module:
-        ERROR(scope().locationStr(thing.name.range[0]), f"Module [{module_from_name}] of a top-level entry '{thing.name.value}' does not match the file's module [{default_module}]. Assigning it to module [{default_module}] because identifier name has lower priority.")
+        ERROR(scope().locationStr(thing.name.range[0]), f"Module [{module_from_name}] of a top-level {thing.kind()} '{thing.name.value}' does not match the module of the file [{default_module}]. Assigning it to module [{default_module}] because identifier name has lower priority.")
 
     return (default_private, default_module)
 
 def _get_visibility_and_module_check(thing: Details, default_private: bool | None = None, default_module: str = "", is_nested = False) -> tuple[bool | None, str]:
     ret = _get_visibility_and_module(thing, default_private=default_private, default_module=default_module, is_nested=is_nested)
     if not is_nested and default_module and ret[1] != default_module:
-        ERROR(scope().locationStr(thing.name.range[0]), f"Module [{ret[1]}] of a top-level entry '{thing.name.value}' does not match the file's module [{default_module}]. Assigning it to module [{ret[1]}].")
+        ERROR(scope().locationStr(thing.name.range[0]), f"Module [{ret[1]}] of a top-level {thing.kind()} '{thing.name.value}' does not match the module of the file [{default_module}]. Assigning it to module [{ret[1]}].")
     return ret
 
 

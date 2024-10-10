@@ -82,16 +82,20 @@ class MacroParts:
                 else:  # Not break
                     self.is_const = True
 
+    def args_short_repr(self) -> str:
+        return "(" + ", ".join([arg.value for arg in self.args]) + ")" if self.args else ""
     def short_repr(self) -> str:
-        args = "(" + ", ".join([arg.value for arg in self.args]) + ")" if self.args else ""
-        return f"Macro {self.name.value}{args} is_wellformed={self.is_wellformed} is_const={self.is_const}"
+        return f"Macro {self.name.value}{self.args_short_repr()} is_wellformed={self.is_wellformed} is_const={self.is_const}"
+
+    def kind(self) -> str:
+        return "macro"
 
     def update(self, other: 'MacroParts') -> list[str]:
         errors = []
         if self.name != other.name:
             errors.append(f"macro name mismatch for '{self.name.value}': '{self.name.value}' != '{other.name.value}'")
         if self.args != other.args:
-            errors.append(f"macro args mismatch for '{self.name.value}': ({', '.join((arg.value for arg in self.args))}) != ({', '.join((arg.value for arg in other.args))})")
+            errors.append(f"macro args mismatch for '{self.name.value}': {self.args_short_repr()} != {other.args_short_repr()}")
         if self.body != other.body:
             errors.append(f"macro redifinition: '{self.name.value}'")
         if self.preComment is None:
