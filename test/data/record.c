@@ -68,3 +68,13 @@ static S2 *__wti_module1_funcX(void) {
     return 5;
 }
 
+int func_local_struct(int a, char b) {
+    struct {
+        S1 s1;
+        S2 s2;
+    } local_str;
+    local_str.s1.x = a;
+    local_str.s2.s.x = a;
+}
+
+

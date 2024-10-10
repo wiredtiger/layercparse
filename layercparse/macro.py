@@ -242,7 +242,7 @@ class Macros:
                 # if va_args, continue appending to the last list
             args_val[-1].append(token_arg)
         if len(args_val) < len(macro.args):  # type: ignore # macro has args
-            self.errors.append(f"error: macro {name}: got only {len(args_val)} arguments, expected {len(macro.args)}")   # type: ignore # macro has args # TODO: better error reporting
+            self.errors.append(f"macro {name}: got only {len(args_val)} arguments, expected {len(macro.args)}")   # type: ignore # macro has args # TODO: better error reporting
             return self.__update_insert_list(match[0], match, base_offset)
 
         replacement = macro.body.value  # type: ignore # match is not None

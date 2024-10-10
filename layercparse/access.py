@@ -81,7 +81,7 @@ class AccessCheck:
 
         # Check local names
         localvars: dict[str, Definition] = {} # name -> type
-        for var in defn.details.getArgs() + defn.details.getLocalVars():
+        for var in defn.details.getArgs() + defn.details.getLocalVars(self._globals):
             if var.typename:
                 localvars[var.name.value] = Definition(
                     name=var.name.value,

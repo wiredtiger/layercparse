@@ -5,6 +5,7 @@ from .internal import *
 from .ctoken import *
 from .statement import *
 from .variable import *
+from .record import *
 
 @dataclass
 class FunctionParts:
@@ -92,16 +93,16 @@ class FunctionParts:
     def getArgs(self) -> list[Variable]:
         return list(self.xGetArgs())
 
-    def xGetLocalVars(self) -> Iterable[Variable]:
+    def xGetLocalVars(self, _globals: 'Codebase | None' = None) -> Iterable[Variable]: # type: ignore[name-defined] # error: Name "Codebase" is not defined (circular dependency)
         if not self.body:
             return
         saved_type: Any = None
         for st in StatementList.xFromText(self.body.value):
             t = st.getKind()
-            if saved_type is None and (t.is_statement or (t.is_expression and not t.is_initialization)):
+            if not saved_type and not t.is_decl and (t.is_statement or (t.is_expression and not t.is_initialization)):
                 break
             # TODO: Add local variables from where t.is_record
-            if saved_type is not None or (t.is_decl and not t.is_function and not t.is_record):
+            if saved_type or (t.is_decl and not t.is_function and not t.is_record):
                 var = Variable.fromVarDef(st.tokens)
                 if var:
                     if not var.typename:
@@ -110,5 +111,14 @@ class FunctionParts:
                     saved_type = var.typename if var.end == "," else None
             else:
                 saved_type = None
-    def getLocalVars(self) -> list[Variable]:
-        return list(self.xGetLocalVars())
+                if t.is_record:
+                    with ScopePush(offset=self.body.range[0]):
+                        record = RecordParts.fromStatement(st)
+                    if record:
+                        if _globals:
+                            _globals.addRecord(record, is_global_scope=False)
+                        if record.vardefs:
+                            yield from record.vardefs
+
+    def getLocalVars(self, _globals: 'Codebase | None' = None) -> list[Variable]: # type: ignore[name-defined] # error: Name "Codebase" is not defined (circular dependency)
+        return list(self.xGetLocalVars(_globals))
