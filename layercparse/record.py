@@ -148,7 +148,7 @@ class RecordParts:
                     if record.vardefs:
                         for var in record.vardefs:
                             yield var
-                    elif record.is_unnamed:  # Pull its members up
+                    elif record.is_unnamed and record.members:  # Pull its members up
                         for var in record.members:
                             yield var
                 continue

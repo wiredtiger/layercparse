@@ -154,6 +154,7 @@ class Codebase:
             module=local_module,
             is_private=is_private_record,
             details=record))
+        DEBUG3(lambda: scope().locationStr(record.name.range[0]), "Record:", self.types[record.name.value].short_repr)
         if is_private_record:
             self.types_restricted[record.name.value] = self.types[record.name.value]
         if record.members:
@@ -173,7 +174,8 @@ class Codebase:
             for typedef in record.typedefs:
                 self.typedefs[typedef.name.value] = record.name.value
         if record.vardefs:
-            pass # TODO: add global variables from struct definitions
+            if is_global_scope:
+                INFO(scope().locationStr(record.name.range[0]), f"Global variables of record '{record.name.value}' are ignored")
         if record.nested:
             for rec in record.nested:
                 self.addRecord(rec)
@@ -191,9 +193,10 @@ class Codebase:
                             var.typename = saved_type
                         if var.typename:
                             self.typedefs[var.name.value] = get_base_type(var.typename)
+                            DEBUG3(lambda: scope().locationStr(st.range()[0]), lambda: f"Typedef: {var.name.value} = {var.typename} = {self.typedefs[var.name.value]}")
                             saved_type = var.typename if var.end == "," else None
                         else:
-                            WARNING(scope().locationStr(var.name.range[0]), f"Invalid typedef near '{var.name.value}'")
+                            WARNING(scope().locationStr(st.range()[0]), f"Invalid typedef near '{var.name.value}'")
                 else:
                     saved_type = None
                     if st.getKind().is_function_def:
@@ -208,6 +211,7 @@ class Codebase:
                                 module=local_module,
                                 is_private=is_private,
                                 details=func)
+                            DEBUG3(lambda: funcdef.locationStr(), "Function:", funcdef.short_repr)
                             if scope_file().fileKind == "c" and func.is_type_static:
                                 if funcdef.is_private and funcdef.module != scope_module():
                                     ERROR(funcdef.locationStr(), f"Private static function of a foreign module defined in [{scope_module()}]")
@@ -222,16 +226,19 @@ class Codebase:
                         record = RecordParts.fromStatement(st)
                         if record:
                             self.addRecord(record)
-                        # TODO: add global variables from struct definitions
                     elif st.getKind().is_decl:
-                        pass # TODO: global function and variable declarations - add to global or static names
+                        INFO(scope().locationStr(st.range()[0]), f"Global variable ignored")
                     elif do_preproc and st.getKind().is_preproc:
                         macro = MacroParts.fromStatement(st)
                         if macro:
-                            self.macros.upsert(macro)
+                            DEBUG3(lambda: scope().locationStr(st.range()[0]), "Macro:", macro.short_repr)
+                            if errors := self.macros.upsert(macro):
+                                for error in errors:
+                                    INFO(*error)
                     elif st.getKind().is_extern_c:
                         body = next((t for t in st.tokens if t.value.startswith("{")), None)
                         if body:
+                            DEBUG3(lambda: scope().locationStr(st.range()[0]), "extern C")
                             self.updateFromText(body.value[1:-1], offset=body.range[0]+1)
 
     def updateFromFile(self, fname: str, expand_preproc = True) -> None:
@@ -249,7 +256,9 @@ class Codebase:
             for st in StatementList.preprocFromText(txt):
                 macro = MacroParts.fromStatement(st)
                 if macro:
-                    self.macros.upsert(macro)
+                    if errors := self.macros.upsert(macro):
+                        for error in errors:
+                            INFO(*error)
 
     def updateMacroFromFile(self, fname: str) -> None:
         with ScopePush(file=File(fname)):
