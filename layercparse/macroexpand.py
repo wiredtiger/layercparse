@@ -1,52 +1,29 @@
 from dataclasses import dataclass
 
+from .workspace import *
 from .macro import *
 
 def c_string_escape(txt: str) -> str:
     return txt.replace("\\", "\\\\").replace("\n", "\\n").replace("\t", "\\t").replace("\"", "\\\"")
 
-@dataclass
-class Macros:
-    macros: dict[str, MacroParts] = field(default_factory=dict)
-    errors: list[str] = field(default_factory=list)
+def _D2M(val: 'Definition') -> MacroParts: # type: ignore[name-defined] # circular dependency for Definition
+    return cast(MacroParts, val.details)
 
-    def __post_init__(self):
-        if "__attribute__" not in self.macros:
-            self.macros["__attribute__"] = MacroParts(name=Token(0, (0, 0), "__attribute__"), args=[Token(0, (0, 0), "arg")])
-
-    def add(self, macro: MacroParts) -> None:
-        self.macros[macro.name.value] = macro
-
-    def addFromStatement(self, statement: Statement) -> None:
-        if macro := MacroParts.fromStatement(statement):
-            self.add(macro)
-
-    def upsert(self, other: MacroParts) -> list[tuple[str | Callable[[], str] | int | None, str]]:
-        if other.name.value in self.macros:
-            errors = self.macros[other.name.value].update(other)
-            if not errors:
-                return []
-            return [
-                (scope().locationStr(other.name.range[0]), f"Conflicting update for macro '{other.name.value}':"),
-                # (scope().locationStr(self.macros[other.name.value].name.range[0]), f"conflict here:"),
-                *(((None, err) for err in errors))
-            ]
-        else:
-            self.add(other)
-            return []
+class MacroExpander:
+    insert_list: list[tuple[int, int]]
+    _macros: dict[str, MacroParts]
 
     # Macro expansion.
     #  - https://en.wikipedia.org/wiki/C_preprocessor#Order_of_expansion
     #  - https://stackoverflow.com/questions/45375238/c-preprocessor-macro-expansion
     #  - https://gcc.gnu.org/onlinedocs/cpp/Argument-Prescan.html
-    def expand(self, txt: str, expand_const: bool = False) -> str:
+    def expand(self, txt: str, macros: 'dict[str, Definition]', expand_const: bool = False) -> str: # type: ignore[name-defined] # circular dependency for Definition
         # TODO(later): Optimise: compose the result as a list of strings, then join at the end
 
         self.insert_list: list[tuple[int, int]] = []  # (offset, delta)
-        self.errors = []
-
-        if not self.macros:
+        if not macros:
             return txt
+        self._macros = macros
 
         names_re_a = [
             r"""(?> (?: \# | \/\/ ) (?: [^\\\n] | \\. )*+ \n)""",
@@ -56,20 +33,24 @@ class Macros:
         ]
         kwargs = {}
         self._has_obj_like_names, self._has_fn_like_names = False, False
-        if names := [k for k, v in self.macros.items() if v.args is None]:
-            if not expand_const:
-                names = [k for k in names if not self.macros[k].is_const]
-            if names:
-                kwargs["names_obj"] = names
-                names_re_a.append(r"""(?P<name> \b(?:\L<names_obj>)\b )""")
-                self._has_obj_like_names = True
-        if names := [k for k, v in self.macros.items() if v.args is not None]:
-            if not expand_const:
-                names = [k for k in names if not self.macros[k].is_const]
-            if names:
-                kwargs["names_func"] = names
-                names_re_a.append(r"""(?P<name> \b(?:\L<names_func>)\b )(?P<args>(?P<spc>\s*+)\((?P<list>(?&TOKEN)*+)\))""" + re_token)
-                self._has_fn_like_names = True
+        obj_like_names, fn_like_names = [], []
+        for k, v in self._macros.items():
+            macro = _D2M(v)
+            if not expand_const and macro.is_const:
+                continue
+            if macro.args is None:
+                obj_like_names.append(k)
+            else:
+                fn_like_names.append(k)
+        if obj_like_names:
+            kwargs["names_obj"] = obj_like_names
+            names_re_a.append(r"""(?P<name> \b(?:\L<names_obj>)\b )""")
+            self._has_obj_like_names = True
+        if fn_like_names:
+            kwargs["names_func"] = fn_like_names
+            names_re_a.append(r"""(?P<name> \b(?:\L<names_func>)\b )(?P<args>(?P<spc>\s*+)\((?P<list>(?&TOKEN)*+)\))""" + re_token)
+            self._has_fn_like_names = True
+        del obj_like_names, fn_like_names # There can be many, so free up memory
 
         if not self._has_obj_like_names and not self._has_fn_like_names:
             return txt
@@ -78,12 +59,13 @@ class Macros:
         self._in_use: set[str] = set()
         self._in_use_stack: list[str] = []
 
-        return self._expand_fragment(txt)
+        ret = self._expand_fragment(txt)
+        del self._macros # delete reference
+        return ret
 
     def __update_insert_list(self, replacement: str, match: regex.Match, base_offset) -> str:
-        if self._in_use:
-            return replacement
-        self.insert_list.append((match.start() + base_offset, len(replacement) - len(match[0])))
+        if not self._in_use:
+            self.insert_list.append((match.start() + base_offset, len(replacement) - len(match[0])))
         return replacement
 
     def _expand_fragment(self, txt: str, base_offset: int = 0) -> str:
@@ -97,13 +79,13 @@ class Macros:
         name = match["name"]
         if name in self._in_use:
             return self.__update_insert_list(match[0], match, base_offset)
-        if not self.macros[name].body:
+        if not _D2M(self._macros[name]).body:
             return self.__update_insert_list("", match, base_offset)
 
         self._in_use.add(name)
         self._in_use_stack.append(name)
-        # TODO: embed file and line number
-        replacement = self._expand_fragment(self.macros[name].body.value, base_offset)  # type: ignore # match is not None
+        # TODO: push scope
+        replacement = self._expand_fragment(_D2M(self._macros[name]).body.value, base_offset)  # type: ignore # match is not None
         self._in_use_stack.pop()
         self._in_use.remove(name)
 
@@ -113,7 +95,7 @@ class Macros:
         name = match["name"]
         if name in self._in_use:
             return self.__update_insert_list(match[0], match, base_offset)
-        macro = self.macros[name]
+        macro = _D2M(self._macros[name])
         if not macro.body:
             return self.__update_insert_list("", match, base_offset)
 
@@ -132,7 +114,8 @@ class Macros:
                 # if va_args, continue appending to the last list
             args_val[-1].append(token_arg)
         if len(args_val) < len(macro.args):  # type: ignore # macro has args
-            self.errors.append(f"macro {name}: got only {len(args_val)} arguments, expected {len(macro.args)}")   # type: ignore # macro has args
+            ERROR(scope_file().locationStr(base_offset + match.start()), #  if not self._in_use_stack else 0   # TODO: better error location
+                  f"macro {name}: got only {len(args_val)} arguments, expected {len(macro.args)}")   # type: ignore # macro has args
             return self.__update_insert_list(match[0], match, base_offset)
 
         replacement = macro.body.value  # type: ignore # match is not None

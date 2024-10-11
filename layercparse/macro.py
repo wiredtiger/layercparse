@@ -51,11 +51,12 @@ class MacroParts:
     args: list[Token] | None = None
     body: Token | None = None
     preComment: Token | None = None
-    # postComment: Token | None = None
+    postComment: Token | None = field(default=None, repr=False) # for compatibility with other details
     is_va_args: bool = False
     is_wellformed: bool = True
     # is_multiple_statements: bool = False
     is_const: bool | None = None
+    typename: TokenList = field(default_factory=TokenList, repr=False) # for compatibility with other details
 
     # TODO(later): Parse body into a list of tokens. Use special token types for # and ## operators and replacements
 

@@ -195,22 +195,16 @@ class TestMacro(TestCaseLocal):
         _globals = Codebase()
         src = file_content("data/macro.c")
         for p in StatementList.preprocFromText(src):
-            macro = MacroParts.fromStatement(p)
-            # pprint(macro)
-            if macro:
-                _globals.macros.upsert(macro)
+            _globals.addMacro(MacroParts.fromStatement(p))
+
         # _globals.updateFromFile("data/macro.c")
         # setLogLevel(LogLevel.DEBUG)
         # pprint(_globals.macros, width=120, compact=False)
 
-        expanded = _globals.macros.expand(src, expand_const=True)
-        if _globals.macros.errors:
-            print("\n".join(_globals.macros.errors))
+        expanded = MacroExpander().expand(src, _globals.macros___, expand_const=True)
         self.checkStrAgainstFile(expanded, "data/macro.c.macro-full")
 
-        expanded = _globals.macros.expand(src, expand_const=False)
-        if _globals.macros.errors:
-            print("\n".join(_globals.macros.errors))
+        expanded = MacroExpander().expand(src, _globals.macros___, expand_const=False)
         self.checkStrAgainstFile(expanded, "data/macro.c.macro-noconst")
 
     def test_macro_expand(self):

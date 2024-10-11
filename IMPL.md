@@ -114,9 +114,9 @@ These objects are created from `Statement` objects that indicate corresponding t
   * `is_wellformed` – indicates if the macro expands to a well-formed C construct (i.e., no incomplete braces or similar issues).
   * `is_const` – indicates if the macro expands to a literal constant.
 
-* **`MacroExpand`** – Handles the expansion of C macros. It includes:
+* **`MacroExpander`** – Handles the expansion of C macros. It includes:
   * `expand(txt, expand_const)` – expands all macros within the provided text. If `expand_const` is `False`, literal constant macros are not expanded, saving computation.
-  * `errors` – a list of errors encountered during macro expansion.
+  * `insert_list` – a list of offsets and deltas after macro expansion, used for adjusting line numbers.
 
 ### Workspace and Code Environment
 
