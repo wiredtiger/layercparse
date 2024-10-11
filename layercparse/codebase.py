@@ -8,6 +8,7 @@ from .common import *
 from .record import *
 from .function import *
 from .macro import *
+from .macroexpand import *
 from . import workspace
 
 Details: TypeAlias = FunctionParts | RecordParts | Variable
