@@ -206,7 +206,7 @@ class AccessCheck:
                 WARNING(_locationStr(chain.offset), f"Can't deduce type of expression {chain}")
 
     # Go through function bodies. Check calls and struct member accesses.
-    def checkAccess(self, multithread = False) -> None:
+    def checkAccess(self, multithread = True) -> None:
         if not multithread:
             for defn in itertools.chain(
                         self._globals.names.values(),

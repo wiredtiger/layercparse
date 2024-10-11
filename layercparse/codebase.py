@@ -271,7 +271,7 @@ class Codebase:
         with ScopePush(file=File(fname)):
             self.updateMacroFromText(scope_file().read())
 
-    def scanFiles(self, files: Iterable[str], twopass = True, multithread = False) -> None:
+    def scanFiles(self, files: Iterable[str], twopass = True, multithread = True) -> None:
         if twopass:
             for fname in files:
                 # if get_file_priority(fname) <= 1:
