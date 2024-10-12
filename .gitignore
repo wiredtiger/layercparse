@@ -8,5 +8,6 @@ build/
 .idea
 .venv
 .mypy_cache
+.ruff_cache
 .vscode
 test/**/*.test
