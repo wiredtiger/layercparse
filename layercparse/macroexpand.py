@@ -73,23 +73,35 @@ class MacroExpander:
             return txt
 
         self._names_reg = regex.compile(" | ".join(names_re_a), re_flags, **kwargs)  # type: ignore # **kwargs
-        self._recurse_in_use: set[str] = set()
-        self._expand_stack: list[str] = []
+        self._recurse_in_use: set[str] = set()  # recursion control
+        self._owner_stack: list[str] = []       # stack of current expansion "owning" scopes
+        self._expanding_stack: list[str] = []   # stack of current expansion levels
+
+        # The difference between _owner_stack and _expanding_stack is best demonstrated by the
+        # following example. Consider the following code:
+        #
+        #     CAT(HE, LLO)
+        #
+        # The topmost expansion matches the entire macro "CAT(HE, LLO)" and _expanding_stack is
+        # entered into "CAT". The _owner_stack is empty because expansion of its arguments "HE" and
+        # "LLO" are performed on the topmost level, not within the "CAT" macro.
+        # Then, when the contents of "CAT" are expanded with arguments substituted, the _owner_stack
+        # is set to "CAT" as well.
 
         ret = self._expand_fragment(txt)
         del self._macros, self._cur_expand_entry # delete temporaries
         return ret
 
     def __expand_enter(self, name: str) -> None:
-        parent = self._expand_stack[-1] if self._expand_stack else ""
+        self._expanding_stack.append(name)
+        parent = self._owner_stack[-1] if self._owner_stack else ""
         if parent not in self._cur_expand_entry:
             self._cur_expand_entry[parent] = set()
         self._cur_expand_entry[parent].add(name)
-        self._expand_stack.append(name)
 
     def __expand_leave(self, replacement: str, match: regex.Match, base_offset) -> str:
-        self._expand_stack.pop()
-        if not self._expand_stack:
+        self._expanding_stack.pop()
+        if not self._expanding_stack:
             range = (match.start() + base_offset, len(replacement) - len(match[0]), )
             self.insert_list.append(range)
             self.expand_list.append(ExpandList(range, self._cur_expand_entry))
@@ -114,8 +126,10 @@ class MacroExpander:
             return self.__expand_leave("", match, base_offset)
 
         self._recurse_in_use.add(name)
+        self._owner_stack.append(name)
         # TODO: push scope
         replacement = self._expand_fragment(_D2M(self._macros[name]).body.value, base_offset)  # type: ignore # match is not None
+        self._owner_stack.pop()
         self._recurse_in_use.remove(name)
 
         return self.__expand_leave(replacement, match, base_offset)
@@ -182,7 +196,9 @@ class MacroExpander:
 
         # Another round of global replacement
         self._recurse_in_use.add(name)
+        self._owner_stack.append(name)
         replacement = self._expand_fragment(replacement, base_offset+match.start())
+        self._owner_stack.pop()
         self._recurse_in_use.remove(name)
 
         return self.__expand_leave(replacement, match, base_offset)
