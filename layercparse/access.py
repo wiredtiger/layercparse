@@ -222,8 +222,6 @@ class AccessCheck:
 
             return token_type
 
-        chain: AccessChain
-
         def _get_type_of_expr_str(clean_txt: str, root_offset: int = 0) -> str:
             return self._globals.untypedef(_get_type_of_expr(TokenList(
                         TokenList.xxFilterCode(TokenList.xFromText(clean_txt, 0))), root_offset))
@@ -247,6 +245,8 @@ class AccessCheck:
             if rec_type in self._globals.fields and field in self._globals.fields[rec_type]:
                 _check_access_to_defn(
                     self._globals.fields[rec_type][field], offset, prefix=f"{rec_type} :: ")
+
+        # TODO: ? check macro expansions, allow ones expanded from valid modules
 
         if invisible_names := self._get_invisible_global_names_for_module(module):
             for match in invisible_names.finditer(body_clean):
