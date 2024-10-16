@@ -175,6 +175,7 @@ class MacroExpander:
                     for k, v in args_dict.items()}
 
             # Replace operators # and ## and arguments
+            # TODO: protect from expanding in comments and strings
             reg_macro_subst = regex.compile(r"""
                 (?P<h> \#\s*+ (?P<n>\w++) ) |
                 (?P<hh> (?P<n>\w++)(?>\s*+(\#\#)\s*+(?P<n>\w++))++) |
