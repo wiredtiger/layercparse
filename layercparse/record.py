@@ -45,14 +45,6 @@ class RecordParts:
     def kind(self) -> str:
         return "record"
 
-    def _getBodyOffset(self) -> int:
-        ret = 0
-        if self.body:
-            ret += self.body.range[0]
-        if self.parent:
-            ret += self.parent._getBodyOffset()
-        return ret + scope_offset()
-
     def update(self, other: 'RecordParts') -> list[str]:
         errors = []
         if self.recordKind != other.recordKind:
@@ -115,7 +107,7 @@ class RecordParts:
         # vars or types list
         names: list[Variable] = []
         if not ret.name.value:
-            ret.name = Token(ret.body.idx, ret.body.range, f"({locationStr(ret._getBodyOffset())})")
+            ret.name = Token(ret.body.idx, ret.body.range, f"({locationStr(ret.body.range[0])})")
             ret.typename = TokenList([ret.name])
         for stt in StatementList.xFromTokens(TokenList(tokens[i+1:])):
             var = Variable.fromVarDef(stt.tokens)
@@ -139,34 +131,35 @@ class RecordParts:
             return
         saved_type: Any = None
         var: Variable | None
-        for st in StatementList.xFromText(self.body.value, base_offset=self.body.range[0]):
-            t = st.getKind()
-            if t.is_preproc:
-                continue
+        with ScopePush(offset=self.body.range[0]):
+            for st in StatementList.xFromText(self.body.value, base_offset=self.body.range[0]):
+                t = st.getKind()
+                if t.is_preproc:
+                    continue
 
-            if t.is_record:
-                record = RecordParts.fromStatement(st, parent=self)
-                if record:
-                    if self.nested is None:
-                        self.nested = []
-                    self.nested.append(record)
-                    record.getMembers()
-                    if record.vardefs:
-                        for var in record.vardefs:
-                            yield var
-                    elif record.is_unnamed and record.members:  # Pull its members up
-                        for var in record.members:
-                            yield var
-                continue
+                if t.is_record:
+                    record = RecordParts.fromStatement(st, parent=self)
+                    if record:
+                        if self.nested is None:
+                            self.nested = []
+                        self.nested.append(record)
+                        record.getMembers()
+                        if record.vardefs:
+                            for var in record.vardefs:
+                                yield var
+                        elif record.is_unnamed and record.members:  # Pull its members up
+                            for var in record.members:
+                                yield var
+                    continue
 
-            var = Variable.fromVarDef(st.tokens)
-            if var:
-                if not var.typename:
-                    var.typename = saved_type
-                yield var
-                saved_type = var.typename if var.end == "," else None
-            else:
-                saved_type = None
+                var = Variable.fromVarDef(st.tokens)
+                if var:
+                    if not var.typename:
+                        var.typename = saved_type
+                    yield var
+                    saved_type = var.typename if var.end == "," else None
+                else:
+                    saved_type = None
 
     def getMembers(self) -> list[Variable]:
         if self.members is None:
