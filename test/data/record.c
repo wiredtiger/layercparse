@@ -85,3 +85,8 @@ struct ACCESS1 {
         int z;
     } z;
 };
+
+struct FNPTRS {
+    int (*f1)(int);
+    int (*f2)(int);
+};

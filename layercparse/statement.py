@@ -94,22 +94,27 @@ class StatementKind:
         if not ret.is_typedef:
             # Filter tokens relevant to declaration. Take first two elements
             tokens_decl = list(islice(filter(lambda t:
-                (t.getKind() == "{" or
+                (t.getKind() in ["{", "("] or
                 (t.getKind() == "+" and t.value != "*") or
                 (t.getKind() == "w" and t.value not in ["struct", "union", "enum", "*"])),
                 clean_tokens),
-                                      0, 2))
+                                      0, 3))
             if len(tokens_decl) < 2:
                 # ret.is_expression = True
-                if (len(clean_tokens) == 2 and
+                if tokens_decl[0].value in c_type_keywords or tokens_decl[0].value in c_types:
+                    ret.is_decl = True
+                elif (len(clean_tokens) == 2 and
                             clean_tokens[0].value in ["struct", "union"] and
                             clean_tokens[1].getKind() == "{"):
                     ret.is_record = True
                     ret.is_unnamed_record = True
                 return ret
-            if ((tokens_decl[0].getKind() == "w" and tokens_decl[1].getKind() == "w") or
-                    tokens_decl[0].value in c_type_keywords or
-                    tokens_decl[0].value in c_types):
+            if (tokens_decl[0].value in c_type_keywords or tokens_decl[0].value in c_types or
+                    (tokens_decl[0].getKind() == "w" and tokens_decl[1].getKind() == "w") or
+                    (len(tokens_decl) > 2 and
+                     tokens_decl[0].getKind() == "w" and
+                     tokens_decl[1].getKind() in ["w", "("] and
+                     tokens_decl[2].getKind() in ["w", "("])):
                 ret.is_decl = True
 
             for i in range(1, len(clean_tokens)-1):

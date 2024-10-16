@@ -54,7 +54,7 @@ Statement(tokens=[85:97] 〈
                              is_preproc=None,
                              is_typedef=None,
                              is_record=None,
-                             is_function=None,
+                             is_function=True,
                              is_function_def=None,
                              is_function_decl=None,
                              is_statement=None,
@@ -2047,7 +2047,7 @@ Statement(tokens=[2768:2775] 〈int⌇ ⌇*⌇;⌇
                              is_function_def=None,
                              is_function_decl=None,
                              is_statement=None,
-                             is_decl=None,
+                             is_decl=True,
                              is_expression=None,
                              is_initialization=None,
                              is_extern_c=None,
@@ -2055,6 +2055,12 @@ Statement(tokens=[2768:2775] 〈int⌇ ⌇*⌇;⌇
                              end=None,
                              preComment=None,
                              postComment=None))
+Variable:
+Variable(name=Token(idx=480, range=(2768, 2771), value='int'),
+         typename=[0:0] 〈〉,
+         preComment=None,
+         postComment=None,
+         end=';')
 Statement(tokens=[2775:2793] 〈
 ⌇qwe⌇ ⌇=⌇ ⌇asd⌇ ⌇*⌇ ⌇zxc⌇;⌇
 〉,
@@ -2461,7 +2467,68 @@ RecordParts(recordKind=<RecordKind.STRUCT: 1>,
             nested=None,
             parent=None,
             is_unnamed=False)
-Statement(tokens=[3159:3160] 〈
+Statement(tokens=[3159:3187] 〈
+⌇qwe⌇ ⌇*⌇ ⌇asd⌇(int aa, int bb)⌇;⌇
+〉,
+          kind=StatementKind(is_comment=None,
+                             is_preproc=None,
+                             is_typedef=None,
+                             is_record=None,
+                             is_function=True,
+                             is_function_def=None,
+                             is_function_decl=True,
+                             is_statement=None,
+                             is_decl=True,
+                             is_expression=None,
+                             is_initialization=None,
+                             is_extern_c=None,
+                             is_unnamed_record=None,
+                             end=None,
+                             preComment=None,
+                             postComment=None))
+Statement(tokens=[3187:3217] 〈qwe⌇ ⌇*⌇ ⌇asd⌇(int aa, int bb)⌇ ⌇{
+}⌇
+〉,
+          kind=StatementKind(is_comment=None,
+                             is_preproc=None,
+                             is_typedef=None,
+                             is_record=None,
+                             is_function=True,
+                             is_function_def=True,
+                             is_function_decl=True,
+                             is_statement=None,
+                             is_decl=True,
+                             is_expression=None,
+                             is_initialization=None,
+                             is_extern_c=None,
+                             is_unnamed_record=None,
+                             end=None,
+                             preComment=None,
+                             postComment=None))
+Function:
+FunctionParts(typename=[3187:3192] 〈qwe⌇*〉,
+              name=Token(idx=613, range=(3193, 3196), value='asd'),
+              args=Token(idx=614, range=(3197, 3211), value='int aa, int bb'),
+              body=Token(idx=616, range=(3214, 3215), value='\n'),
+              preComment=None,
+              postComment=None,
+              is_type_const=False,
+              is_type_static=False)
+Args:
+[Variable(name=Token(idx=2, range=(3201, 3203), value='aa'),
+          typename=[3197:3200] 〈int〉,
+          preComment=None,
+          postComment=None,
+          end=','),
+ Variable(name=Token(idx=7, range=(3209, 3211), value='bb'),
+          typename=[3205:3208] 〈int〉,
+          preComment=None,
+          postComment=None,
+          end=None)]
+Vars:
+[]
+Statement(tokens=[3217:3249] 〈
+⌇qwe⌇ ⌇*⌇ ⌇(* asd)⌇(int aa, int bb)⌇;⌇
 〉,
           kind=StatementKind(is_comment=None,
                              is_preproc=None,
@@ -2471,7 +2538,57 @@ Statement(tokens=[3159:3160] 〈
                              is_function_def=None,
                              is_function_decl=None,
                              is_statement=None,
-                             is_decl=None,
+                             is_decl=True,
+                             is_expression=None,
+                             is_initialization=None,
+                             is_extern_c=None,
+                             is_unnamed_record=None,
+                             end=None,
+                             preComment=None,
+                             postComment=None))
+Variable:
+Variable(name=Token(idx=623, range=(3224, 3231), value='asd'),
+         typename=[3218:3221] 〈qwe〉,
+         preComment=None,
+         postComment=None,
+         end=';')
+Statement(tokens=[3249:3289] 〈qwe⌇ ⌇*⌇ ⌇(* asd(void))⌇(int aa, int bb)⌇ ⌇{
+}⌇
+〉,
+          kind=StatementKind(is_comment=None,
+                             is_preproc=None,
+                             is_typedef=None,
+                             is_record=None,
+                             is_function=None,
+                             is_function_def=None,
+                             is_function_decl=None,
+                             is_statement=None,
+                             is_decl=True,
+                             is_expression=None,
+                             is_initialization=None,
+                             is_extern_c=None,
+                             is_unnamed_record=None,
+                             end=None,
+                             preComment=None,
+                             postComment=None))
+Variable:
+Variable(name=Token(idx=634, range=(3285, 3288), value=''),
+         typename=[3249:3284] 〈qwe⌇(* asd(void))⌇(int aa, int bb)〉,
+         preComment=None,
+         postComment=None,
+         end=None)
+Statement(tokens=[3289:3319] 〈
+⌇int⌇ ⌇(* asd)⌇(int aa, int bb)⌇;⌇
+〉,
+          kind=StatementKind(is_comment=None,
+                             is_preproc=None,
+                             is_typedef=None,
+                             is_record=None,
+                             is_function=True,
+                             is_function_def=None,
+                             is_function_decl=True,
+                             is_statement=None,
+                             is_decl=True,
                              is_expression=None,
                              is_initialization=None,
                              is_extern_c=None,

@@ -214,3 +214,12 @@ static const struct {
       int x;
 } qwe = {123};
 
+qwe * asd(int aa, int bb);
+qwe * asd(int aa, int bb) {
+}
+
+qwe * (* asd)(int aa, int bb);
+qwe * (* asd(void))(int aa, int bb) {
+}
+
+int (* asd)(int aa, int bb);

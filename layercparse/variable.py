@@ -57,8 +57,10 @@ class Variable:
         while clean_tokens and clean_tokens[-1].value.startswith(("*", "[")):
             clean_tokens.pop()
         # skip function arguments
+        is_func_ptr = False
         if clean_tokens and clean_tokens[-1].value[0].startswith("("):
             clean_tokens.pop()
+            is_func_ptr = True
         # find some words, skip standalone []s and *s
         while clean_tokens and clean_tokens[-1].value.startswith(("*", "[")):
             clean_tokens.pop()
@@ -66,8 +68,25 @@ class Variable:
         # The last token contains the arg name
         if not clean_tokens:
             return None
+
         name = deepcopy(clean_tokens.pop())
         name.value = regex.sub(r"\W+", "", name.value)
+        # if clean_tokens[-1].getKind() == "(": # Function pointer
+        #     # TODO: Work-around this:
+        #     # uint32_t (*wiredtiger_crc32c_func(void))(const void *, size_t)
+        #     # where it reads as:
+        #     # wiredtiger_crc32c_func is function
+        #     #   taking no arguments
+        #     #   returning a pointer to a function
+        #     #     taking const void *, size_t
+        #     #     returning uint32_t
+        #     if inner := Variable.fromVarDef(TokenList.fromText(clean_tokens[-1].value[1:-1],
+        #                                                    base_offset=clean_tokens[-1].range[0])):
+        #         name = inner.name
+        #     clean_tokens.pop()
+        # else:
+        #     name = deepcopy(clean_tokens.pop())
+        #     name.value = regex.sub(r"\W+", "", name.value)
 
         # Remove C keywords from type
         type = TokenList((filter(lambda x:

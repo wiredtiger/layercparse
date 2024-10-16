@@ -25,6 +25,9 @@ data/record.c:84:12: debug3: Record: ACCESS2 (record) data/record.c:84:12: [modu
   member: Variable(Token(idx=4, range=(1404, 1405), value='z') : [1400:1403] 〈int〉)
   vardef: Variable(Token(idx=20, range=(1413, 1414), value='z') : [1382:1389] 〈ACCESS2〉))
 data/record.c:84:12: info: Global variables of record 'ACCESS2' are ignored
+data/record.c:89:8: debug3: Record: FNPTRS (record) data/record.c:89:8: [] public Record(FNPTRS : <RecordKind.STRUCT: 1>
+  member: Variable(Token(idx=4, range=(1444, 1449), value='f1') : [1440:1443] 〈int〉)
+  member: Variable(Token(idx=11, range=(1464, 1469), value='f2') : [1460:1463] 〈int〉))
 data/record.c:19:5: debug3: Checking __wti_module2_func1 (function) data/record.c:19:5: [module2] private Function(Token(idx=35, range=(167, 186), value='__wti_module2_func1') (Token(idx=36, range=(187, 193), value='S2 *s2'))) : [163:167] 〈S1⌇*〉
 data/record.c:19:5: debug: Checking function [module2] __wti_module2_func1
 data/record.c:19:34: [module2] '__wti_module2_func1': debug2: locals vars:
