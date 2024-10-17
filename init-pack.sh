@@ -8,6 +8,6 @@ chmod 755 .venv/bin/activate
 . .venv/bin/activate
 pip3 -q install -r requirements.txt
 
-# set up development environment
-pip3 install mypy types-regex
+# set up packaging environment
+pip3 -q install setuptools wheel twine
 
