@@ -11,3 +11,39 @@ For example, a function definition might be represented as a sequence of: "comme
 This approach makes it possible to perform a variety of analyses on C code or other languages with clear syntax rules.
 
 Implementation details are described in the [Implementation](IMPL.md) document.
+
+## Installation
+
+```bash
+$ pip install layercparse
+```
+
+## Usage
+
+```python
+import os
+from layercparse import *
+
+def main():
+    # setLogLevel(LogLevel.WARNING)
+    setRootPath(os.path.realpath(sys.argv[1]))
+    setModules([
+        Module("module1"),
+        Module("module2", fileAliases=["m2"], sourceAliases = ["mod2", "m2"]),
+    ])
+
+    code = Codebase()
+    code.scanFiles(get_files(), twopass=True, multithread=True)
+    AccessCheck(code).checkAccess(multithread=True)
+
+    return not workspace.errors
+
+if __name__ == "__main__":
+    # When using multithreaded processing, it's criticak to check __name__
+    # rather than doing things directly in the global scope.
+    sys.exit(main())
+```
+
+## Links
+
+* This project on GitHub: [layercparse](https://github.com/ershov/layercparse).
