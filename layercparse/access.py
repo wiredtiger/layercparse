@@ -14,13 +14,28 @@ from .workspace import *
 _reg_member_access_chain = regex.compile(r"""
     (?>
         # (1) variable or function call or array index
-        ([a-zA-Z_]\w*+)(?>(?>\((?&TOKEN)*+\))|(?>\[(?&TOKEN)*+\]))*+ |
+        (?>
+            ( [a-zA-Z_] \w*+ )
+            (?>
+                (?> \( (?&TOKEN)*+ \) ) |
+                (?> \[ (?&TOKEN)*+ \] )
+            )*+
+        ) |
         # (2) expression
-        (\((?&TOKEN)++\))
+        ( \( (?&TOKEN)++ \) )
     )
     # (3) member access chain via -> or .
-    (?>(?>->|\.)(?>([a-zA-Z_]\w*+)(?>(?>\((?&TOKEN)*+\))|(?>\[(?&TOKEN)*+\]))*+))++
-"""+re_token, re_flags)
+    (?>
+        (?> -> | \. )
+        (?>
+            ( [a-zA-Z_] \w*+ )
+            (?>
+                (?> \( (?&TOKEN)*+ \) ) |
+                (?> \[ (?&TOKEN)*+ \] )
+            )*+
+        )
+    )++
+""" + re_token, re_flags)
 
 @dataclass
 class AccessChain:

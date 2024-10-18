@@ -24,7 +24,7 @@ class MacroExpander:
     #  - https://en.wikipedia.org/wiki/C_preprocessor#Order_of_expansion
     #  - https://stackoverflow.com/questions/45375238/c-preprocessor-macro-expansion
     #  - https://gcc.gnu.org/onlinedocs/cpp/Argument-Prescan.html
-    def expand(self, txt: str, macros: 'dict[str, Definition]',expand_const: bool = False) -> str: # type: ignore[name-defined] # circular dependency for Definition
+    def expand(self, txt: str, macros: 'dict[str, Definition]', expand_const: bool = False) -> str: # type: ignore[name-defined] # circular dependency for Definition
         # TODO(later): Optimise: compose the result as a list of strings, then join at the end
 
         self.insert_list = []  # (offset, delta)

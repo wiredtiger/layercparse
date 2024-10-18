@@ -62,6 +62,12 @@ def main():
     AccessCheck(_globals).checkAccess(multithread=True)
     # AccessCheck(_globals).checkAccess(multithread=False)
 
+    # import cProfile as p
+    # pr = p.Profile()
+    # pr.runctx('AccessCheck(_globals).checkAccess(multithread=False)', globals=globals(), locals=locals())
+    # pr.create_stats()
+    # pr.dump_stats("q")
+
     return not workspace.errors
 
 if __name__ == "__main__":
