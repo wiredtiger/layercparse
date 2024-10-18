@@ -37,6 +37,19 @@ _reg_member_access_chain = regex.compile(r"""
     )++
 """ + re_token, re_flags)
 
+_reg_member_access_chain_fast = regex.compile(r"""
+    (?>
+        (?> -> | \. )
+        (?>
+            ( [a-zA-Z_] \w*+ )
+            (?>
+                (?> \( (?&TOKEN)*+ \) ) |
+                (?> \[ (?&TOKEN)*+ \] )
+            )*+
+        )
+    )++
+""" + re_token, re_flags)
+
 @dataclass
 class AccessChain:
     name: str
@@ -54,6 +67,53 @@ def member_access_chains(txt: str, offset_in_parent: int = 0) -> Iterable[Access
         elif match[2]:
             yield AccessChain(match[2], match.allcaptures()[3], offset)  # type: ignore[misc] # Tuple index out of range
             yield from member_access_chains(match[2][1:-1], offset_in_parent + match.start(2) + 1)
+
+def member_access_chains_fast(txt: str, offset_in_parent: int = 0) -> Iterable[AccessChain]:
+    for match in _reg_member_access_chain_fast.finditer(txt):
+        endpos = match.start()
+        offset = offset_in_parent + match.start()
+
+        # Find previous token which should be a variable or function call or expression
+        while True:
+            prev_match = reg_token_r.match(txt, endpos=endpos)
+            if not prev_match:
+                break  # TODO: report error?
+            endpos = prev_match.start()
+            prev_token = Token.fromMatch(prev_match, base_offset=offset_in_parent)
+            if prev_token.getKind() in [" ", "/", "#", "[", "{"]:
+                continue
+            if prev_token.getKind() == "w":
+                break
+            if prev_token.getKind() == "(":
+                # If it's a function call, find the function name
+                while True:
+                    prevprev_match = reg_token_r.match(txt, endpos=endpos)
+                    if not prevprev_match:
+                        break
+                    endpos = prevprev_match.start()
+                    prevprev_token = Token.fromMatch(prevprev_match, base_offset=offset_in_parent)
+                    if prevprev_token.getKind() in [" ", "/", "#", "["]:
+                        continue
+                    if prevprev_token.getKind() == "w":
+                        prev_match = prevprev_match
+                        prev_token = prevprev_token
+                        break
+                    break
+                else: # not break
+                    pass # TODO: report error?
+                break
+            prev_match = None
+            break  # TODO: report error?
+
+        if not prev_match:
+            continue
+
+        offset = offset_in_parent + prev_match.start()
+
+        yield AccessChain(prev_token.value, match.allcaptures()[1], offset)  # type: ignore[misc] # Tuple index out of range
+
+        if prev_token.getKind() == "(":
+            yield from member_access_chains_fast(prev_token.value[1:-1], offset_in_parent + prev_match.start() + 1)
 
 def _funcId(module: str, func: str, colon: str = ":") -> str:
     return (f"[{module}] " if module else "") + f"'{func}'{colon}"
@@ -270,7 +330,7 @@ class AccessCheck:
                       f"Invalid access to private name '{name}' "
                       f"of [{self._globals.names_restricted[name].module}]")
 
-        for chain in member_access_chains(body_clean):
+        for chain in member_access_chains_fast(body_clean):
             DEBUG2(_LOC(chain.offset), f"Access chain: {chain}")
             expr_type = _get_type_of_expr_str(chain.name, chain.offset)
             if expr_type:

@@ -60,6 +60,10 @@ data/record.c:29:5: [module1] 'func': debug2: Access chain: (&s2)->s
 data/record.c:29:5: [module1] 'func': debug3: Access type: S2
 data/record.c:29:5: [module1] 'func': debug3: Field access chain: (&s2)->s
 data/record.c:29:5: [module1] 'func': debug3: Field access: S2->s
+data/record.c:30:11: [module1] 'func': debug2: Access chain: ((S2*)s2)->s
+data/record.c:30:11: [module1] 'func': debug3: Access type: S2
+data/record.c:30:11: [module1] 'func': debug3: Field access chain: ((S2*)s2)->s
+data/record.c:30:11: [module1] 'func': debug3: Field access: S2->s
 data/record.c:30:5: [module1] 'func': debug2: Access chain: ((S1*)((S2*)s2)->s)->x
 data/record.c:30:5: [module1] 'func': debug3: Access type: S1
 data/record.c:30:5: [module1] 'func': debug3: Field access chain: ((S1*)((S2*)s2)->s)->x
@@ -68,6 +72,10 @@ data/record.c:30:11: [module1] 'func': debug2: Access chain: ((S2*)s2)->s
 data/record.c:30:11: [module1] 'func': debug3: Access type: S2
 data/record.c:30:11: [module1] 'func': debug3: Field access chain: ((S2*)s2)->s
 data/record.c:30:11: [module1] 'func': debug3: Field access: S2->s
+data/record.c:31:11: [module1] 'func': debug2: Access chain: ((S2*)s2 + 1)->s
+data/record.c:31:11: [module1] 'func': debug3: Access type: S2
+data/record.c:31:11: [module1] 'func': debug3: Field access chain: ((S2*)s2 + 1)->s
+data/record.c:31:11: [module1] 'func': debug3: Field access: S2->s
 data/record.c:31:5: [module1] 'func': debug2: Access chain: ((S1*)((S2*)s2 + 1)->s)->x
 data/record.c:31:5: [module1] 'func': debug3: Access type: S1
 data/record.c:31:5: [module1] 'func': debug3: Field access chain: ((S1*)((S2*)s2 + 1)->s)->x
@@ -76,6 +84,10 @@ data/record.c:31:11: [module1] 'func': debug2: Access chain: ((S2*)s2 + 1)->s
 data/record.c:31:11: [module1] 'func': debug3: Access type: S2
 data/record.c:31:11: [module1] 'func': debug3: Field access chain: ((S2*)s2 + 1)->s
 data/record.c:31:11: [module1] 'func': debug3: Field access: S2->s
+data/record.c:32:11: [module1] 'func': debug2: Access chain: ((S2*)s2 + 1)->s
+data/record.c:32:11: [module1] 'func': debug3: Access type: S2
+data/record.c:32:11: [module1] 'func': debug3: Field access chain: ((S2*)s2 + 1)->s
+data/record.c:32:11: [module1] 'func': debug3: Field access: S2->s
 data/record.c:32:5: [module1] 'func': debug2: Access chain: ((S1*)((S2*)s2 + 1)->s)->x
 data/record.c:32:5: [module1] 'func': debug3: Access type: S1
 data/record.c:32:5: [module1] 'func': debug3: Field access chain: ((S1*)((S2*)s2 + 1)->s)->x
@@ -84,6 +96,10 @@ data/record.c:32:11: [module1] 'func': debug2: Access chain: ((S2*)s2 + 1)->s
 data/record.c:32:11: [module1] 'func': debug3: Access type: S2
 data/record.c:32:11: [module1] 'func': debug3: Field access chain: ((S2*)s2 + 1)->s
 data/record.c:32:11: [module1] 'func': debug3: Field access: S2->s
+data/record.c:33:11: [module1] 'func': debug2: Access chain: ((S2*)s2[10])->s
+data/record.c:33:11: [module1] 'func': debug3: Access type: S2
+data/record.c:33:11: [module1] 'func': debug3: Field access chain: ((S2*)s2[10])->s
+data/record.c:33:11: [module1] 'func': debug3: Field access: S2->s
 data/record.c:33:5: [module1] 'func': debug2: Access chain: ((S1*)((S2*)s2[10])->s)->x
 data/record.c:33:5: [module1] 'func': debug3: Access type: S1
 data/record.c:33:5: [module1] 'func': debug3: Field access chain: ((S1*)((S2*)s2[10])->s)->x
@@ -92,10 +108,10 @@ data/record.c:33:11: [module1] 'func': debug2: Access chain: ((S2*)s2[10])->s
 data/record.c:33:11: [module1] 'func': debug3: Access type: S2
 data/record.c:33:11: [module1] 'func': debug3: Field access chain: ((S2*)s2[10])->s
 data/record.c:33:11: [module1] 'func': debug3: Field access: S2->s
-data/record.c:34:5: [module1] 'func': debug2: Access chain: ((S2*)((S1*)((S2*)s2[10])->s)->x)->s
-data/record.c:34:5: [module1] 'func': debug3: Access type: S2
-data/record.c:34:5: [module1] 'func': debug3: Field access chain: ((S2*)((S1*)((S2*)s2[10])->s)->x)->s
-data/record.c:34:5: [module1] 'func': debug3: Field access: S2->s
+data/record.c:34:17: [module1] 'func': debug2: Access chain: ((S2*)s2[10])->s
+data/record.c:34:17: [module1] 'func': debug3: Access type: S2
+data/record.c:34:17: [module1] 'func': debug3: Field access chain: ((S2*)s2[10])->s
+data/record.c:34:17: [module1] 'func': debug3: Field access: S2->s
 data/record.c:34:11: [module1] 'func': debug2: Access chain: ((S1*)((S2*)s2[10])->s)->x
 data/record.c:34:11: [module1] 'func': debug3: Access type: S1
 data/record.c:34:11: [module1] 'func': debug3: Field access chain: ((S1*)((S2*)s2[10])->s)->x
@@ -104,6 +120,27 @@ data/record.c:34:17: [module1] 'func': debug2: Access chain: ((S2*)s2[10])->s
 data/record.c:34:17: [module1] 'func': debug3: Access type: S2
 data/record.c:34:17: [module1] 'func': debug3: Field access chain: ((S2*)s2[10])->s
 data/record.c:34:17: [module1] 'func': debug3: Field access: S2->s
+data/record.c:34:5: [module1] 'func': debug2: Access chain: ((S2*)((S1*)((S2*)s2[10])->s)->x)->s
+data/record.c:34:5: [module1] 'func': debug3: Access type: S2
+data/record.c:34:5: [module1] 'func': debug3: Field access chain: ((S2*)((S1*)((S2*)s2[10])->s)->x)->s
+data/record.c:34:5: [module1] 'func': debug3: Field access: S2->s
+data/record.c:34:17: [module1] 'func': debug2: Access chain: ((S2*)s2[10])->s
+data/record.c:34:17: [module1] 'func': debug3: Access type: S2
+data/record.c:34:17: [module1] 'func': debug3: Field access chain: ((S2*)s2[10])->s
+data/record.c:34:17: [module1] 'func': debug3: Field access: S2->s
+data/record.c:34:11: [module1] 'func': debug2: Access chain: ((S1*)((S2*)s2[10])->s)->x
+data/record.c:34:11: [module1] 'func': debug3: Access type: S1
+data/record.c:34:11: [module1] 'func': debug3: Field access chain: ((S1*)((S2*)s2[10])->s)->x
+data/record.c:34:11: [module1] 'func': debug3: Field access: S1->x
+data/record.c:34:17: [module1] 'func': debug2: Access chain: ((S2*)s2[10])->s
+data/record.c:34:17: [module1] 'func': debug3: Access type: S2
+data/record.c:34:17: [module1] 'func': debug3: Field access chain: ((S2*)s2[10])->s
+data/record.c:34:17: [module1] 'func': debug3: Field access: S2->s
+data/record.c:35:9: [module1] 'func': debug2: Access chain: s2->s.y
+data/record.c:35:9: [module1] 'func': debug3: Access type: S2
+data/record.c:35:9: [module1] 'func': debug3: Field access chain: s2->s.y
+data/record.c:35:9: [module1] 'func': debug3: Field access: S2->s
+data/record.c:35:9: [module1] 'func': debug3: Field access: S1->y
 data/record.c:35:5: [module1] 'func': debug2: Access chain: ((&(s2->s[i].y)))->z
 data/record.c:35:5: [module1] 'func': debug3: Access type: S0
 data/record.c:35:5: [module1] 'func': debug3: Field access chain: ((&(s2->s[i].y)))->z
@@ -127,6 +164,10 @@ data/record.c:40:5: [module1] 'func': debug2: Access chain: __wti_module2_func1-
 data/record.c:40:5: [module1] 'func': debug3: Access type: S1
 data/record.c:40:5: [module1] 'func': debug3: Field access chain: __wti_module2_func1->x
 data/record.c:40:5: [module1] 'func': debug3: Field access: S1->x
+data/record.c:41:25: [module1] 'func': debug2: Access chain: s2->s
+data/record.c:41:25: [module1] 'func': debug3: Access type: S2
+data/record.c:41:25: [module1] 'func': debug3: Field access chain: s2->s
+data/record.c:41:25: [module1] 'func': debug3: Field access: S2->s
 data/record.c:41:5: [module1] 'func': debug2: Access chain: __wti_module2_func1->x
 data/record.c:41:5: [module1] 'func': debug3: Access type: S1
 data/record.c:41:5: [module1] 'func': debug3: Field access chain: __wti_module2_func1->x
@@ -138,6 +179,8 @@ data/record.c:42:5: [module1] 'func': debug3: Field access: S2->s
 data/record.c:42:5: [module1] 'func': debug3: Field access: S1->x
 data/record.c:43:5: [module1] 'func': debug2: Access chain: aa->bb.cc.dd
 data/record.c:43:5: [module1] 'func': warning: Can't deduce type of expression aa->bb.cc.dd
+data/record.c:44:6: [module1] 'func': debug2: Access chain: aa->aaa
+data/record.c:44:6: [module1] 'func': warning: Can't deduce type of expression aa->aaa
 data/record.c:44:5: [module1] 'func': debug2: Access chain: (aa->aaa)->bb.cc.dd
 data/record.c:44:5: [module1] 'func': warning: Can't deduce type of expression (aa->aaa)->bb.cc.dd
 data/record.c:44:6: [module1] 'func': debug2: Access chain: aa->aaa
