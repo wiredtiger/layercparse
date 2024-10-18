@@ -73,7 +73,7 @@ class AccessCheck:
                     callerDef = self._globals.macros[callerMacro]
                     callerMod = callerDef.module
                 else:
-                    callerMod = ""
+                    callerMod = module
                 for calleeMacro in explist[callerMacro]:
                     if (calleeMacro in self._globals.macros and
                             (calleeDef := self._globals.macros[calleeMacro]) and
