@@ -132,7 +132,7 @@ class RecordParts:
         saved_type: Any = None
         var: Variable | None
         with ScopePush(offset=self.body.range[0]):
-            for st in StatementList.xFromText(self.body.value, base_offset=self.body.range[0]):
+            for st in StatementList.xFromText(self.body.value, base_offset=0):
                 t = st.getKind()
                 if t.is_preproc:
                     continue
