@@ -3,6 +3,7 @@
 ### 2024-10-21 version 0.1.2
 
 * Optimize member access search.
+* Read module descriptions from files in the `src` subdirectories.
 
 ### 2024-10-18 version 0.1.1
 

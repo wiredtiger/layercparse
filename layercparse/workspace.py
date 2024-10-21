@@ -9,6 +9,7 @@ from bisect import bisect_left
 from io import StringIO
 
 from .internal import *
+from .common import *
 
 FileKind: TypeAlias = Literal[
     "",   # undefined
@@ -32,10 +33,6 @@ def get_file_priority(fname: str) -> int:
 
 rootPath = ""
 
-def setRootPath(p: str):
-    global rootPath
-    rootPath = path.realpath(p)
-
 @dataclass
 class Module:
     name: str
@@ -53,11 +50,14 @@ moduleAliasesFile: dict[str, str] = {}
 moduleAliasesSrc: dict[str, str] = {}
 moduleSrcNames: set[str] = set()
 
-def setModules(mods: list[Module]):
+def setModules(mods: Iterable[Module]):
     global modules, moduleDirs, moduleAliasesFile, moduleAliasesSrc, moduleSrcNames
     modules, moduleDirs, moduleAliasesFile, moduleAliasesSrc, moduleSrcNames = {}, {}, {}, {}, set()
     for module in mods:
         name = module.name
+        if not name:
+            # make fatal error?
+            raise ValueError(f"Module doesn't have a name: {module}")
         if name in modules:
             # make fatal error?
             raise ValueError(f"Module {name} already exists")
@@ -80,6 +80,44 @@ def setModules(mods: list[Module]):
                                  f"conflicts with [{moduleAliasesSrc[alias]}]")
             moduleAliasesSrc[alias] = name
     moduleSrcNames = set(modules.keys()).union(set(moduleAliasesSrc.keys()))
+
+# Read module description from a file
+# src/<name>/README.md
+# <!-- MODULE: {
+#   "name": "name",
+#   "dirname": "dirname",
+#   "fileAliases": ["alias1", "alias2"],
+#   "sourceAliases": ["alias3", "alias4"]
+# } -->
+def read_module_desc(name: str = "", fname = "", **kwargs) -> Iterable[Module]:
+    import json
+    if not fname and name:
+        if name:
+            fname = f"src/{name}/README.md"
+        else:
+            return
+    with open(fname) as file:
+        txt = file.read()
+    for match in regex.finditer(r"<!--\s*+MODULE:\s*+((?&TOKEN))\s*+-->"+re_token,
+                                txt, flags=re_flags):
+        try:
+            desc = {"name": name, **kwargs, **json.loads(clean_text(match[1]))}
+        except json.JSONDecodeError as e:
+            FATAL(f"{fname}:{lineno(txt, match.start(1))}",
+                  f"Error parsing module description: {e}\n", txt[match.start(1):match.end(1)])
+            continue
+        module = Module(**desc)
+        DEBUG3(None, f"Add module: {module}")
+        yield module
+
+def read_modules(rootPath: str) -> Iterable[Module]:
+    for fname in glob(path.join(rootPath, "src/*/README.md"), recursive=False):
+        yield from read_module_desc(name=path.basename(path.dirname(fname)), fname=fname)
+
+def setRootPath(p: str):
+    global rootPath
+    rootPath = path.realpath(p)
+    setModules(read_modules(rootPath))
 
 # First go headers, then inlines, then sources
 def get_files() -> list[str]:
