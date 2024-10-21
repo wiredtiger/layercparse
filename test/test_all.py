@@ -94,7 +94,7 @@ class TestCaseLocal(unittest.TestCase):
 
     def parseDetailsFromFile(self, fname: str) -> str:
         with ScopePush(file=fname):
-            return self.parseDetailsFromText(file_content(fname))
+            return self.parseDetailsFromText(scope_file().read())
 
 
 class TestRegex(TestCaseLocal):
@@ -224,29 +224,30 @@ class TestRecordAccess(TestCaseLocal):
 class TestMacro(TestCaseLocal):
     def test_macro(self):
         _globals = Codebase()
-        src = file_content("data/macro.c")
-        for p in StatementList.preprocFromText(src):
-            _globals.addMacro(MacroParts.fromStatement(p))
+        with ScopePush(file=File("data/macro.c")):
+            src = scope_file().read()
+            for p in StatementList.preprocFromText(src):
+                _globals.addMacro(MacroParts.fromStatement(p))
 
-        # _globals.updateFromFile("data/macro.c")
-        # setLogLevel(LogLevel.DEBUG)
-        # pprint(_globals.macros, width=120, compact=False)
+            # _globals.updateFromFile("data/macro.c")
+            # setLogLevel(LogLevel.DEBUG)
+            # pprint(_globals.macros, width=120, compact=False)
 
-        expander = MacroExpander()
-        expanded = expander.expand(src, _globals.macros, expand_const=True)
-        self.checkStrAgainstFile(expanded, "data/macro.c.macro-full")
-        self.checkStrAgainstFile(_sort_set_txt(pf(expander.insert_list)),
-                                 "data/macro.c.macro-full-inserts")
-        self.checkStrAgainstFile(_sort_set_txt(pf(expander.expand_list)),
-                                 "data/macro.c.macro-full-expands")
+            expander = MacroExpander()
+            expanded = expander.expand(src, _globals.macros, expand_const=True)
+            self.checkStrAgainstFile(expanded, "data/macro.c.macro-full")
+            self.checkStrAgainstFile(_sort_set_txt(pf(expander.insert_list)),
+                                    "data/macro.c.macro-full-inserts")
+            self.checkStrAgainstFile(_sort_set_txt(pf(expander.expand_list)),
+                                    "data/macro.c.macro-full-expands")
 
-        expander = MacroExpander()
-        expanded = expander.expand(src, _globals.macros, expand_const=False)
-        self.checkStrAgainstFile(expanded, "data/macro.c.macro-noconst")
-        self.checkStrAgainstFile(_sort_set_txt(pf(expander.insert_list)),
-                                 "data/macro.c.macro-noconst-inserts")
-        self.checkStrAgainstFile(_sort_set_txt(pf(expander.expand_list)),
-                                 "data/macro.c.macro-noconst-expands")
+            expander = MacroExpander()
+            expanded = expander.expand(src, _globals.macros, expand_const=False)
+            self.checkStrAgainstFile(expanded, "data/macro.c.macro-noconst")
+            self.checkStrAgainstFile(_sort_set_txt(pf(expander.insert_list)),
+                                    "data/macro.c.macro-noconst-inserts")
+            self.checkStrAgainstFile(_sort_set_txt(pf(expander.expand_list)),
+                                    "data/macro.c.macro-noconst-expands")
 
     def test_macro_expand(self):
         setModules([Module("mod1"), Module("mod2")])

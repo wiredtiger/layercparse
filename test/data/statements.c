@@ -58,80 +58,80 @@ typedef TAILQ_HEAD(aa,bb) tqh; /* post comment */
 /* pre comment */
 struct {
   /* pre comment 2 */
-  int a, b; /* post comment 2 */
-  char c;
+  int a1, b1; /* post comment 2 */
+  char c1;
 }; /* post comment */
 
 /* pre comment */
 struct aaa {
   /* pre comment 2 */
-  int a, b; /* post comment 2 */
-  char c;
+  int a2, b2; /* post comment 2 */
+  char c2;
 }; /* post comment */
 
 /* pre comment */
 struct {
   /* pre comment 2 */
-  int a, b; /* post comment 2 */
-  char c;
+  int a3, b3; /* post comment 2 */
+  char c3;
 } bbb; /* post comment */
 
 /* pre comment */
 struct aaa {
   /* pre comment 2 */
-  int a, b; /* post comment 2 */
-  char c;
+  int a4, b4; /* post comment 2 */
+  char c4;
 } bbb, ccc; /* post comment */
 
 /* pre comment */
 typedef struct aaa {
   /* pre comment 2 */
-  int a, b; /* post comment 2 */
-  char c;
+  int a5, b5; /* post comment 2 */
+  char c5;
 } bbb, ccc; /* post comment */
 
 /* pre comment */
 union aaa {
   /* pre comment 2 */
-  int a, b; /* post comment 2 */
-  char c;
+  int a6, b6; /* post comment 2 */
+  char c6;
 } bbb, ccc; /* post comment */
 
 /* pre comment */
 typedef enum aaa {
-  AAA, BBB, CCC
+  AAA1, BBB1, CCC1
 } bbb, ccc; /* post comment */
 
 /* pre comment */
 typedef enum aaa {
-  AAA, BBB, CCC
+  AAA2, BBB2, CCC2
 } bbb, ccc; /* post comment */
 
 /* pre comment */
 typedef union aaa {
   /* pre comment 2 */
-  int a, b; /* post comment 2 */
+  int a7, b7; /* post comment 2 */
   struct aaabbb {
-    int bbb;
+    int bbb7;
     struct aaabbbccc {
-      int ccc;
-    } yyy;
-  } xxx;
-  char c;
-} bbb, ccc; /* post comment */
+      int ccc7;
+    } yyy7;
+  } xxx7;
+  char c7;
+} bbb7, ccc7; /* post comment */
 
 /* pre comment */
-typedef union aaa {
+typedef union aaa8 {
   /* pre comment 2 */
-  int a, b; /* post comment 2 */
+  int a8, b8; /* post comment 2 */
   struct {
-    int bbb;
+    int bbb8;
     struct {
-      int ccc;
-    } yyy;
-  } xxx;
-  char c;
-} bbb, ccc; /* post comment */
+      int ccc8;
+    } yyy8;
+  } xxx8;
+  char c8;
+} bbb8, ccc8; /* post comment */
 
 int func(int a, int b);
 void func(int a, int b) __attribute__((__noreturn__));
@@ -165,7 +165,7 @@ extern "C" {
   int func_ext_c(int a, int b);
   struct ext_c_struct; typedef struct ext_c_struct EXT_C_STRUCT;
   struct {
-    int a, b;
+    int a9, b9;
   } ext_c_struct2;
 }
 
@@ -194,8 +194,8 @@ qwe = asd * zxc;
 int qwe = asd * zxc;
 qwe asd = {123, 456};
 struct aaa {
-  int a, b;
-} bbb = {123, 456};
+  int a10, b10;
+} bbb10 = {123, 456};
 struct aaa bbb = {123, 456};
 
 qwe *func1(int a, int b) {1}
@@ -205,8 +205,8 @@ qwe*func4(int a, int b) {4}
 
 struct StructWithNested {
     struct {
-        int x;
-        char y;
+        int x11;
+        char y11;
     };
 };
 
