@@ -90,3 +90,13 @@ struct FNPTRS {
     int (*f1)(int);
     int (*f2)(int);
 };
+
+struct unnamed_members {
+    union {
+        struct {
+            int member1;
+            char member2;
+        };
+        char __padding[64];
+    }
+};

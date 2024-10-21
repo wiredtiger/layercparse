@@ -28,6 +28,19 @@ data/record.c:84:12: info: Global variables of record 'ACCESS2' are ignored
 data/record.c:89:8: debug3: Record: FNPTRS (record) data/record.c:89:8: [] public Record(FNPTRS : <RecordKind.STRUCT: 1>
   member: Variable(Token(idx=4, range=(1444, 1449), value='f1') : [1440:1443] 〈int〉)
   member: Variable(Token(idx=11, range=(1464, 1469), value='f2') : [1460:1463] 〈int〉))
+data/record.c:94:8: debug3: Record: unnamed_members (record) data/record.c:94:8: [] public Record(unnamed_members : <RecordKind.STRUCT: 1>
+  member: Variable(Token(idx=4, range=(1550, 1557), value='member1') : [1546:1549] 〈int〉)
+  member: Variable(Token(idx=10, range=(1576, 1583), value='member2') : [1571:1575] 〈char〉)
+  member: Variable(Token(idx=10, range=(1609, 1618), value='__padding') : [1604:1608] 〈char〉)
+  nested: (data/record.c:103:1388:))
+data/record.c:95:12: debug3: Record: (data/record.c:103:1388:) (record) data/record.c:95:12: [] public Record((data/record.c:103:1388:) : <RecordKind.UNION: 2>
+  member: Variable(Token(idx=4, range=(1550, 1557), value='member1') : [1546:1549] 〈int〉)
+  member: Variable(Token(idx=10, range=(1576, 1583), value='member2') : [1571:1575] 〈char〉)
+  member: Variable(Token(idx=10, range=(1609, 1618), value='__padding') : [1604:1608] 〈char〉)
+  nested: (data/record.c:103:2921:))
+data/record.c:96:17: debug3: Record: (data/record.c:103:2921:) (record) data/record.c:96:17: [] public Record((data/record.c:103:2921:) : <RecordKind.STRUCT: 1>
+  member: Variable(Token(idx=4, range=(1550, 1557), value='member1') : [1546:1549] 〈int〉)
+  member: Variable(Token(idx=10, range=(1576, 1583), value='member2') : [1571:1575] 〈char〉))
 data/record.c:19:5: debug3: Checking __wti_module2_func1 (function) data/record.c:19:5: [module2] private Function(Token(idx=35, range=(167, 186), value='__wti_module2_func1') (Token(idx=36, range=(187, 193), value='S2 *s2'))) : [163:167] 〈S1⌇*〉
 data/record.c:19:5: debug: Checking function [module2] __wti_module2_func1
 data/record.c:19:34: [module2] '__wti_module2_func1': debug2: locals vars:
