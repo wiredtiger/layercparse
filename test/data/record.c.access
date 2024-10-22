@@ -56,10 +56,10 @@ data/record.c:24:5: debug: Checking function [module1] func
 data/record.c:24:20: [module1] 'func': debug2: locals vars:
     num: int
     s2: S2
-data/record.c:39:5: [module1] 'func': error: Invalid access to private name '__wti_module2_func1' of [module2]
-data/record.c:40:5: [module1] 'func': error: Invalid access to private name '__wti_module2_func1' of [module2]
-data/record.c:41:5: [module1] 'func': error: Invalid access to private name '__wti_module2_func1' of [module2]
-data/record.c:46:10: [module1] 'func': error: Invalid access to private name '__wti_module2_func1' of [module2]
+data/record.c:39:5: [module1] 'func': error: Invalid access to private name [module2] '__wti_module2_func1' 
+data/record.c:40:5: [module1] 'func': error: Invalid access to private name [module2] '__wti_module2_func1' 
+data/record.c:41:5: [module1] 'func': error: Invalid access to private name [module2] '__wti_module2_func1' 
+data/record.c:46:10: [module1] 'func': error: Invalid access to private name [module2] '__wti_module2_func1' 
 data/record.c:27:5: [module1] 'func': debug2: Access chain: s2->s
 data/record.c:27:5: [module1] 'func': debug3: Access type: S2
 data/record.c:27:5: [module1] 'func': debug3: Field access chain: s2->s

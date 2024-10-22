@@ -132,11 +132,18 @@ class AccessCheck:
             if not retSet:
                 self._perModuleInvisibleNamesRe[module] = None
             else:
-                # reg_name =  r"(?<!->|\.)\s*+\b(" + "|".join(retSet) + r")\s*+(?:->|\.|\()"
-                # reg_name =  r"(?<!->|\.)\s*+\b(" + "|".join(retSet) + r")\b"
-                reg_name =  r"(?<!(?:->|\.)\s*+)(?:" + "|".join(retSet) + r")\b"
-                self._perModuleInvisibleNamesRe[module] = regex.compile(reg_name, re_flags)
+                reg_name =  r"(?<!(?:->|\.)\s*+)(?:\L<names>)\b"
+                self._perModuleInvisibleNamesRe[module] = regex.compile(reg_name, re_flags, names=retSet)
         return self._perModuleInvisibleNamesRe[module]
+
+    def _get_all_global_names_for_module(self) -> regex.Pattern | None:
+        if "" not in self._perModuleInvisibleNamesRe:
+            if not self._globals.names:
+                self._perModuleInvisibleNamesRe[""] = None
+            else:
+                reg_name =  r"(?<!(?:->|\.)\s*+)(?:\L<names>)\b"
+                self._perModuleInvisibleNamesRe[""] = regex.compile(reg_name, re_flags, names=list(self._globals.names))
+        return self._perModuleInvisibleNamesRe[""]
 
     def __check_macro_expansions_access(self, defn: Definition) -> None:
         module = defn.module
@@ -321,14 +328,20 @@ class AccessCheck:
                 _check_access_to_defn(
                     self._globals.fields[rec_type][field], offset, prefix=f"{rec_type}.")
 
-        # TODO: ? check macro expansions, allow ones expanded from valid modules
-
         if invisible_names := self._get_invisible_global_names_for_module(module):
             for match in invisible_names.finditer(body_clean):
                 name = match[0]
                 ERROR(_locationStr(match.start()),
-                      f"Invalid access to private name '{name}' "
-                      f"of [{self._globals.names_restricted[name].module}]")
+                      f"Invalid access to private name [{self._globals.names_restricted[name].module}] '{name}' ")
+
+        # if global_names := self._get_all_global_names_for_module():
+        #     for match in global_names.finditer(body_clean):
+        #         name = match[0]
+        #         dst_module = self._globals.names[name].module
+        #         DEBUG3(_LOC(match.start()), f"Function call: [{dst_module}] '{name}'")
+        #         if dst_module and dst_module != module:
+        #             ERROR(_locationStr(match.start()),
+        #                 f"Invalid access to private name [{dst_module}] '{name}'")
 
         for chain in member_access_chains_fast(body_clean):
             DEBUG2(_LOC(chain.offset), f"Access chain: {chain}")

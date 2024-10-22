@@ -227,7 +227,7 @@ class TestMacro(TestCaseLocal):
         with ScopePush(file=File("data/macro.c")):
             src = scope_file().read()
             for p in StatementList.preprocFromText(src):
-                _globals.addMacro(MacroParts.fromStatement(p))
+                _globals.addMacroDesc(MacroParts.fromStatement(p))
 
             # _globals.updateFromFile("data/macro.c")
             # setLogLevel(LogLevel.DEBUG)

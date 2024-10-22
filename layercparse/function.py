@@ -130,7 +130,7 @@ class FunctionParts:
                         record = RecordParts.fromStatement(st)
                     if record:
                         if _globals:
-                            _globals.addRecord(record, is_global_scope=False)
+                            _globals.addRecordDesc(record, is_global_scope=False)
                         if record.vardefs:
                             yield from record.vardefs
 

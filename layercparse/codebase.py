@@ -169,6 +169,24 @@ class Codebase:
                                    args=[Token(0, (0, 0), "@")])
             )
 
+    def addMacro(self, name: str,
+                       args: int | tuple[str, ...] | None = None,
+                       body: str | None = None,
+                       **kwargs) -> None:
+        self.macros[name] = Definition(
+            name=name,
+            kind="macro",
+            scope=Scope.empty(),
+            offset=0,
+            module="",
+            is_private=False,
+            details=MacroParts(name=Token(0, (0, 0), name),
+                               args=[Token(0, (0, 0), "@") for _ in range(args)] if isinstance(args, int) else
+                                    [Token(0, (0, 0), a) for a in args] if isinstance(args, tuple) else
+                                    None,
+                               body=Token(0, (0, 0), body) if body is not None else None,
+                               **kwargs))
+
     def untypedef(self, name: str) -> str:
         seen: set[str] = set()
         while name not in self.types and name in self.typedefs and name not in seen:
@@ -187,7 +205,7 @@ class Codebase:
         return self.untypedef(get_base_type(
             cast(Details, self.fields[rec_type][field_name].details).typename))
 
-    def addRecord(self, record: RecordParts | None, is_global_scope: bool = True) -> None:
+    def addRecordDesc(self, record: RecordParts | None, is_global_scope: bool = True) -> None:
         if record is None:
             return
         record.getMembers()
@@ -235,9 +253,9 @@ class Codebase:
                      f"Global variables of record '{record.name.value}' are ignored")
         if record.nested:
             for rec in record.nested:
-                self.addRecord(rec)
+                self.addRecordDesc(rec)
 
-    def addMacro(self, macro: MacroParts | None) -> None:
+    def addMacroDesc(self, macro: MacroParts | None) -> None:
         if macro is None:
             return
         is_private, local_module = _get_visibility_and_module_check(
@@ -309,7 +327,7 @@ class Codebase:
                                     self.names_restricted[func.name.value] = \
                                         self.names[func.name.value]
                     elif st.getKind().is_record:
-                        self.addRecord(RecordParts.fromStatement(st))
+                        self.addRecordDesc(RecordParts.fromStatement(st))
                     elif st.getKind().is_function_decl:
                         func = FunctionParts.fromStatement(st)
                         INFO(scope().locationStr(st.range()[0]),
@@ -318,7 +336,7 @@ class Codebase:
                     elif st.getKind().is_decl:
                         INFO(scope().locationStr(st.range()[0]), f"Global variable ignored")
                     elif do_preproc and st.getKind().is_preproc:
-                        self.addMacro(MacroParts.fromStatement(st))
+                        self.addMacroDesc(MacroParts.fromStatement(st))
                     elif st.getKind().is_extern_c:
                         body = next((t for t in st.tokens if t.value.startswith("{")), None)
                         if body:
@@ -340,7 +358,7 @@ class Codebase:
     def updateMacroFromText(self, txt: str, offset: int = 0) -> None:
         with ScopePush(offset=offset):
             for st in StatementList.preprocFromText(txt):
-                self.addMacro(MacroParts.fromStatement(st))
+                self.addMacroDesc(MacroParts.fromStatement(st))
 
     def updateMacroFromFile(self, fname: str) -> None:
         with ScopePush(file=File(fname)):

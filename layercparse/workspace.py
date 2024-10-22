@@ -331,6 +331,14 @@ class LogLevel(enum.IntEnum):
     DEBUG4  = 8
     DEBUG5  = 9
 
+class LogCategory(enum.IntFlag):
+    NONE = 0
+    MISC = 1
+    MODULEDECL = enum.auto()
+    ACCESS = enum.auto()
+    MACRODEF = enum.auto()
+    MACROEXP = enum.auto()
+
 logLevel = LogLevel.DEFAULT
 logStream: IO | None = None
 errors: int = 0
