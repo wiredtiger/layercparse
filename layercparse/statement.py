@@ -5,6 +5,70 @@ from typing import Iterable
 
 from .ctoken import *
 
+def clean_tokens_decl(clean_tokens: TokenList, clean_static_const: bool = True) -> TokenList:
+    i = 0
+    while i < len(clean_tokens):
+        if clean_tokens[i].value in ignore_type_keywords:
+            clean_tokens.pop(i)
+            if i < len(clean_tokens) and clean_tokens[i].getKind() == "(":
+                clean_tokens.pop(i)
+        elif clean_static_const and clean_tokens[i].value in ["const", "static"]:
+            clean_tokens.pop(i)
+        else:
+            i += 1
+    return clean_tokens
+
+def scan_defn_ctype(clean_tokens: TokenList, ignore_static_const: bool = True) -> tuple[TokenList, int, Token | None]:
+    """Scan for type of a C declaration. clean_tokens should be treated with filterCode and clean_tokens_decl."""
+
+    if not clean_tokens or (len(clean_tokens) == 1 and
+                            clean_tokens[0].value in ["...", "void"]):
+        return (TokenList([]), len(clean_tokens), None)
+
+    # Figure out where the type ends
+    is_c_type = False
+    type = TokenList([])
+    for i in range(len(clean_tokens)):
+        token = clean_tokens[i]
+        if token.getKind() != "w":
+            break
+        # it's a word
+        if ignore_static_const and token.value in c_type_keywords:  # type modifier
+            continue
+        if token.value in c_types:  # actual type
+            is_c_type = True
+        else:
+            if not is_c_type:
+                type.append(token)
+                i += 1
+            break
+        type.append(token)
+
+    if i >= len(clean_tokens):
+        return (type, i, None)
+
+    # i is right after the type - where the name should be
+    # but keep appending to the type until it's a non-word
+    for i in range(i, len(clean_tokens)):
+        token = clean_tokens[i]
+        if token.getKind() == "[":
+            # if it's a c type and the last word is not a c type, then it's a variable name
+            if is_c_type and type[-1].value not in c_types:
+                name = type.pop()
+                return (type, i-1, name)
+        elif token.getKind() != "w":
+            break
+        type.append(token)
+    else: # not break
+        # We appended something and the last thing is the variable name
+        name = type.pop()
+        return (type, i-1, name)
+
+    # Now we are at something that is not a word
+    # Should be either * or [] or ()
+
+    return (type, i, None)
+
 @dataclass
 class StatementKind:
     is_comment: bool | None = None
@@ -49,18 +113,7 @@ class StatementKind:
             return ret
 
         # Only get here if we have a non-empty token
-        clean_tokens = tokens.filterCode()
-
-        i = 0
-        while i < len(clean_tokens):
-            if clean_tokens[i].value in ignore_type_keywords:
-                clean_tokens.pop(i)
-                if i < len(clean_tokens) and clean_tokens[i].getKind() == "(":
-                    clean_tokens.pop(i)
-            elif clean_tokens[i].value in ["const", "static"]:
-                clean_tokens.pop(i)
-            else:
-                i += 1
+        clean_tokens = clean_tokens_decl(tokens.filterCode())
 
         if not clean_tokens:
             return ret
@@ -154,7 +207,12 @@ class StatementKind:
         for i in range(1, len(clean_tokens)):
             token = clean_tokens[i]
             if token.value.startswith("("):
-                if reg_identifier.match(clean_tokens[i-1].value):   # word followed by (
+                if (reg_identifier.match(clean_tokens[i-1].value) or   # word followed by (
+                    (not ret.is_expression and
+                     i > 1 and
+                     i < len(clean_tokens)-1 and
+                     reg_identifier.match(clean_tokens[0].value) and
+                     clean_tokens[i+1].value.startswith("("))):
                     ret.is_function = True
                     if ret.is_decl:
                         ret.is_function_decl = True
@@ -252,6 +310,7 @@ class StatementList(list[Statement]):
                 if cur:
                     yield push_statement()
                 yield Statement(TokenList([token]))
+                continue
 
             if (complete and token.getKind() not in [" ", "/"]) or \
                (comment_only and token.getKind() == "/"):

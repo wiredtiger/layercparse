@@ -3,6 +3,7 @@ from copy import deepcopy
 import itertools
 import regex
 from .ctoken import *
+from .statement import clean_tokens_decl, scan_defn_ctype
 
 def get_base_type(clean_tokens: TokenList) -> str:
     type = TokenList((filter(lambda x:
@@ -41,7 +42,7 @@ class Variable:
             self.postComment = other.postComment
         return errors
 
-    # Get the variable name and type from C declaration or argument list.
+    # Get the variable name and type from C declaration.
     @staticmethod
     def fromVarDef(vardef: TokenList) -> 'Variable | None':
         """Get the variable name and type from C declaration."""
@@ -100,4 +101,66 @@ class Variable:
             break
 
         return Variable(name, type, get_pre_comment(vardef)[0], get_post_comment(vardef), end)
+
+    # Get the variable name and type from function argument list.
+    @staticmethod
+    def fromFuncArg(vardef: TokenList) -> 'Variable | None':
+        """Get the variable name and type from C declaration."""
+
+        clean_tokens = clean_tokens_decl(vardef.filterCode())
+
+        type, i, token = scan_defn_ctype(clean_tokens)
+
+        if i >= len(clean_tokens):
+            return Variable(Token.empty(), type) if type else None
+        if token:
+            return Variable(token, type)
+
+        # Now we are at something that is not a word
+        # Should be either * or [] or ()
+
+        for i in range(i, len(clean_tokens)):
+            token = clean_tokens[i]
+            if token.value == "*":
+                continue
+            if token.getKind() == "w":
+                return Variable(token, type)
+            if token.getKind() == "(":
+                for token in reversed(
+                        clean_tokens_decl(
+                            TokenList(TokenList.xxFilterCode(
+                                TokenList.xFromText(
+                                    token.value[1:-1], base_offset=token.range[0]))))):
+                    if token.getKind() == "w":
+                        return Variable(token, type)
+                break
+            break
+
+        # Fallback
+        return Variable(Token.empty(), type) if type else None
+
+
+# Variants of variable declarations:
+#
+# typedef int A;
+# typedef char B;
+#
+# static A a;
+#
+# static A(b); // wrong
+# static A b;  // right
+#
+# static A(bb)(void); // wrong
+# static A bb(void);  // right
+#
+# static A(*c); // wrong
+# static A *c;  // right
+#
+# static A fn1(B);
+#
+# static A (*fn2)(B);
+#
+# static A (*fn3(void))(B);
+
+
 

@@ -176,6 +176,29 @@ class TestVariable(TestCaseLocal):
             r"""preComment=None, postComment=None, end=';')""")
 
 
+class TestFuncArgs(TestCaseLocal):
+    def test_1(self):
+        self.assertMultiLineEqualDiff(
+            repr(Variable.fromFuncArg(TokenList.fromText("int a,", 0))),
+            r"""Variable(name=Token(idx=2, range=(4, 5), value='a'), typename=[0:3] 〈int〉, """
+            r"""preComment=None, postComment=None, end=None)""")
+    def test_2(self):
+        self.assertMultiLineEqualDiff(
+            repr(Variable.fromFuncArg(TokenList.fromText("int (*a)(void),", 0))),
+            r"""Variable(name=Token(idx=1, range=(5, 6), value='a'), typename=[0:3] 〈int〉, """
+            r"""preComment=None, postComment=None, end=None)""")
+    def test_3(self):
+        self.assertMultiLineEqualDiff(
+            repr(Variable.fromFuncArg(TokenList.fromText("int a[10],", 0))),
+            r"""Variable(name=Token(idx=2, range=(4, 5), value='a'), typename=[0:3] 〈int〉, """
+            r"""preComment=None, postComment=None, end=None)""")
+    def test_4(self):
+        self.assertMultiLineEqualDiff(
+            repr(Variable.fromFuncArg(TokenList.fromText("int *a[10],", 0))),
+            r"""Variable(name=Token(idx=3, range=(5, 6), value='a'), typename=[0:3] 〈int〉, """
+            r"""preComment=None, postComment=None, end=None)""")
+
+
 class TestStatement(TestCaseLocal):
     def test_statement(self):
         with ScopePush(file=File("data/block.h")):

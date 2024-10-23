@@ -50,61 +50,106 @@ class FunctionParts:
 
     @staticmethod
     def fromStatement(statement: Statement) -> 'FunctionParts | None':
-        tokens = TokenList([t for t in statement.tokens]) # Shallow copy
+        preComment, _ = get_pre_comment(statement.tokens)
+        postComment = get_post_comment(statement.tokens)
 
-        i = 0
-        while i < len(tokens):
-            if tokens[i].value in ignore_type_keywords:
-                tokens.pop(i)
-                if i < len(tokens) and tokens[i].getKind() == "(":
-                    tokens.pop(i)
-            i += 1
+        clean_tokens = clean_tokens_decl(statement.tokens.filterCode(), clean_static_const=False)
 
-        preComment, i = get_pre_comment(tokens)
-
-        # Return type, function name, function args
-        retType = TokenList([])
-        funcName = None
-        argsList = None
-        is_type_const, is_type_static = False, False
-        for i in range(i, len(tokens)):
-            token = tokens[i]
-            if token.getKind() == "(":
-                if retType:
-                    funcName = retType.pop()
-                argsList = Token(token.idx, (token.range[0]+1, token.range[1]-1), token.value[1:-1])
-                break
-            if token.getKind() not in [" ", "#", "/"]:
-                retType.append(token)
-            if token.value == "const":
-                is_type_const = True
-            elif token.value == "static":
-                is_type_static = True
-        if funcName is None or argsList is None:
+        retType, i, name = scan_defn_ctype(clean_tokens, ignore_static_const=False)
+        if not retType or i >= len(clean_tokens) or name:  # having name means it's not a function
             return None
 
-        retType = TokenList((filter(lambda x: x.value not in c_type_keywords, retType)))
+        # Now we are at something that is not a word
+        # Should be either * or [] or ()
 
-        ret = FunctionParts(retType, funcName, argsList, preComment=preComment,
-                            postComment=get_post_comment(tokens),
-                            is_type_const=is_type_const, is_type_static=is_type_static)
+        # Skip stars and find the name
+        for i in range(i, len(clean_tokens)):
+            if clean_tokens[i].value == "*":
+                continue
+            break
+        else:
+            return None
 
-        # Function body
-        for i in range(i+1, len(tokens)):
-            token = tokens[i]
-            if token.value[0] == "{":
-                ret.body = Token(token.idx, (token.range[0]+1, token.range[1]-1), token.value[1:-1])
-                break
+        # It must be () and the last word of type is the function name
+        token = clean_tokens[i]
+        if token.getKind() == "w":
+            name = token
+            # Find a ()
+            for i in range(i+1, len(clean_tokens)):
+                token = clean_tokens[i]
+                if token.getKind() == "(":
+                    break
+            else:
+                return None
+        elif token.getKind() != "(":
+            return None
 
-        return ret
+        # It's a ().
+        # Now find out if it's an arguments list or a function pointer
+        argsList = Token(token.idx, (token.range[0]+1, token.range[1]-1), token.value[1:-1])
+
+        body: Token | None = None
+        if not name:
+            # If there are more ()s at this level, it's a function pointer and args are somewhere else
+            for i in range(i+1, len(clean_tokens)):
+                token = clean_tokens[i]
+                if token.getKind() == "(":
+                    # Found another (), so the first one was a function pointer and this is the args
+                    for token in reversed(
+                            clean_tokens_decl(
+                                TokenList(TokenList.xxFilterCode(
+                                    TokenList.xFromText(
+                                        argsList.value, base_offset=argsList.range[0]))))):
+                        if token.getKind() == "w":
+                            name = token
+                            break
+                    else: # Not break
+                        name = Token.empty()
+                    argsList = Token(token.idx, (token.range[0]+1, token.range[1]-1), token.value[1:-1])
+                    break
+                if token.getKind() == "{":
+                    body = Token(token.idx, (token.range[0]+1, token.range[1]-1), token.value[1:-1])
+            else: # not break
+                # The name is the last word of the type
+                name = retType.pop()
+
+        # Finish scanning if there's no body
+        if not body:
+            for i in range(i+1, len(clean_tokens)):
+                token = clean_tokens[i]
+                if token.getKind() == "{":
+                    body = Token(token.idx, (token.range[0]+1, token.range[1]-1), token.value[1:-1])
+                    break
+
+        is_type_const, is_type_static = False, False
+        i = 0
+        while i < len(retType):
+            match retType[i].value:
+                case "const":
+                    is_type_const = True
+                    retType.pop(i)
+                case "static":
+                    is_type_static = True
+                    retType.pop(i)
+                case _:
+                    i += 1
+
+        return FunctionParts(retType,
+                             name, # type: ignore[arg-type] # name is guaranteed to be a Token
+                             argsList,
+                             body,
+                             preComment=preComment,
+                             postComment=postComment,
+                             is_type_const=is_type_const, is_type_static=is_type_static)
 
     def xGetArgs(self) -> Iterable[Variable]:
         for stt in StatementList.xFromText(self.args.value, base_offset=self.args.range[0]):
-            var = Variable.fromVarDef(stt.tokens)
+            var = Variable.fromFuncArg(stt.tokens)
             if var:
                 yield var
     def getArgs(self) -> list[Variable]:
         return list(self.xGetArgs())
+
 
     def xGetLocalVars(self, _globals: 'Codebase | None' = None) -> Iterable[Variable]: # type: ignore[name-defined] # error: Name "Codebase" is not defined (circular dependency)
         if not self.body:

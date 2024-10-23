@@ -62,6 +62,7 @@ def main():
     # print(" ===== Scan")
     _globals.addMacro("__attribute__", 1)
     _globals.addMacro("WT_UNUSED", 1)
+    _globals.addMacro("WT_ATTRIBUTE_LIBRARY_VISIBLE")
     _globals.addMacro("WT_INLINE")
     _globals.addMacro("inline")
     _globals.addMacro("WT_COMPILER_BARRIER", ("__VA_ARGS__"), body="WT_COMPILER_BARRIER", is_va_args=True)
