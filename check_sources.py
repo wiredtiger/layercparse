@@ -15,6 +15,7 @@ from layercparse import Module
 
 def main():
     # lcp.setLogLevel(lcp.LogLevel.WARNING)
+    lcp.Log.module_name_mismatch.enabled = False
 
     rootPath = os.path.realpath(sys.argv[1])
     lcp.setRootPath(rootPath)

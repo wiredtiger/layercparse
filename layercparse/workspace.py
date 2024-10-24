@@ -103,7 +103,7 @@ def read_module_desc(name: str = "", fname = "", **kwargs) -> Iterable[Module]:
         try:
             desc = {"name": name, **kwargs, **json.loads(clean_text(match[1]))}
         except json.JSONDecodeError as e:
-            FATAL(f"{fname}:{lineno(txt, match.start(1))}",
+            FATAL(None, f"{fname}:{lineno(txt, match.start(1))}",
                   f"Error parsing module description: {e}\n", txt[match.start(1):match.end(1)])
             continue
         module = Module(**desc)
@@ -319,6 +319,7 @@ class ScopePush:
     def __exit__(self, exc_type, exc_value, traceback):
         scope_pop()
 
+import enum
 class LogLevel(enum.IntEnum):
     QUIET   = 0
     FATAL   = 1
@@ -331,13 +332,34 @@ class LogLevel(enum.IntEnum):
     DEBUG4  = 8
     DEBUG5  = 9
 
-class LogCategory(enum.IntFlag):
-    NONE = 0
-    MISC = 1
-    MODULEDECL = enum.auto()
-    ACCESS = enum.auto()
-    MACRODEF = enum.auto()
-    MACROEXP = enum.auto()
+from dataclasses import dataclass, field
+from typing import Any
+@dataclass
+class LogCategory:
+    name: str
+    level: LogLevel
+    enabled: bool
+
+    def __call__(self, *args, **kwargs) -> bool:
+        return LOG(self, *args, **kwargs)
+
+class Log: # Log Categories
+    none                 = LogCategory("none",                 LogLevel.QUIET,   True)
+    misc                 = LogCategory("misc",                 LogLevel.QUIET,   True)
+    macro_expand         = LogCategory("macro_expand",         LogLevel.DEBUG3,  True)
+    module_name_mismatch = LogCategory("module_name_mismatch", LogLevel.ERROR,   True)
+    module_foreign_def   = LogCategory("module_foreign_def",   LogLevel.ERROR,   True)
+    access_macro         = LogCategory("access_macro",         LogLevel.ERROR,   True)
+    access_global        = LogCategory("access_global",        LogLevel.ERROR,   True)
+    access_member        = LogCategory("access_member",        LogLevel.ERROR,   True)
+    defn_conflict        = LogCategory("defn_conflict",        LogLevel.WARNING, True)
+    defn_conflict_macro  = LogCategory("defn_conflict_macro",  LogLevel.WARNING, True)
+    parse_typedef        = LogCategory("parse_typedef",        LogLevel.WARNING, True)
+    parse_localvar       = LogCategory("parse_localvar",       LogLevel.WARNING, True)
+    parse_expression     = LogCategory("parse_expression",     LogLevel.WARNING, True)
+    type_deduce_member   = LogCategory("type_deduce_member",   LogLevel.WARNING, True)
+    type_deduce_expr     = LogCategory("type_deduce_expr",     LogLevel.WARNING, True)
+    ignored_global       = LogCategory("ignored_global",       LogLevel.INFO,    True)
 
 logLevel = LogLevel.DEFAULT
 logStream: IO | None = None
@@ -359,24 +381,29 @@ def setLogLevel(level: LogLevel):
     global logLevel
     logLevel = level
 
-def LOG(level: LogLevel, location: str | Callable[[], str] | int | None, *args, **kwargs) -> bool:
+def LOG(what: LogLevel | LogCategory,
+        location: str | Callable[[], str] | int | None,
+        *args, **kwargs) -> bool:
+    level, enabled, catname = ((what.level, what.enabled, (f"{{{what.name}}}", ))
+                               if isinstance(what, LogCategory) else
+                               (what, True, ()))
     if level <= LogLevel.ERROR:
         global errors
         errors += 1
-    if level <= logLevel:
-        if isinstance(location, int):
-            location = locationStr(location)
-        elif callable(location):
-            location = location()
-        elif location is None:
-            location = "    "
-        for i in range(len(args)):
-            if callable(args[i]):
-                args = [arg() if callable(arg) else arg for arg in args] # type: ignore[assignment] # incompatible type
-                break
-        print(location, f"{level.name.lower()}:", *args, **kwargs, file=logStream)
-        return True
-    return False
+    if level > logLevel or not enabled:
+        return False
+    if isinstance(location, int):
+        location = locationStr(location)
+    elif callable(location):
+        location = location()
+    elif location is None:
+        location = "    "
+    for i in range(len(args)):
+        if callable(args[i]):
+            args = [arg() if callable(arg) else arg for arg in args] # type: ignore[assignment] # incompatible type
+            break
+    print(location, f"{level.name.lower()}:", *args, *catname, **kwargs, file=logStream)
+    return True
 
 def FATAL(*args, **kwargs): LOG(LogLevel.FATAL, *args, **kwargs)
 def ERROR(*args, **kwargs): LOG(LogLevel.ERROR, *args, **kwargs)

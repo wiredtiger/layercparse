@@ -163,7 +163,7 @@ class AccessCheck:
                             (calleeMod := calleeDef.module) and
                             calleeMod != callerMod):
                         if not callerMacro:
-                            ERROR(defn.scope.file.locationStr(r[0]), _funcId(module, defn.name),
+                            Log.access_macro(defn.scope.file.locationStr(r[0]), _funcId(module, defn.name),
                                 f"Invalid access to private macro [{calleeMod}] '{calleeMacro}'")
                         else:
                             if "" not in explist or len(explist[""]) != 1:
@@ -175,14 +175,14 @@ class AccessCheck:
                                         if rootName in self._globals.macros
                                         else ""),
                                     rootName, colon="")
-                            ERROR(defn.scope.file.locationStr(r[0]), _funcId(module, defn.name),
+                            Log.access_macro(defn.scope.file.locationStr(r[0]), _funcId(module, defn.name),
                                 f"Expansion of {rootName} leads to invalid private macro access:")
-                            ERROR(callerDef.scope.file.locationStr(
+                            Log.access_macro(callerDef.scope.file.locationStr(
                                         cast(MacroParts, callerDef.details).name.range[0]),
                                 "...",
                                 _funcId(callerMod, callerMacro),
                                 f"Invalid access to private macro [{calleeMod}] '{calleeMacro}'")
-                            ERROR(calleeDef.scope.file.locationStr(
+                            Log.access_macro(calleeDef.scope.file.locationStr(
                                         cast(MacroParts, calleeDef.details).name.range[0]),
                                 "...",
                                 _funcId(calleeMod, calleeMacro),
@@ -227,7 +227,7 @@ class AccessCheck:
                         is_private=False,
                         details=var)
                 else:
-                    WARNING(_LOC(var.name.range[0]),
+                    Log.parse_localvar(_LOC(var.name.range[0]),
                             f"Missing type for local variable '{var.name.value}'")
 
         if localvars:
@@ -282,7 +282,7 @@ class AccessCheck:
             elif reg_word_char.match(token.value):
                 token_type = _get_type_of_name(token.value)
             else: # Something weird
-                WARNING(_LOC(root_offset + token.range[0]),
+                Log.parse_expression(_LOC(root_offset + token.range[0]),
                         f"Unexpected token in expression: {token.value}")
                 return ""
 
@@ -297,7 +297,7 @@ class AccessCheck:
                     break
                 i += 1
                 if i >= len(tokens):
-                    WARNING(_LOC(root_offset + tokens[-1].range[1]),
+                    Log.parse_expression(_LOC(root_offset + tokens[-1].range[1]),
                             f"Unexpected end of expression: '{tokens.short_repr()}'")
                     break  # syntax error - stop the chain
                 token_type = self._globals.get_field_type(token_type, tokens[i].value)
@@ -311,7 +311,7 @@ class AccessCheck:
 
         def _check_access_to_defn(defn2: Definition, offset: int, prefix: str = "") -> None:
             if defn2.is_private and defn2.module and defn2.module != module:
-                ERROR(_locationStr(offset),
+                Log.access_member(_locationStr(offset),
                       f"Invalid access to private {defn2.kind} "
                       f"[{defn2.module}] '{prefix}{defn2.name}'")
 
@@ -332,7 +332,7 @@ class AccessCheck:
         if invisible_names := self._get_invisible_global_names_for_module(module):
             for match in invisible_names.finditer(body_clean):
                 name = match[0]
-                ERROR(_locationStr(match.start()),
+                Log.access_global(_locationStr(match.start()),
                       f"Invalid access to private name [{self._globals.names_restricted[name].module}] '{name}' ")
 
         # if global_names := self._get_all_global_names_for_module():
@@ -341,7 +341,7 @@ class AccessCheck:
         #         dst_module = self._globals.names[name].module
         #         DEBUG3(_LOC(match.start()), f"Function call: [{dst_module}] '{name}'")
         #         if dst_module and dst_module != module:
-        #             ERROR(_locationStr(match.start()),
+        #             Log.access_global(_locationStr(match.start()),
         #                 f"Invalid access to private name [{dst_module}] '{name}'")
 
         for chain in member_access_chains_fast(body_clean):
@@ -355,11 +355,11 @@ class AccessCheck:
                     DEBUG3(_LOC(chain.offset), f"Field access: {expr_type}->{field}")
                     _check_access_to_field(expr_type, field, chain.offset)
                     if not (expr_type := self._globals.get_field_type(expr_type, field)):
-                        WARNING(_LOC(chain.offset),
+                        Log.type_deduce_member(_LOC(chain.offset),
                                 f"Can't deduce type of member '{field}' in {chain}")
                         break  # error
             else:
-                WARNING(_locationStr(chain.offset), f"Can't deduce type of expression {chain}")
+                Log.type_deduce_expr(_locationStr(chain.offset), f"Can't deduce type of expression {chain}")
 
     # Go through function bodies. Check calls and struct member accesses.
     def checkAccess(self, multithread = True) -> None:

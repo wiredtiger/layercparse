@@ -48,14 +48,14 @@ class Definition:
         #     self.scope = other.scope
         #     self.offset = other.offset
         if self.kind != other.kind:
-            WARNING(self.locationStr, f"conflicting update for 'kind':")
-            WARNING(other.locationStr, f"conflict here:")
-            WARNING(None, f"type mismatch for '{self.name}': "
+            Log.defn_conflict(self.locationStr, f"conflicting update for 'kind':")
+            Log.defn_conflict(other.locationStr, f"conflict here:")
+            LOG(Log.defn_conflict.level, None, f"type mismatch for '{self.name}': "
                     f"{self.kind} != {other.kind}\n{self.short_repr()}\n{other.short_repr()}")
         if self.module and other.module and self.module != other.module:
-            WARNING(self.locationStr, f"conflicting update for 'module':")
-            WARNING(other.locationStr, f"conflict here:")
-            WARNING(None, f"module mismatch for {self.kind} '{self.name}': "
+            Log.defn_conflict(self.locationStr, f"conflicting update for 'module':")
+            Log.defn_conflict(other.locationStr, f"conflict here:")
+            LOG(Log.defn_conflict.level, f"module mismatch for {self.kind} '{self.name}': "
                     f"{self.module} != {other.module}\n{self.short_repr()}\n{other.short_repr()}")
         elif not self.module and other.module:
             self.module = other.module
@@ -64,16 +64,16 @@ class Definition:
         elif self.is_private is None and other.is_private is not None:
             self.is_private = other.is_private
         if type(self.details).__name__ != type(other.details).__name__:
-            WARNING(self.locationStr, f"conflicting update for details type:")
-            WARNING(other.locationStr, f"conflict here:")
-            WARNING(None, f"details type mismatch for '{self.name}': "
+            Log.defn_conflict(self.locationStr, f"conflicting update for details type:")
+            Log.defn_conflict(other.locationStr, f"conflict here:")
+            LOG(Log.defn_conflict.level, f"details type mismatch for '{self.name}': "
                     f"{type(self.details)} != {type(other.details)}\n"
                     f"{self.short_repr()}\n{other.short_repr()}")
         else:
             if self.details is not None:
                 errors = self.details.update(other.details)  # type: ignore
                 if errors:
-                    LOG_ERROR_FUNC = WARNING if not isinstance(self.details, MacroParts) else INFO
+                    LOG_ERROR_FUNC = Log.defn_conflict if not isinstance(self.details, MacroParts) else Log.defn_conflict_macro
                     LOG_ERROR_FUNC(self.locationStr, f"conflicting update for {self.kind} details:")
                     LOG_ERROR_FUNC(other.locationStr, f"conflict here:")
                     for error in errors:
@@ -117,7 +117,7 @@ def _get_visibility_and_module(thing: Details, default_private: bool | None = No
 
     # Top level
     if module_from_name != default_module:
-        ERROR(scope().locationStr(thing.name.range[0]),
+        Log.module_name_mismatch(scope().locationStr(thing.name.range[0]),
               f"Module [{module_from_name}] of a top-level {thing.kind()} '{thing.name.value}' "
               f"does not match the module of the file [{default_module}]. "
               f"Assigning it to module [{default_module}] "
@@ -132,7 +132,7 @@ def _get_visibility_and_module_check(thing: Details,
     ret = _get_visibility_and_module(thing,
             default_private=default_private, default_module=default_module, is_nested=is_nested)
     if not is_nested and default_module and ret[1] != default_module:
-        ERROR(scope().locationStr(thing.name.range[0]),
+        Log.module_name_mismatch(scope().locationStr(thing.name.range[0]),
               f"Module [{ret[1]}] of a top-level {thing.kind()} '{thing.name.value}' "
               f"does not match the module of the file [{default_module}]. "
               f"Assigning it to module [{ret[1]}].")
@@ -249,7 +249,7 @@ class Codebase:
                 self.typedefs[typedef.name.value] = record.name.value
         if record.vardefs:
             if is_global_scope:
-                INFO(scope().locationStr(record.name.range[0]),
+                Log.ignored_global(scope().locationStr(record.name.range[0]),
                      f"Global variables of record '{record.name.value}' are ignored")
         if record.nested:
             for rec in record.nested:
@@ -293,7 +293,7 @@ class Codebase:
                                            f"{self.typedefs[var.name.value]}")
                             saved_type = var.typename if var.end == "," else None
                         else:
-                            WARNING(scope().locationStr(st.range()[0]),
+                            Log.parse_typedef(scope().locationStr(st.range()[0]),
                                     f"Invalid typedef near '{var.name.value}'")
                 else:
                     saved_type = None
@@ -314,8 +314,8 @@ class Codebase:
                                 details=func)
                             DEBUG3(lambda: defn.locationStr(), "Function:", defn.short_repr)
                             if scope_file().fileKind == "c" and func.is_type_static:
-                                if defn.is_private and defn.module != scope_module():
-                                    ERROR(defn.locationStr(),
+                                if defn.is_private and defn.module and scope_module() and defn.module != scope_module():
+                                    Log.module_foreign_def(defn.locationStr(),
                                           f"Private static function of a foreign module defined in "
                                           f"[{scope_module()}]")
                                 if scope_file().name not in self.static_names:
@@ -330,11 +330,11 @@ class Codebase:
                         self.addRecordDesc(RecordParts.fromStatement(st))
                     elif st.getKind().is_function_decl:
                         func = FunctionParts.fromStatement(st)
-                        INFO(scope().locationStr(st.range()[0]),
+                        Log.ignored_global(scope().locationStr(st.range()[0]),
                                 f"Function declaration ignored for '{func.name.value}'" if func else
                                 "Function declaration ignored")
                     elif st.getKind().is_decl:
-                        INFO(scope().locationStr(st.range()[0]), f"Global variable ignored")
+                        Log.ignored_global(scope().locationStr(st.range()[0]), f"Global variable ignored")
                     elif do_preproc and st.getKind().is_preproc:
                         self.addMacroDesc(MacroParts.fromStatement(st))
                     elif st.getKind().is_extern_c:
