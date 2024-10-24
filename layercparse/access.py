@@ -215,19 +215,20 @@ class AccessCheck:
 
         # Check local names
         localvars: dict[str, Definition] = {} # name -> type
-        for var in defn.details.getArgs() + defn.details.getLocalVars(self._globals):
-            if var.typename:
-                localvars[var.name.value] = Definition(
-                    name=var.name.value,
-                    kind="variable",
-                    scope=defn.scope,
-                    offset=var.name.range[0],
-                    module="",
-                    is_private=False,
-                    details=var)
-            else:
-                WARNING(_LOC(var.name.range[0]),
-                        f"Missing type for local variable '{var.name.value}'")
+        with ScopePush(file=defn.scope.file, offset=0):
+            for var in defn.details.getArgs() + defn.details.getLocalVars(self._globals):
+                if var.typename:
+                    localvars[var.name.value] = Definition(
+                        name=var.name.value,
+                        kind="variable",
+                        scope=defn.scope,
+                        offset=var.name.range[0],
+                        module="",
+                        is_private=False,
+                        details=var)
+                else:
+                    WARNING(_LOC(var.name.range[0]),
+                            f"Missing type for local variable '{var.name.value}'")
 
         if localvars:
             DEBUG4(_LOC(0), f"locals vars:\n{pformat(localvars, width=120, compact=False)}") or \

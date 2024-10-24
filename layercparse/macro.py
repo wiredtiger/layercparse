@@ -111,7 +111,7 @@ class MacroParts:
                     self.is_const = True
 
     def args_short_repr(self) -> str:
-        return "(" + ", ".join([arg.value for arg in self.args]) + ")" if self.args else ""
+        return "(" + ", ".join([arg.value for arg in self.args]) + ")" if self.args is not None else ""
     def short_repr(self) -> str:
         return (f"Macro {self.name.value}{self.args_short_repr()} "
                 f"is_wellformed={self.is_wellformed} is_const={self.is_const}")
@@ -121,14 +121,16 @@ class MacroParts:
 
     def update(self, other: 'MacroParts') -> list[str]:
         errors = []
-        if self.name != other.name:
+        if self.name.value != other.name.value:
             errors.append(f"macro name mismatch for '{self.name.value}': "
                           f"'{self.name.value}' != '{other.name.value}'")
-        if self.args != other.args:
+        if ((self.args is None) != (other.args is None) or
+                (self.args is not None and len(self.args) != len(other.args))): # type: ignore[arg-type] # args is not None
             errors.append(f"macro args mismatch for '{self.name.value}': "
                           f"{self.args_short_repr()} != {other.args_short_repr()}")
-        if self.body != other.body:
-            errors.append(f"macro redifinition: '{self.name.value}'")
+        if ((self.body is None) != (other.body is None) or
+                (self.body is not None and self.body.value != other.body.value)): # type: ignore[union-attr] # body is not None
+            errors.append(f"macro body redifinition: '{self.name.value}'")
         if self.preComment is None:
             self.preComment = other.preComment
         return errors

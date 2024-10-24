@@ -34,13 +34,13 @@ class FunctionParts:
         if self.typename != other.typename:
             errors.append(f"function retType mismatch for '{self.name.value}': "
                           f"'{self.typename.short_repr()}' != '{other.typename.short_repr()}'")
-        if self.name != other.name:
+        if self.name.value != other.name.value:
             errors.append(f"function name mismatch for '{self.name.value}': "
                           f"'{self.name.value}' != '{other.name.value}'")
-        if self.args != other.args:
+        if self.args.value != other.args.value:
             errors.append(f"function args mismatch for '{self.name.value}': "
                           f"'{self.args.value}' != '{other.args.value}'")
-        if self.body is not None and other.body is not None and self.body != other.body:
+        if self.body is not None and other.body is not None and self.body.value != other.body.value:
             errors.append(f"function redifinition: '{self.name.value}'")
         if self.preComment is None:
             self.preComment = other.preComment

@@ -218,23 +218,23 @@ data/record.c:64:12: [module2] '__wti_module2_func3': debug3: Field access: S2->
 data/record.c:64:12: [module2] '__wti_module2_func3': warning: Can't deduce type of member 'x' in __wti_module1_func2->x
 data/record.c:71:5: debug3: Checking func_local_struct (function) data/record.c:71:5: [] public Function(Token(idx=99, range=(1159, 1176), value='func_local_struct') (Token(idx=100, range=(1177, 1190), value='int a, char b'))) : [1155:1158] 〈int〉
 data/record.c:71:5: debug: Checking function [] func_local_struct
-:0:1206: debug3: Record: (:0:2399:) (record) :0:1206: [] public Record((:0:2399:) : <RecordKind.STRUCT: 1>
+data/record.c:72:13: debug3: Record: (data/record.c:103:767:) (record) data/record.c:72:13: [] public Record((data/record.c:103:767:) : <RecordKind.STRUCT: 1>
   member: Variable(Token(idx=4, range=(12, 14), value='s1') : [9:11] 〈S1〉)
   member: Variable(Token(idx=10, range=(27, 29), value='s2') : [24:26] 〈S2〉)
-  vardef: Variable(Token(idx=6, range=(1243, 1252), value='local_str') : [1206:1241] 〈(:0:2399:)〉))
+  vardef: Variable(Token(idx=6, range=(1243, 1252), value='local_str') : [1206:1241] 〈(data/record.c:103:767:)〉))
 data/record.c:71:39: 'func_local_struct': debug2: locals vars:
     a: int
     b: char
-    local_str: (:0:2399:)
+    local_str: (data/record.c:103:767:)
 data/record.c:76:5: 'func_local_struct': debug2: Access chain: local_str->s1.x
-data/record.c:76:5: 'func_local_struct': debug3: Access type: (:0:2399:)
+data/record.c:76:5: 'func_local_struct': debug3: Access type: (data/record.c:103:767:)
 data/record.c:76:5: 'func_local_struct': debug3: Field access chain: local_str->s1.x
-data/record.c:76:5: 'func_local_struct': debug3: Field access: (:0:2399:)->s1
+data/record.c:76:5: 'func_local_struct': debug3: Field access: (data/record.c:103:767:)->s1
 data/record.c:76:5: 'func_local_struct': debug3: Field access: S1->x
 data/record.c:77:5: 'func_local_struct': debug2: Access chain: local_str->s2.s.x
-data/record.c:77:5: 'func_local_struct': debug3: Access type: (:0:2399:)
+data/record.c:77:5: 'func_local_struct': debug3: Access type: (data/record.c:103:767:)
 data/record.c:77:5: 'func_local_struct': debug3: Field access chain: local_str->s2.s.x
-data/record.c:77:5: 'func_local_struct': debug3: Field access: (:0:2399:)->s2
+data/record.c:77:5: 'func_local_struct': debug3: Field access: (data/record.c:103:767:)->s2
 data/record.c:77:5: 'func_local_struct': debug3: Field access: S2->s
 data/record.c:77:5: 'func_local_struct': error: Invalid access to private field [module1] 'S2.s'
 data/record.c:77:5: 'func_local_struct': debug3: Field access: S1->x
