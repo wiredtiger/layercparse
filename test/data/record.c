@@ -101,3 +101,25 @@ struct unnamed_members {
         char __padding[64];
     }
 };
+
+struct __wt_rwlock { /* Read/write lock */
+    volatile union {
+        uint64_t v; /* Full 64-bit value */
+        struct {
+            uint8_t current;         /* Current ticket */
+            uint8_t next;            /* Next available ticket */
+            uint8_t reader;          /* Read queue ticket */
+            uint8_t readers_queued;  /* Count of queued readers */
+            uint32_t readers_active; /* Count of active readers */
+        } s;
+    } u;
+
+    int16_t stat_read_count_off;    /* read acquisitions offset */
+    int16_t stat_write_count_off;   /* write acquisitions offset */
+    int16_t stat_app_usecs_off;     /* waiting application threads offset */
+    int16_t stat_int_usecs_off;     /* waiting server threads offset */
+    int16_t stat_session_usecs_off; /* waiting session offset */
+
+    WT_CONDVAR *cond_readers; /* Blocking readers */
+    WT_CONDVAR *cond_writers; /* Blocking writers */
+};

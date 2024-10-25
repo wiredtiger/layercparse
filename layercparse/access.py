@@ -57,7 +57,7 @@ class AccessChain:
     offset: int
 
     def __str__(self) -> str:
-        return f"{self.name}->{'.'.join(self.members)}"
+        return self.name.replace("\n", " ") + f"->{'.'.join(self.members)}"
 
 def member_access_chains(txt: str, offset_in_parent: int = 0) -> Iterable[AccessChain]:
     for match in _reg_member_access_chain.finditer(txt):
