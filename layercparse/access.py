@@ -119,6 +119,38 @@ def _funcId(module: str, func: str, colon: str = ":") -> str:
     return (f"[{module}] " if module else "") + f"'{func}'{colon}"
 
 @dataclass
+class AccessEventBase:
+    src: Definition
+
+@dataclass
+class AccessMacroExpand(AccessEventBase):
+    "Report pacro expansion in a function body"
+    exps: Expansions
+
+@dataclass
+class AccessGlobalName(AccessEventBase):
+    "Report access to a global name in a function body - mostly, a function call"
+    range: Range
+    dst: str
+
+@dataclass
+class AccessFieldChain(AccessEventBase):
+    "Report access to a field chain like 'a->b.c'"
+    chain: AccessChain
+
+@dataclass
+class AccessField(AccessEventBase):
+    "Report access to a field '(type of X)->a'"
+    typename: str
+    field: str
+
+AccessEvent: TypeAlias = AccessMacroExpand | AccessGlobalName | AccessFieldChain | AccessField
+
+def _yield_if_not_none(val: Any) -> Iterable[Any]:
+    if val is not None:
+        yield val
+
+@dataclass
 class AccessCheck:
     _globals: Codebase
     _perModuleInvisibleNamesRe: dict[str, regex.Pattern | None] = field(default_factory=dict)
@@ -145,10 +177,13 @@ class AccessCheck:
                 self._perModuleInvisibleNamesRe[""] = regex.compile(reg_name, re_flags, names=list(self._globals.names))
         return self._perModuleInvisibleNamesRe[""]
 
-    def __check_macro_expansions_access(self, defn: Definition) -> None:
+    def __check_macro_expansions_access(self, defn: Definition,
+                                        on_macro_expand: Callable[[AccessMacroExpand], Any] | None = None) -> Iterable[Any]:
         module = defn.module
         for exps in defn.scope.file.expansions(
                 cast(Token, cast(FunctionParts, defn.details).body).range):
+            if on_macro_expand:
+                yield from _yield_if_not_none(on_macro_expand(AccessMacroExpand(defn, exps)))
             r, explist = exps.range, exps.expansions
             for callerMacro in sorted(explist.keys()):
                 if callerMacro and callerMacro in self._globals.macros:
@@ -188,7 +223,12 @@ class AccessCheck:
                                 _funcId(calleeMod, calleeMacro),
                                 f"Defined here")
 
-    def _check_function(self, defn: Definition) -> None:
+    def _scan_function(self, defn: Definition,
+                       optimize_for_errors: bool = True,
+                       on_macro_expand: Callable[[AccessMacroExpand], Any] | None = None,
+                       on_global_name: Callable[[AccessGlobalName], Any] | None = None,
+                       on_field_chain: Callable[[AccessFieldChain], Any] | None = None,
+                       on_field_access: Callable[[AccessField], Any] | None = None) -> Iterable[Any]:
         DEBUG3(defn.scope.locationStr(defn.offset), f"Checking {defn.short_repr()}") or \
         DEBUG(defn.scope.locationStr(defn.offset),
               f"Checking {defn.kind} [{defn.module}] {defn.name}")
@@ -211,7 +251,7 @@ class AccessCheck:
 
         DEBUG5(_LOC(0), f"=== body:\n{body_clean}\n===")
 
-        self.__check_macro_expansions_access(defn)
+        yield from self.__check_macro_expansions_access(defn, on_macro_expand=on_macro_expand)
 
         # Check local names
         localvars: dict[str, Definition] = {} # name -> type
@@ -329,29 +369,38 @@ class AccessCheck:
                 _check_access_to_defn(
                     self._globals.fields[rec_type][field], offset, prefix=f"{rec_type}.")
 
-        if invisible_names := self._get_invisible_global_names_for_module(module):
-            for match in invisible_names.finditer(body_clean):
-                name = match[0]
-                Log.access_global(_locationStr(match.start()),
-                      f"Invalid access to private name [{self._globals.names_restricted[name].module}] '{name}' ")
-
-        # if global_names := self._get_all_global_names_for_module():
-        #     for match in global_names.finditer(body_clean):
-        #         name = match[0]
-        #         dst_module = self._globals.names[name].module
-        #         DEBUG3(_LOC(match.start()), f"Function call: [{dst_module}] '{name}'")
-        #         if dst_module and dst_module != module:
-        #             Log.access_global(_locationStr(match.start()),
-        #                 f"Invalid access to private name [{dst_module}] '{name}'")
+        if optimize_for_errors:
+            if invisible_names := self._get_invisible_global_names_for_module(module):
+                for match in invisible_names.finditer(body_clean):
+                    name = match[0]
+                    Log.access_global(_locationStr(match.start()),
+                        f"Invalid access to private name [{self._globals.names_restricted[name].module}] '{name}' ")
+                    if on_global_name:
+                        yield from _yield_if_not_none(on_global_name(AccessGlobalName(defn, (match.start(), match.end()), name)))
+        else:
+            if global_names := self._get_all_global_names_for_module():
+                for match in global_names.finditer(body_clean):
+                    name = match[0]
+                    dst_module = self._globals.names[name].module
+                    DEBUG3(_LOC(match.start()), f"Function call: [{dst_module}] '{name}'")
+                    if dst_module and dst_module != module:
+                        Log.access_global(_locationStr(match.start()),
+                            f"Invalid access to private name [{dst_module}] '{name}'")
+                    if on_global_name:
+                        yield from _yield_if_not_none(on_global_name(AccessGlobalName(defn, (match.start(), match.end()), name)))
 
         for chain in member_access_chains_fast(body_clean):
             DEBUG2(_LOC(chain.offset), f"Access chain: {chain}")
+            if on_field_chain:
+                yield from _yield_if_not_none(on_field_chain(AccessFieldChain(defn, chain)))
             expr_type = _get_type_of_expr_str(chain.name, chain.offset)
             if expr_type:
                 DEBUG3(_LOC(chain.offset), f"Access type: {expr_type}")
                 _check_access_to_type(expr_type, chain.offset)
                 DEBUG3(_LOC(chain.offset), f"Field access chain: {chain}")
                 for field in chain.members:
+                    if on_field_access:
+                        yield from _yield_if_not_none(on_field_access(AccessField(defn, expr_type, field)))
                     DEBUG3(_LOC(chain.offset), f"Field access: {expr_type}->{field}")
                     _check_access_to_field(expr_type, field, chain.offset)
                     if not (expr_type := self._globals.get_field_type(expr_type, field)):
@@ -363,27 +412,41 @@ class AccessCheck:
 
     # Go through function bodies. Check calls and struct member accesses.
     def checkAccess(self, multithread = True) -> None:
+        self.scan(multithread)
+
+    # Go through function bodies. Check calls and struct member accesses.
+    def scan(self, multithread = True, *args, **kwargs) -> None:
+        for _ in self.xscan(multithread, *args, **kwargs):
+            pass
+
+    # Go through function bodies. Check calls and struct member accesses.
+    def xscan(self, multithread = True, *args, **kwargs) -> Iterable[Any]:
         if not multithread:
             for defn in itertools.chain(
                         self._globals.names.values(),
                         *(namedict.values() for namedict in self._globals.static_names.values())):
-                self._check_function(defn)
+                yield from self._scan_function(defn, *args, **kwargs)
         else:
             init_multithreading()
             with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
                 for res in pool.starmap(
-                        AccessCheck._check_function_name_for_multi,
+                        AccessCheck._check_function_name_for_multiproc,
                         itertools.chain(
-                            ((self, n, True) for n in self._globals.static_names.keys()),
-                            ((self, n, False) for n in self._globals.names.keys()))):
-                    print(res, end='')
+                            ((self, n, True, args, kwargs) for n in self._globals.static_names.keys()),
+                            ((self, n, False, args, kwargs) for n in self._globals.names.keys()))):
+                    print(res[0], end='')
+                    yield from res[1]
 
     @staticmethod
-    def _check_function_name_for_multi(self: 'AccessCheck', name: str, file: bool) -> str:
+    def _check_function_name_for_multiproc(self: 'AccessCheck', name: str, file: bool, args: list[Any] = [], kwargs = dict[Any, Any]) -> tuple[str, list[Any]]:
+        ret: list[Any] = []
         with LogToStringScope():
             if not file:
-                self._check_function(self._globals.names[name])
+                for res in self._scan_function(self._globals.names[name], *args, **kwargs):
+                    ret.append(res)
             else:
                 for defn in self._globals.static_names[name].values():
-                    self._check_function(defn)
-            return workspace.logStream.getvalue() # type: ignore # logStream is a StringIO
+                    for res in self._scan_function(defn, *args, **kwargs):
+                        ret.append(res)
+            return (workspace.logStream.getvalue(), # type: ignore # logStream is a StringIO
+                    ret)
