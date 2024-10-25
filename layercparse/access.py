@@ -42,7 +42,7 @@ _reg_member_access_chain_fast = regex.compile(r"""
         (?> -> | \. )
         (?>
             ( [a-zA-Z_] \w*+ )
-            (?>
+            (
                 (?> \( (?&TOKEN)*+ \) ) |
                 (?> \[ (?&TOKEN)*+ \] )
             )*+
@@ -114,6 +114,10 @@ def member_access_chains_fast(txt: str, offset_in_parent: int = 0) -> Iterable[A
 
         if prev_token.getKind() == "(":
             yield from member_access_chains_fast(prev_token.value[1:-1], offset_in_parent + prev_match.start() + 1)
+
+        if (match2 := match.allcaptures()[2]):
+            for i in range(0, len(match2)):
+                yield from member_access_chains_fast(match2[i][1:-1], offset_in_parent + match.allspans()[2][i][0] + 1)
 
 def _funcId(module: str, func: str, colon: str = ":") -> str:
     return (f"[{module}] " if module else "") + f"'{func}'{colon}"

@@ -45,6 +45,7 @@ int func(int num) {
     (5 ? s2 : s3)->s->x;
     (5 ? __wti_module2_func1() : s3)->x;
     ((S1){.x=5}).x;
+    ((S1*)z)->y[s2->qwe1].z(s2->qwe2, s2->qwe3);
 
     return num * num;
 }
