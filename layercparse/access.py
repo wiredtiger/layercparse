@@ -308,7 +308,7 @@ class AccessCheck:
                         if tokens[j].value == ":":
                             break
                     if ret := _get_type_of_expr(
-                            TokenList(tokens[i:j-1]), root_offset + tokens[i].range[0]):
+                            TokenList(tokens[i+1:j]), root_offset + tokens[i].range[0]):
                         return ret
                     return (_get_type_of_expr(TokenList(tokens[j+1:]),
                                               root_offset + tokens[j+1].range[0])

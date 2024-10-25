@@ -35,11 +35,7 @@ def on_field_chain(arg: lcp.AccessFieldChain):
 
 def on_field_access(arg: lcp.AccessField):
     dstMod = defn.module if (defn := _globals.types.get(arg.typename, None)) else ""
-    untypedef = _globals.untypedef(arg.typename)
-    return (locationStr(arg.src) +
-          f" Field access [{dstMod}] '{arg.typename}' " +
-          (f"=> '{untypedef}'" if untypedef != arg.typename else "") +
-          f"-> '{arg.field}'" + "\n")
+    return f"{locationStr(arg.src)} Field access [{dstMod}] '{arg.typename}' -> '{arg.field}'" + "\n"
 
 def main():
     lcp.setLogLevel(lcp.LogLevel.QUIET)

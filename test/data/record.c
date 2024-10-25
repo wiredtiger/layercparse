@@ -46,6 +46,8 @@ int func(int num) {
     (5 ? __wti_module2_func1() : s3)->x;
     ((S1){.x=5}).x;
     ((S1*)z)->y[s2->qwe1].z(s2->qwe2, s2->qwe3);
+    ((S2*)s2 ? (S1*)NULL : (S0*)NULL)->x;
+    ((S2*)s2 ? NULL : (S0*)NULL)->z;
 
     return num * num;
 }
