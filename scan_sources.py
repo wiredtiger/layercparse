@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
-""" Access checker script.
+""" Source scan script.
 
-This script checks that WiredTiger sources comply with modularity rules
-described in MODULARITY.md.
+This script scans WiredTiger.
 
 """
 
@@ -29,7 +28,7 @@ def on_macro_expand(arg: lcp.AccessMacroExpand):
     return "".join(ret)
 
 def on_global_name(arg: lcp.AccessGlobalName):
-    return f"{locationStr(arg.src)} Call [{_globals.names.get(arg.dst, '')}] '{arg.dst}'\n"
+    return f"{locationStr(arg.src)} Call [{_globals.names[arg.dst].module if arg.dst in _globals.names else '*'}] '{arg.dst}'\n"
 
 def on_field_chain(arg: lcp.AccessFieldChain):
     return f"{locationStr(arg.src)} Field chain {arg.chain}\n"

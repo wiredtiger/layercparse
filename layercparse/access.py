@@ -228,7 +228,7 @@ class AccessCheck:
                                 f"Defined here")
 
     def _scan_function(self, defn: Definition,
-                       optimize_for_errors: bool = True,
+                       optimize_for_errors: bool = False,
                        on_macro_expand: Callable[[AccessMacroExpand], Any] | None = None,
                        on_global_name: Callable[[AccessGlobalName], Any] | None = None,
                        on_field_chain: Callable[[AccessFieldChain], Any] | None = None,
@@ -416,7 +416,7 @@ class AccessCheck:
 
     # Go through function bodies. Check calls and struct member accesses.
     def checkAccess(self, multithread = True) -> None:
-        self.scan(multithread)
+        self.scan(multithread, optimize_for_errors=True)
 
     # Go through function bodies. Check calls and struct member accesses.
     def scan(self, multithread = True, *args, **kwargs) -> None:
