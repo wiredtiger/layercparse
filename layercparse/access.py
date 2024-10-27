@@ -115,9 +115,9 @@ def member_access_chains_fast(txt: str, offset_in_parent: int = 0) -> Iterable[A
         if prev_token.getKind() == "(":
             yield from member_access_chains_fast(prev_token.value[1:-1], offset_in_parent + prev_match.start() + 1)
 
-        if (match2 := match.allcaptures()[2]):
+        if (match2 := match.allcaptures()[2]): # type: ignore[misc] # Tuple index out of range
             for i in range(0, len(match2)):
-                yield from member_access_chains_fast(match2[i][1:-1], offset_in_parent + match.allspans()[2][i][0] + 1)
+                yield from member_access_chains_fast(match2[i][1:-1], offset_in_parent + match.allspans()[2][i][0] + 1) # type: ignore[misc] # Tuple index out of range
 
 def _funcId(module: str, func: str, colon: str = ":") -> str:
     return (f"[{module}] " if module else "") + f"'{func}'{colon}"
@@ -424,33 +424,44 @@ class AccessCheck:
             pass
 
     # Go through function bodies. Check calls and struct member accesses.
-    def xscan(self, multithread = True, *args, **kwargs) -> Iterable[Any]:
+    def xscan(self,
+              multithread = True,
+              want_scan: Callable[[Definition], bool] | None = None,
+              *args, **kwargs) -> Iterable[Any]:
         if not multithread:
             for defn in itertools.chain(
                         self._globals.names.values(),
                         *(namedict.values() for namedict in self._globals.static_names.values())):
-                yield from self._scan_function(defn, *args, **kwargs)
+                if not want_scan or want_scan(defn):
+                    yield from self._scan_function(defn, *args, **kwargs)
         else:
             init_multithreading()
             with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
                 for res in pool.starmap(
                         AccessCheck._check_function_name_for_multiproc,
                         itertools.chain(
-                            ((self, n, True, args, kwargs) for n in self._globals.static_names.keys()),
-                            ((self, n, False, args, kwargs) for n in self._globals.names.keys()))):
+                            ((self, n, True,  want_scan, args, kwargs) for n in self._globals.static_names.keys()),
+                            ((self, n, False, want_scan, args, kwargs) for n in self._globals.names.keys()))):
                     print(res[0], end='')
                     yield from res[1]
 
     @staticmethod
-    def _check_function_name_for_multiproc(self: 'AccessCheck', name: str, file: bool, args: list[Any] = [], kwargs = dict[Any, Any]) -> tuple[str, list[Any]]:
+    def _check_function_name_for_multiproc(self: 'AccessCheck',
+                                           name: str,
+                                           file: bool,
+                                           want_scan: Callable[[Definition], bool] | None = None,
+                                           args: list[Any] = [],
+                                           kwargs = dict[Any, Any]) -> tuple[str, list[Any]]:
         ret: list[Any] = []
         with LogToStringScope():
             if not file:
-                for res in self._scan_function(self._globals.names[name], *args, **kwargs):
-                    ret.append(res)
+                if not want_scan or want_scan(self._globals.names[name]):
+                    for res in self._scan_function(self._globals.names[name], *args, **kwargs):
+                        ret.append(res)
             else:
                 for defn in self._globals.static_names[name].values():
-                    for res in self._scan_function(defn, *args, **kwargs):
-                        ret.append(res)
+                    if not want_scan or want_scan(defn):
+                        for res in self._scan_function(defn, *args, **kwargs):
+                            ret.append(res)
             return (workspace.logStream.getvalue(), # type: ignore # logStream is a StringIO
                     ret)
