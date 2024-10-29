@@ -14,6 +14,12 @@ def _D2M(val: 'Definition') -> MacroParts: # type: ignore[name-defined] # circul
 #     expansionTree: 'map[str, ExpandTree]'
 #     # name: str
 
+def ExpandMacros(txt: str,
+                 macros: 'dict[str, Definition]',  # type: ignore[name-defined] # circular dependency for Definition
+                 expand_const: bool = False) -> tuple[str, InsertList, list[Expansions]]:
+    expander = MacroExpander()
+    return expander.expand(txt, macros, expand_const), expander.insert_list, expander.expand_list
+
 class MacroExpander:
     insert_list: InsertList  # sorted list by range[0] of (offset, delta)
     expand_list: list[Expansions]  # sorted list by range[0] of ExpandList

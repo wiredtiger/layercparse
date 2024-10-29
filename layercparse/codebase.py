@@ -10,6 +10,7 @@ from .function import *
 from .macro import *
 from .macroexpand import *
 from . import workspace
+from .cache import *
 
 Details: TypeAlias = FunctionParts | RecordParts | Variable | MacroParts
 
@@ -137,6 +138,15 @@ def _get_visibility_and_module_check(thing: Details,
               f"does not match the module of the file [{default_module}]. "
               f"Assigning it to module [{ret[1]}].")
     return ret
+
+import cProfile as p
+from datetime import datetime, timedelta
+
+# Return current seconds since unix epoch
+def tt() -> float:
+    return datetime.now().timestamp()
+
+_t = tt()
 
 @dataclass
 class Codebase:
@@ -347,10 +357,9 @@ class Codebase:
         DEBUG2(" ---", f"File: {fname}")
         with ScopePush(file=File(fname)):
             if expand_preproc:
-                expander = MacroExpander()
-                txt = expander.expand(scope_file().read(), self.macros)
-                scope_file().updateLineInfoWithInsertList(expander.insert_list)
-                scope_file().expandList = expander.expand_list
+                txt, insert_list, expand_list = ExpandMacros(scope_file().read(), self.macros)
+                scope_file().updateLineInfoWithInsertList(insert_list)
+                scope_file().expandList = expand_list
                 self.updateFromText(txt, do_preproc=False)
             else:
                 self.updateFromText(scope_file().read(), do_preproc=True)
@@ -409,9 +418,14 @@ class Codebase:
             else:
                 init_multithreading()
                 with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
+                    # for res in pool.starmap(
+                    #             Codebase._preprocess_file_for_multi,
+                    #             ((self, fname) for fname in files)):
                     for res in pool.starmap(
                                 Codebase._preprocess_file_for_multi,
-                                ((self, fname) for fname in files)):
+                                ((self, fname) for fname in files if not CacheFile.is_cached(fname, ".expand"))) + \
+                               [CacheFile.get(fname, ".expand") for fname in files if CacheFile.is_cached(fname, ".expand")]:
+                        print(tt() - _t, fname, "update")
                         self._update_from_multi(*res)
         else:
             for fname in files:
@@ -447,12 +461,24 @@ class Codebase:
                     dict[str, Definition],
                     dict[str, dict[str, Definition]],
                     dict[str, str]]:
+        print(tt() - _t, fname, "in")
+        ret = self._preprocess_file_for_multi_cached(fname)
+        print(tt() - _t, fname, "out")
+        return ret
+
+    @cached(fileFn=lambda _, fname: fname,
+            suffixFn=lambda *args, **kwargs: ".expand")
+    def _preprocess_file_for_multi_cached(self, fname: str) -> tuple[str, str,
+                    dict[str, Definition],
+                    dict[str, dict[str, Definition]],
+                    dict[str, Definition],
+                    dict[str, dict[str, Definition]],
+                    dict[str, str]]:
         with LogToStringScope():
             with ScopePush(file=File(fname)):
-                expander = MacroExpander()
-                txt = expander.expand(scope_file().read(), self.macros)
-                scope_file().updateLineInfoWithInsertList(expander.insert_list)
-                scope_file().expandList = expander.expand_list
+                txt, insert_list, expand_list = ExpandMacros(scope_file().read(), self.macros)
+                scope_file().updateLineInfoWithInsertList(insert_list)
+                scope_file().expandList = expand_list
                 self.updateFromText(txt, do_preproc=False)
             errors = workspace.logStream.getvalue() # type: ignore # logStream is a StringIO
         return (fname, errors, self.types, self.fields, self.names, self.static_names, self.typedefs)

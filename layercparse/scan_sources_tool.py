@@ -389,6 +389,12 @@ def scan_sources_main(extraFiles: list[str], modules: list[Module], extraMacros:
         _globals.addMacro(**macro)
     _globals.scanFiles(files)
 
+    # import cProfile as p
+    # pr = p.Profile()
+    # pr.runctx("_globals.scanFiles(files)", globals=globals(), locals=locals())
+    # pr.create_stats()
+    # pr.dump_stats("q")
+
     if _args.list is not None:
         if _args.macros:
             print("  == Macros:")

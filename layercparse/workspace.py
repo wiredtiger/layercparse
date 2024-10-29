@@ -119,6 +119,9 @@ def setRootPath(p: str):
     rootPath = path.realpath(p)
     setModules(read_modules(rootPath))
 
+def relpath(p: str) -> str:
+    return path.relpath(p, rootPath) if p.startswith(rootPath) else path.relpath(p, "/")
+
 # First go headers, then inlines, then sources
 def get_files() -> list[str]:
     return sorted(glob(path.join(rootPath, "src/**/*.[ch]"), recursive=True),

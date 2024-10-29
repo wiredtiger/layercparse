@@ -452,6 +452,17 @@ class AccessCheck:
                                            want_scan: Callable[[Definition], bool] | None = None,
                                            args: list[Any] = [],
                                            kwargs = dict[Any, Any]) -> tuple[str, list[Any]]:
+        return self._check_function_name_for_multiproc_cached(name, file, want_scan, args, kwargs)
+
+    @cached(fileFn=lambda self, name, file, *args: (self._globals.names[name].scope.file.name
+                                                    if not file else name),
+            suffixFn=lambda self, name, file, *args, **kwargs: ".access" if not file else ".access-static")
+    def _check_function_name_for_multiproc_cached(self,
+                                name: str,
+                                file: bool,
+                                want_scan: Callable[[Definition], bool] | None = None,
+                                args: list[Any] = [],
+                                kwargs = dict[Any, Any]) -> tuple[str, list[Any]]:
         ret: list[Any] = []
         with LogToStringScope():
             if not file:
