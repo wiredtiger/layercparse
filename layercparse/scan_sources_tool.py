@@ -166,28 +166,58 @@ def match_str_or_regex(filter: str, value: str) -> bool:
         return bool(regex.match(filter[1:-1], value))
     return value == filter
 
+def match_str_or_regex_type(filter: str, value: str) -> bool:
+    if not filter:
+        return True
+    if filter[0] == "/" and filter[-1] == "/":
+        return bool(regex.match(filter[1:-1], value))
+    return value == _globals.untypedef(filter)
+
 # Fuction to check whether a to/from filter matches a definition. Variants are:
+#  "module"         - module name if it's in module list
 #  "[module]"       - module name
 #  "[/module/]"     - module regex
 #  "filename"       - file name or its tail
-#  "function"       - function name
-#  "/function/"     - function name regex
 #  "(type)"         - type name
 #  "(/type/)"       - type name regex
 #  "(type).field"   - type's field name
 #  "(type)./field/" - type's field name regex
+#  "name"           - any entity name (if it doesn't match a module name)
+#  "*name"          - any entity name
+#  "/regex/"        - entity name regex
+
+def _unparentype(filter: str) -> str:
+    if "/" not in filter:
+        while filter and filter[0] == "(" and filter[-1] == ")":
+            filter = filter[1:-1]
+    else:
+        while len(filter) > 1 and filter[0] == "(" and filter[1] == "(" and filter[-1] == ")":
+            filter = filter[1:-1]
+    return filter
+
+def _split_type_field(filter: str) -> tuple[str, str]:
+    if filter[-1] == ")":
+        return _unparentype(filter), ""
+    # Find the last dot
+    if (i := filter.rfind(".")) == -1:
+        return _unparentype(filter), ""
+    return _unparentype(filter[:i]), filter[i+1:]
 
 def filter_matches_location(filter: str, loc: LocationId) -> bool:
     if not filter:
         return True
     if filter[0] == "[" and filter[-1] == "]":
         return loc.mod == filter[1:-1]
+    if filter in workspace.moduleSrcNames:
+        return filter == loc.mod
     if filter[0] == "(" and loc.kind == "field":
         if filter[-1] == ")":
             return loc.parentname == filter[1:-1]
-        type, field = filter.split(".", maxsplit=2)
-        return loc.name == field and loc.parentname == type[1:-1]
-    if "." in filter or "/" in filter: # file name
+        type, field = _split_type_field(filter)
+        return loc.name == field and loc.parentname == type
+    if filter[0] == "*":
+        return match_str_or_regex(filter[1:], loc.name)
+    if "/" in filter or "." in filter: # file name
         return bool(loc.file and loc.file.endswith(filter))
     # may be a file name or a function name
     if loc.file and loc.file.endswith(filter):
@@ -212,7 +242,9 @@ def filter_access(access: Access) -> bool:
                 break
         else: # not break
             return False
-    if not _args.self and access.src.mod and access.dst.mod and access.src.mod == access.dst.mod:
+    if (not _args.self and
+            # access.src.mod and access.dst.mod and
+            access.src.mod == access.dst.mod):
         return False
     return True
 
@@ -220,11 +252,30 @@ def filter_access_list(access_list: list[Access]) -> list[Access] | None:
     ret: list[Access] = list(filter(filter_access, access_list))
     return ret if ret else None
 
+_in_record = ""
+
 def filter_matches_definition(filter: str, defn: Definition) -> bool:
-    if not filter or filter[0] == "(":
+    global _in_record
+    if defn.kind == "record":
+        _in_record = defn.name
+    elif defn.kind != "field":
+        _in_record = ""
+
+    if not filter:
         return True
     if filter[0] == "[" and filter[-1] == "]":
         return match_str_or_regex(filter[1:-1], defn.module)
+    if filter in workspace.moduleSrcNames:
+        return filter == defn.module
+    if filter[0] == "(":
+        if filter[-1] == ")":
+            return defn.kind == "record" and match_str_or_regex_type(filter[1:-1], defn.name)
+        if defn.kind != "field" or not _in_record:
+            return False
+        type, field = _split_type_field(filter)
+        return match_str_or_regex(field, defn.name) and match_str_or_regex_type(type, _in_record)
+    if filter[0] == "*":
+        return match_str_or_regex(filter[1:], defn.name)
     if defn.scope.file.name.endswith(filter):
         return True
     return match_str_or_regex(filter, defn.name)
@@ -240,13 +291,18 @@ def want_scan(defn: Definition) -> bool:
     return False
 
 def want_list(defn: Definition) -> bool:
-    if _args.unmod and not defn.module:
-        return True
+    if not defn.module:
+        if not _args.list and _args.unmod:
+            return True
+        return False
     if _args.list:
+        if not _args.unmod and not defn.module:
+            return False
         for filter in _args.list:
             if filter_matches_definition(filter, defn):
                 return True
-    return False
+        return False
+    return True
 
 def EnumFromStr(type, val: str) -> type:
     try:
@@ -255,21 +311,27 @@ def EnumFromStr(type, val: str) -> type:
         print(f"Invalid value: '{val}'. Should be one of: {', '.join(e.name for e in type)}")
         sys.exit(1)
 
+class MyFormatter(argparse.RawDescriptionHelpFormatter):
+    def __init__(self, *args, **kwargs):
+        super().__init__(max_help_position=26, *args, **kwargs)
+
 def commandline() -> argparse.Namespace:
-    argparser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
+    argparser = argparse.ArgumentParser(formatter_class=MyFormatter,
         description=f"Source scanner version {LAYERCPARSE_VERSION}.",
         epilog=f"""
 To/from filters notation for "TO", "FROM" and "LIST" options:
-  "[module]"            module name
-  "[/module/]"          module regex
-  "filename"            file name or its tail
-  "function"            function name
-  "/function/"          function name regex
-  "(type)"              type name
-  "(/type/)"            type name regex
-  "(type).field"        type's field name
-  "(type)./field/"      type's field name regex
-  "(/type/)./field/"    type and field regex
+  module                  module name if it's in the list
+  [module]                module name
+  [/module/]              module regex
+  filename                file name or its tail
+  (type)                  type name
+  (/type/)                type name regex
+  (type).field            type's field name
+  (type)./field/          type's field name regex
+  (/type/)./field/        type and field regex
+  name                    any entity name (if it doesn't match a module name)
+  *name                   any entity name
+  /regex/                 entity name regex
 """)
     argparser.add_argument('--version',
                            action='version', version=f"%(prog)s {LAYERCPARSE_VERSION}")
@@ -281,12 +343,15 @@ To/from filters notation for "TO", "FROM" and "LIST" options:
                            type=lambda x: EnumFromStr(LogLevel, x),
                            help="Set verbosity level: " + ", ".join(e.name for e in LogLevel))
 
-    group = argparser.add_argument_group(title="Work mode selection")
+    group = argparser.add_argument_group(title="List modules mode")
     group.add_argument("-m", "--modules", dest="list_modules", action="store_true",
                        help="List modules")
+
+    group = argparser.add_argument_group(title="Module content mode")
     group.add_argument("-l", "--list", action="extend", nargs="*",
                        help="List what belongs to a module or file")
-    group = argparser.add_argument_group(title="Access report mode")
+
+    group = argparser.add_argument_group(title="Access report mode (default)")
     group.add_argument("-f", "--from", dest="from_", metavar="FROM", action="extend", nargs=1,
                        help="Find access from module, file, function, type or field")
     group.add_argument("-t", "--to", action="extend", nargs=1,
@@ -295,17 +360,7 @@ To/from filters notation for "TO", "FROM" and "LIST" options:
     group.add_argument("-r", "--reverse", action=argparse.BooleanOptionalAction,
                        help="Reverse access report: what accesses the target")
 
-    group = argparser.add_argument_group(title="Level of detail selection")
-    group.add_argument("-d", "--detail", choices=["mod", "file", "full"],
-                       help="Specify the level of detail for access report")
-    group.add_argument(      "--detail-from", choices=["mod", "file", "full"],
-                       default="mod",
-                       help="Specify the level of detail for access report for outgoing access")
-    group.add_argument(      "--detail-to", choices=["mod", "file", "full"],
-                       default="mod",
-                       help="Specify the level of detail for access report for incoming access")
-
-    group = argparser.add_argument_group(title="What to report")
+    group = argparser.add_argument_group(title="What to report (all modes)")
     group.add_argument(      "--unmod", action=argparse.BooleanOptionalAction,
                        default=False,
                        help="Include unmodular things (default: no)")
@@ -329,6 +384,16 @@ To/from filters notation for "TO", "FROM" and "LIST" options:
                        help="Include macros only")
     group.add_argument(      "--debug", action=argparse.BooleanOptionalAction,
                        help=argparse.SUPPRESS) # help="Debug output")
+
+    group = argparser.add_argument_group(title="Level of detail selection (access report mode)")
+    group.add_argument("-d", "--detail", choices=["mod", "file", "full"],
+                       help="Specify the level of detail for access report")
+    group.add_argument("--detail-from", "--df", choices=["mod", "file", "full"],
+                       default="mod",
+                       help="Specify the level of detail for access report for outgoing access")
+    group.add_argument("--detail-to", "--dt", choices=["mod", "file", "full"],
+                       default="mod",
+                       help="Specify the level of detail for access report for incoming access")
 
     global _args
     _args = argparser.parse_args()
@@ -359,16 +424,17 @@ def scan_sources_main(extraFiles: list[str], modules: list[Module], extraMacros:
 
     if _args.list_modules:
         print("Modules:")
+        output = []
         for mod in sorted(modules, key=lambda m: m.name):
-            desc = f"  {mod.name}:"
+            desc = []
             if mod.dirname != mod.name:
-                desc += f"  \tdirname: {mod.dirname}"
+                desc.append(f"dirname: {mod.dirname}")
             if mod.sourceAliases:
-                desc += f"  \tfileAliases: {mod.sourceAliases}"
+                desc.append(f"sourceAliases: {mod.sourceAliases}")
             if mod.fileAliases:
-                desc += f"  \tfileAliases: {mod.fileAliases}"
-            if desc:
-                print(desc)
+                desc.append(f"fileAliases: {mod.fileAliases}")
+            output.append((f"{mod.name}:", ",   ".join(desc)))
+        print_by_columns(output)
         return 0
 
     access_stats = AccessSrc()
@@ -405,12 +471,16 @@ def scan_sources_main(extraFiles: list[str], modules: list[Module], extraMacros:
         if _args.fields:
             print("  == Fields:")
             for recname, recdefn in _globals.fields.items():
-                r: str | None = recname
+                defn = _globals.types[recname]
+                r: str | None = f"{defn.locationStr()} {'private' if defn.is_private else 'public'}:"
+                if want_list(defn):
+                    print(r)
+                    r = None
                 for fieldname, defn in recdefn.items():
                     if not want_list(defn):
                         continue
                     if r:
-                        print(f"{_globals.types[recname].locationStr()} {'private' if defn.is_private else 'public'}:")
+                        print(r)
                         r = None
                     # print(f"{defn.locationStr()} ..... {'private' if defn.is_private else 'public'} {fieldname}")
                     print(f"    {fieldname} [{defn.module}] {'private' if defn.is_private else 'public'}")

@@ -1,5 +1,13 @@
 # Change log
 
+### 2024-10-30 version 0.2.0
+
+* Add source scan/stat tool.
+* Add log categories.
+* Improve declaration and statement type detection.
+* Fix function-local scope location.
+* Fix access check - look into more of [] and ().
+
 ### 2024-10-22 version 0.1.3
 
 * Fix unnamed record locaion.
