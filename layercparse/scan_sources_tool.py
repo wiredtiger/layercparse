@@ -457,8 +457,8 @@ def list_contents() -> None:
                 # print(f"{defn.locationStr()} ..... {'private' if defn.is_private else 'public'} {fieldname}")
                 print(f"    {fieldname} [{defn.module}] {'private' if defn.is_private else 'public'}")
 
-@cache.cached(fileFn=lambda *args, **kwargs: "globals",
-              depsFn=lambda files, *args, **kwargs: files + script_files_list())
+@cache.cached(file="globals",
+              deps=lambda files, *args, **kwargs: files + script_files_list())
 def load_globals(files: list[str], extraMacros: list[dict]) -> Codebase:
     ret = Codebase()
     for macro in extraMacros:
@@ -466,8 +466,8 @@ def load_globals(files: list[str], extraMacros: list[dict]) -> Codebase:
     ret.scanFiles(files)
     return ret
 
-@cache.cached(fileFn=lambda _: "access",
-              depsFn=lambda files: files + script_files_list())
+@cache.cached(file="access",
+              deps=lambda files: files + script_files_list())
 def load_access(files: list[str]) -> list[Access]:
     ret = []
     for res in AccessCheck(_globals).xscan(
@@ -482,9 +482,9 @@ def load_access(files: list[str]) -> list[Access]:
             ret.append(access)
     return ret
 
-@cache.cached(fileFn=lambda _: "stats.",
-              depsFn=lambda files: files + script_files_list(),
-              suffixFn=lambda _: hashlib.sha1(pickle.dumps(_args)).hexdigest())
+@cache.cached(file="stats.",
+              deps=lambda files: files + script_files_list(),
+              suffix=lambda _: hashlib.sha1(pickle.dumps(_args)).hexdigest())
 def load_stats(files: list[str]) -> tuple[AccessSrc, AccessSrc]:
     access_stats = AccessSrc()
     access_stats_r = AccessSrc()
@@ -542,7 +542,9 @@ def scan_sources_main(extraFiles: list[str], modules: list[Module], extraMacros:
     if _args.clear_cache:
         cache.clearcache()
     cache.use_cache = _args.cache
-    _args.cache = _args.clear_cache = None  # Clear these for the cache key
+
+    _args.calls_only = _args.fields_only = _args.macros_only = None  # Clear these for proper cache key
+    _args.cache = _args.clear_cache = None  # Clear these for proper cache key
 
     _globals = load_globals(files, extraMacros)
 

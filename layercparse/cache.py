@@ -84,25 +84,24 @@ def put(obj: object, srcpath: str, suffix: str = "", cachepath: str = "") -> obj
     return obj
 
 # Decorator that wraps a function or instance method with caching
-def cached(fileFn: Callable[..., str] | None = None,
-           depsFn: Callable[..., list[str] | None] | None = None,
-           suffixFn: Callable[..., str] | None = None):
-    if not fileFn:
-        raise ValueError("fileFn is required")
-    if not depsFn:
-        depsFn = lambda *args, **kwargs: None
-    if not suffixFn:
-        suffixFn = lambda *args, **kwargs: ""
+def cached(file: Callable[..., str] | str = "",
+           deps: Callable[..., list[str] | None] | list[str] | None = None,
+           suffix: Callable[..., str] | str = ""):
+    if not file:
+        raise ValueError("file is required")
+    fileFn   = file   if callable(file  ) else lambda *args, **kwargs: file
+    depsFn   = deps   if callable(deps  ) else lambda *args, **kwargs: deps
+    suffixFn = suffix if callable(suffix) else lambda *args, **kwargs: suffix
     def decorator(func):
         def wrapper(*args, **kwargs):
             if not use_cache:
                 return func(*args, **kwargs)
-            key = fileFn(*args, **kwargs)
-            deps = depsFn(*args, **kwargs)
-            suffix = suffixFn(*args, **kwargs)
-            if (obj := get(key, dependencies=deps, suffix=suffix)) is not None:
+            key_    = fileFn  (*args, **kwargs)
+            deps_   = depsFn  (*args, **kwargs)
+            suffix_ = suffixFn(*args, **kwargs)
+            if (obj := get(key_, dependencies=deps_, suffix=suffix_)) is not None:
                 return obj
-            return put(func(*args, **kwargs), key, suffix=suffix)
+            return put(func(*args, **kwargs), key_, suffix=suffix_)
         return wrapper
     return decorator
 
