@@ -163,14 +163,14 @@ def match_str_or_regex(filter: str, value: str) -> bool:
     if not filter:
         return True
     if filter[0] == "/" and filter[-1] == "/":
-        return bool(regex.match(filter[1:-1], value))
+        return bool(regex.search(filter[1:-1], value))
     return value == filter
 
 def match_str_or_regex_type(filter: str, value: str) -> bool:
     if not filter:
         return True
     if filter[0] == "/" and filter[-1] == "/":
-        return bool(regex.match(filter[1:-1], value))
+        return bool(regex.search(filter[1:-1], value))
     return value == _globals.untypedef(filter)
 
 # Fuction to check whether a to/from filter matches a definition. Variants are:
@@ -187,7 +187,7 @@ def match_str_or_regex_type(filter: str, value: str) -> bool:
 #  "/regex/"        - entity name regex
 
 def _unparentype(filter: str) -> str:
-    if "/" not in filter:
+    if ":" not in filter:
         while filter and filter[0] == "(" and filter[-1] == ")":
             filter = filter[1:-1]
     else:
@@ -214,9 +214,9 @@ def filter_matches_location(filter: str, loc: LocationId) -> bool:
         return workspace.moduleAliasesSrc[filter] == loc.mod
     if filter[0] == "(" and loc.kind == "field":
         if filter[-1] == ")":
-            return loc.parentname == filter[1:-1]
+            return bool(loc.parentname and match_str_or_regex_type(filter[1:-1], loc.parentname))
         type, field = _split_type_field(filter)
-        return loc.name == field and loc.parentname == type
+        return bool(loc.parentname and match_str_or_regex(field, loc.name) and match_str_or_regex_type(type, loc.parentname))
     if filter[0] == "*":
         return match_str_or_regex(filter[1:], loc.name)
     if "/" in filter or "." in filter: # file name
