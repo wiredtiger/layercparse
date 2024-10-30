@@ -10,6 +10,7 @@ from io import StringIO
 
 from .internal import *
 from .common import *
+from . import workspace
 
 FileKind: TypeAlias = Literal[
     "",   # undefined
@@ -179,8 +180,12 @@ class File:
     lineOffsets: list[int] | None = field(default=None, repr=False)
     expandList: list[Expansions] = field(default_factory=list, repr=False)
     fileKind: FileKind = field(default="", repr=False)
+    relpath: str = field(default="", repr=False)
 
     def __post_init__(self):
+        if not self.relpath:
+            # self.relpath = path.relpath(self.name, workspace.rootPath) if workspace.rootPath and self.name else self.name
+            self.relpath = self.name
         if not self.module:
             self.module = fname_to_module(self.name)
         if "_private" in self.name:
@@ -227,7 +232,7 @@ class File:
         return f"{line}:{pos}"
 
     def locationStr(self, offset: int) -> str:
-        return f"{self.name}:{self.offsetToLinePosStr(offset)}:"
+        return f"{self.relpath}:{self.offsetToLinePosStr(offset)}:"
 
     def read(self) -> str:
         txt = file_content(self.name)
