@@ -7,12 +7,13 @@ This script scans WiredTiger.
 """
 
 import sys, os, enum
+import pickle, hashlib
 import argparse
 from dataclasses import dataclass, field, is_dataclass, fields
 
 import regex
 from layercparse import *
-
+from layercparse import cache
 
 _globals: Codebase
 _args: argparse.Namespace
@@ -39,18 +40,15 @@ def access_thing_to_str(full: tuple[str, str, tuple[int, int], str, str]):
     return (f"[{full[0]}]", f"{full[1]}:{full[2][0]}:{full[2][1]}:", f"{full[4]}", f"{full[3]}")
 
 # Format output by columns
-def format_by_columns(rows: list[tuple]) -> list[str]:
+def format_columns(rows: list[tuple]) -> list[str]:
     str_rows = [[str(cell) for cell in row] for row in rows]
     format_str = " ".join(["{:<" + str(max(len(cell) for cell in col)) + "}" for col in zip(*str_rows)])
     return ["  " + format_str.format(*row).strip() for row in str_rows]
 
-def print_by_columns(rows: list[tuple]):
-    print(*format_by_columns(rows), sep="\n")
+def print_columns(rows: list[tuple]):
+    print(*format_columns(rows), sep="\n")
 
 detailsFunc = {"mod": access_mod_to_str, "file": access_file_to_str, "full": access_thing_to_str}
-
-access_stats: AccessSrc
-access_stats_r: AccessSrc
 
 def is_addable_type(type) -> bool:
     return type in (int, float, str, list)
@@ -142,12 +140,12 @@ def on_macro_expand(arg: AccessMacroExpand) -> list[Access] | None:
             ret.append(Access(AccessType.MACRO,
                               locSrc,
                               LocationId.fromDefn(_globals.macros[dst])))
-    return filter_access_list(ret)
+    return ret
 
 def on_global_name(arg: AccessGlobalName) -> list[Access] | None:
-    return filter_access_list([Access(AccessType.CALL,
+    return [Access(AccessType.CALL,
                    LocationId.fromDefn(arg.src),
-                   LocationId.fromDefn(_globals.names[arg.dst]))])
+                   LocationId.fromDefn(_globals.names[arg.dst]))]
 
 # def on_field_chain(arg: AccessFieldChain) -> list[Access]:
 #     return f"{locationStr(arg.src)} Field chain {arg.chain}\n"
@@ -155,9 +153,9 @@ def on_global_name(arg: AccessGlobalName) -> list[Access] | None:
 def on_field_access(arg: AccessField) -> list[Access] | None:
     if arg.typename not in _globals.fields or arg.field not in _globals.fields[arg.typename]:
         return None
-    return filter_access_list([Access(AccessType.FIELD,
+    return [Access(AccessType.FIELD,
                    LocationId.fromDefn(arg.src),
-                   LocationId.fromField(_globals.types[arg.typename], _globals.fields[arg.typename][arg.field]))])
+                   LocationId.fromField(_globals.types[arg.typename], _globals.fields[arg.typename][arg.field]))]
 
 def match_str_or_regex(filter: str, value: str) -> bool:
     if not filter:
@@ -250,9 +248,8 @@ def filter_access(access: Access) -> bool:
         return False
     return True
 
-def filter_access_list(access_list: list[Access]) -> list[Access] | None:
-    ret: list[Access] = list(filter(filter_access, access_list))
-    return ret if ret else None
+def filter_access_list(access_list: Iterable[Access]) -> Iterable[Access]:
+    return filter(filter_access, access_list)
 
 _in_record = ""
 
@@ -399,13 +396,110 @@ To/from filters notation for "TO", "FROM" and "LIST" options:
                        default="mod",
                        help="Specify the level of detail for access report for incoming access")
 
+    group = argparser.add_argument_group(title="Cache control")
+    group.add_argument(      "--cache", action=argparse.BooleanOptionalAction,
+                       default=True,
+                       help="Use cache for operations (default: yes)")
+    group.add_argument(      "--clear-cache", action="store_true",
+                       help="Clear cache before doing anything")
+
     global _args
     _args = argparser.parse_args()
 
     return _args
 
+def list_modules(modules: list[Module]) -> None:
+    print("Modules:")
+    output = []
+    for mod in sorted(modules, key=lambda m: m.name):
+        desc = []
+        if mod.dirname != mod.name:
+            desc.append(f"dirname: {mod.dirname}")
+        if mod.sourceAliases:
+            desc.append(f"sourceAliases: {mod.sourceAliases}")
+        if mod.fileAliases:
+            desc.append(f"fileAliases: {mod.fileAliases}")
+        output.append((f"{mod.name}:", ",   ".join(desc)))
+    print_columns(output)
+
+def list_contents() -> None:
+    if _args.macros:
+        print("  == Macros:")
+        for _, defn in _globals.macros.items():
+            if not defn.offset or not want_list(defn):
+                continue
+            print(f"{defn.locationStr()} {'private' if defn.is_private else 'public'}")
+    if _args.calls:
+        print("  == Functions:")
+        for _, defn in _globals.names.items():
+            if not want_list(defn):
+                continue
+            print(f"{defn.locationStr()} {'private' if defn.is_private else 'public'}")
+    if _args.fields:
+        print("  == Fields:")
+        for recname, recdefn in _globals.fields.items():
+            defn = _globals.types[recname]
+            r: str | None = f"{defn.locationStr()} {'private' if defn.is_private else 'public'}:"
+            if want_list(defn):
+                print(r)
+                r = None
+            for fieldname, defn in recdefn.items():
+                if not want_list(defn):
+                    continue
+                if r:
+                    print(r)
+                    r = None
+                # print(f"{defn.locationStr()} ..... {'private' if defn.is_private else 'public'} {fieldname}")
+                print(f"    {fieldname} [{defn.module}] {'private' if defn.is_private else 'public'}")
+
+@cache.cached(fileFn=lambda *args, **kwargs: "globals",
+              depsFn=lambda files, *args, **kwargs: files)
+def load_globals(files: list[str], extraMacros: list[dict]) -> Codebase:
+    ret = Codebase()
+    for macro in extraMacros:
+        ret.addMacro(**macro)
+    ret.scanFiles(files)
+    return ret
+
+@cache.cached(fileFn=lambda _: "access",
+              depsFn=lambda files: files)
+def load_access(files: list[str]) -> list[Access]:
+    ret = []
+    for res in AccessCheck(_globals).xscan(
+                # want_scan=want_scan if _args.from_ is not None or not _args.unmod else None,
+                on_macro_expand=on_macro_expand if _args.macros else None,
+                on_global_name=on_global_name if _args.calls else None,
+                # on_field_chain=on_field_chain,
+                on_field_access=on_field_access if _args.fields else None):
+        if _args.debug:
+            print(*res, sep="\n")
+        for access in res:
+            ret.append(access)
+    return ret
+
+@cache.cached(fileFn=lambda _: "stats.",
+              depsFn=lambda files: files,
+              suffixFn=lambda _: hashlib.sha1(pickle.dumps(_args)).hexdigest())
+def load_stats(files: list[str]) -> tuple[AccessSrc, AccessSrc]:
+    access_stats = AccessSrc()
+    access_stats_r = AccessSrc()
+
+    for access in filter_access_list(load_access(files)):
+        stats_from = [("mod", access.src.mod),
+                        ("file", (access.src.mod, access.src.file)),
+                        ("full", (access.src.mod, access.src.file, access.src.lineCol, access.src.getName(), access.src.kind))]
+        stats_to = [("mod", access.dst.mod),
+                    ("file", (access.dst.mod, access.dst.file)),
+                    ("full", (access.dst.mod, access.dst.file, access.dst.lineCol, access.dst.getName(), access.dst.kind))]
+        for stat_from in stats_from:
+            for stat_to in stats_to:
+                update_stats(access_stats, *stat_from, *stat_to, 1)
+                update_stats(access_stats_r, *stat_to, *stat_from, 1)
+
+    return access_stats, access_stats_r
+
 def scan_sources_main(extraFiles: list[str], modules: list[Module], extraMacros: list[dict]) -> int:
-    global access_stats, access_stats_r, _globals, _args
+    global _globals, _args
 
     commandline()
 
@@ -427,22 +521,8 @@ def scan_sources_main(extraFiles: list[str], modules: list[Module], extraMacros:
             return 1
 
     if _args.list_modules:
-        print("Modules:")
-        output = []
-        for mod in sorted(modules, key=lambda m: m.name):
-            desc = []
-            if mod.dirname != mod.name:
-                desc.append(f"dirname: {mod.dirname}")
-            if mod.sourceAliases:
-                desc.append(f"sourceAliases: {mod.sourceAliases}")
-            if mod.fileAliases:
-                desc.append(f"fileAliases: {mod.fileAliases}")
-            output.append((f"{mod.name}:", ",   ".join(desc)))
-        print_by_columns(output)
+        list_modules(modules)
         return 0
-
-    access_stats = AccessSrc()
-    access_stats_r = AccessSrc()
 
     setLogLevel(_args.logLevel)
 
@@ -454,61 +534,18 @@ def scan_sources_main(extraFiles: list[str], modules: list[Module], extraMacros:
     for file in extraFiles:
         files.insert(0, os.path.join(os.path.realpath(rootPath), file))
 
-    _globals = Codebase()
-    for macro in extraMacros:
-        _globals.addMacro(**macro)
-    _globals.scanFiles(files)
+    if _args.clear_cache:
+        cache.clearcache()
+    cache.use_cache = _args.cache
+    _args.cache = _args.clear_cache = None  # Clear these for the cache key
+
+    _globals = load_globals(files, extraMacros)
 
     if _args.list is not None:
-        if _args.macros:
-            print("  == Macros:")
-            for _, defn in _globals.macros.items():
-                if not defn.offset or not want_list(defn):
-                    continue
-                print(f"{defn.locationStr()} {'private' if defn.is_private else 'public'}")
-        if _args.calls:
-            print("  == Functions:")
-            for _, defn in _globals.names.items():
-                if not want_list(defn):
-                    continue
-                print(f"{defn.locationStr()} {'private' if defn.is_private else 'public'}")
-        if _args.fields:
-            print("  == Fields:")
-            for recname, recdefn in _globals.fields.items():
-                defn = _globals.types[recname]
-                r: str | None = f"{defn.locationStr()} {'private' if defn.is_private else 'public'}:"
-                if want_list(defn):
-                    print(r)
-                    r = None
-                for fieldname, defn in recdefn.items():
-                    if not want_list(defn):
-                        continue
-                    if r:
-                        print(r)
-                        r = None
-                    # print(f"{defn.locationStr()} ..... {'private' if defn.is_private else 'public'} {fieldname}")
-                    print(f"    {fieldname} [{defn.module}] {'private' if defn.is_private else 'public'}")
+        list_contents()
         return 0
 
-    for res in AccessCheck(_globals).xscan(
-                want_scan=want_scan if _args.from_ is not None or not _args.unmod else None,
-                on_macro_expand=on_macro_expand if _args.macros else None,
-                on_global_name=on_global_name if _args.calls else None,
-                # on_field_chain=on_field_chain,
-                on_field_access=on_field_access if _args.fields else None):
-        if _args.debug:
-            print(*res, sep="\n")
-        for access in res:
-            stats_from = [("mod", access.src.mod),
-                          ("file", (access.src.mod, access.src.file)),
-                          ("full", (access.src.mod, access.src.file, access.src.lineCol, access.src.getName(), access.src.kind))]
-            stats_to = [("mod", access.dst.mod),
-                        ("file", (access.dst.mod, access.dst.file)),
-                        ("full", (access.dst.mod, access.dst.file, access.dst.lineCol, access.dst.getName(), access.dst.kind))]
-            for stat_from in stats_from:
-                for stat_to in stats_to:
-                    update_stats(access_stats, *stat_from, *stat_to, 1)
-                    update_stats(access_stats_r, *stat_to, *stat_from, 1)
+    access_stats, access_stats_r = load_stats(files)
 
     stats, src, dst, detail_src, detail_dst, dir_indicator = \
         (access_stats, _args.from_, _args.to, _args.detail_from, _args.detail_to, "->") if not _args.reverse else \
@@ -518,7 +555,7 @@ def scan_sources_main(extraFiles: list[str], modules: list[Module], extraMacros:
     if getattr(stats, detail_src):
         for key, val in sorted(getattr(stats, detail_src).items()):
             print(*SrcDetails(key), dir_indicator) # type: ignore[operator] # Cannot call function of unknown type
-            print_by_columns([(*DstDetails(key2), ":", val2) for key2, val2 in sorted(getattr(val, detail_dst).items())]) # type: ignore[operator] # Cannot call function of unknown type
+            print_columns([(*DstDetails(key2), ":", val2) for key2, val2 in sorted(getattr(val, detail_dst).items())]) # type: ignore[operator] # Cannot call function of unknown type
             # for key2, val2 in sorted(getattr(val, detail_dst).items()):
             #     print(f"  {DstDetails(key2)} : {val2}")
 
