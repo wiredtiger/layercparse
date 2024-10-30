@@ -6,8 +6,8 @@ set -ueo pipefail
 chmod 755 .venv/bin/activate
 
 . .venv/bin/activate
-pip3 -q install -r requirements.txt
+pip3 -q --disable-pip-version-check install -r requirements.txt
 
 # set up packaging environment
-pip3 -q install setuptools wheel twine
+pip3 -q --disable-pip-version-check install setuptools wheel twine
 

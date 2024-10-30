@@ -6,8 +6,8 @@ set -ueo pipefail
 chmod 755 .venv/bin/activate
 
 . .venv/bin/activate
-pip3 -q install -r requirements.txt
+pip3 -q --disable-pip-version-check install -r requirements.txt
 
 # set up development environment
-pip3 install mypy types-regex
+pip3 --disable-pip-version-check install mypy types-regex
 

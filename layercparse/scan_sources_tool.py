@@ -208,8 +208,10 @@ def filter_matches_location(filter: str, loc: LocationId) -> bool:
         return True
     if filter[0] == "[" and filter[-1] == "]":
         return loc.mod == filter[1:-1]
-    if filter in workspace.moduleSrcNames:
+    if filter in workspace.modules:
         return filter == loc.mod
+    if filter in workspace.moduleAliasesSrc:
+        return workspace.moduleAliasesSrc[filter] == loc.mod
     if filter[0] == "(" and loc.kind == "field":
         if filter[-1] == ")":
             return loc.parentname == filter[1:-1]
@@ -265,8 +267,10 @@ def filter_matches_definition(filter: str, defn: Definition) -> bool:
         return True
     if filter[0] == "[" and filter[-1] == "]":
         return match_str_or_regex(filter[1:-1], defn.module)
-    if filter in workspace.moduleSrcNames:
+    if filter in workspace.modules:
         return filter == defn.module
+    if filter in workspace.moduleAliasesSrc:
+        return workspace.moduleAliasesSrc[filter] == defn.module
     if filter[0] == "(":
         if filter[-1] == ")":
             return defn.kind == "record" and match_str_or_regex_type(filter[1:-1], defn.name)
