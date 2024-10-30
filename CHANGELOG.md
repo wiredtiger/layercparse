@@ -1,5 +1,9 @@
 # Change log
 
+### 2024-10-30 version 0.3.0
+
+* Add local caching.
+
 ### 2024-10-30 version 0.2.0
 
 * Add source scan/stat tool.

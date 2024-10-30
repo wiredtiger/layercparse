@@ -11,4 +11,4 @@ from .access import *
 from .macro import *
 from .macroexpand import *
 
-LAYERCPARSE_VERSION = "0.2.2"
+LAYERCPARSE_VERSION = "0.3.0"
