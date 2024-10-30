@@ -29,6 +29,7 @@ def main():
     # print(" ===== Scan")
     for macro in wt_defs.extraMacros:
         _globals.addMacro(**macro)
+    _globals.scanFiles(files)
     # _globals.scanFiles(files, twopass=True, multithread=False)
     # print(" ===== Globals:")
     # pprint(_globals, width=120, compact=False)
