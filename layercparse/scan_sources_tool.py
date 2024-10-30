@@ -9,6 +9,7 @@ This script scans WiredTiger.
 import sys, os, enum
 import pickle, hashlib
 import argparse
+from glob import glob
 from dataclasses import dataclass, field, is_dataclass, fields
 
 import regex
@@ -312,6 +313,10 @@ def EnumFromStr(type, val: str) -> type:
         print(f"Invalid value: '{val}'. Should be one of: {', '.join(e.name for e in type)}")
         sys.exit(1)
 
+def script_files_list() -> list[str]:
+    p = os.path
+    return glob(p.realpath(p.join(p.dirname(p.realpath(__file__)), "..", "**/*.py")), recursive=True)
+
 class MyFormatter(argparse.RawDescriptionHelpFormatter):
     def __init__(self, *args, **kwargs):
         super().__init__(max_help_position=26, *args, **kwargs)
@@ -453,7 +458,7 @@ def list_contents() -> None:
                 print(f"    {fieldname} [{defn.module}] {'private' if defn.is_private else 'public'}")
 
 @cache.cached(fileFn=lambda *args, **kwargs: "globals",
-              depsFn=lambda files, *args, **kwargs: files)
+              depsFn=lambda files, *args, **kwargs: files + script_files_list())
 def load_globals(files: list[str], extraMacros: list[dict]) -> Codebase:
     ret = Codebase()
     for macro in extraMacros:
@@ -462,7 +467,7 @@ def load_globals(files: list[str], extraMacros: list[dict]) -> Codebase:
     return ret
 
 @cache.cached(fileFn=lambda _: "access",
-              depsFn=lambda files: files)
+              depsFn=lambda files: files + script_files_list())
 def load_access(files: list[str]) -> list[Access]:
     ret = []
     for res in AccessCheck(_globals).xscan(
@@ -478,7 +483,7 @@ def load_access(files: list[str]) -> list[Access]:
     return ret
 
 @cache.cached(fileFn=lambda _: "stats.",
-              depsFn=lambda files: files,
+              depsFn=lambda files: files + script_files_list(),
               suffixFn=lambda _: hashlib.sha1(pickle.dumps(_args)).hexdigest())
 def load_stats(files: list[str]) -> tuple[AccessSrc, AccessSrc]:
     access_stats = AccessSrc()
