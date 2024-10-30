@@ -457,8 +457,13 @@ def list_contents() -> None:
                 # print(f"{defn.locationStr()} ..... {'private' if defn.is_private else 'public'} {fieldname}")
                 print(f"    {fieldname} [{defn.module}] {'private' if defn.is_private else 'public'}")
 
-@cache.cached(file="globals",
-              deps=lambda files, *args, **kwargs: files + script_files_list())
+_script_files = script_files_list()
+
+def _hashstr(obj: Any, sz: int = 8) -> str:
+    return hashlib.sha1(pickle.dumps(obj)).hexdigest()[:sz]
+
+@cache.cached(file=lambda files, *args, **kwargs: "globals." + _hashstr(files + _script_files),
+              deps=lambda files, *args, **kwargs: files + _script_files)
 def load_globals(files: list[str], extraMacros: list[dict]) -> Codebase:
     ret = Codebase()
     for macro in extraMacros:
@@ -466,8 +471,8 @@ def load_globals(files: list[str], extraMacros: list[dict]) -> Codebase:
     ret.scanFiles(files)
     return ret
 
-@cache.cached(file="access",
-              deps=lambda files: files + script_files_list())
+@cache.cached(file=lambda files, *args, **kwargs: "access." + _hashstr(files + _script_files),
+              deps=lambda files: files + _script_files)
 def load_access(files: list[str]) -> list[Access]:
     ret = []
     for res in AccessCheck(_globals).xscan(
@@ -482,9 +487,9 @@ def load_access(files: list[str]) -> list[Access]:
             ret.append(access)
     return ret
 
-@cache.cached(file="stats.",
-              deps=lambda files: files + script_files_list(),
-              suffix=lambda _: hashlib.sha1(pickle.dumps(_args)).hexdigest())
+@cache.cached(file=lambda files, *args, **kwargs: "stats." + _hashstr(files + _script_files),
+              deps=lambda files: files + _script_files,
+              suffix=lambda _: "." + _hashstr(_args, 16))
 def load_stats(files: list[str]) -> tuple[AccessSrc, AccessSrc]:
     access_stats = AccessSrc()
     access_stats_r = AccessSrc()
