@@ -9,12 +9,12 @@ import pickle
 from .internal import *
 from . import workspace
 
-cachedir = ".parsecache"
+cachedir = "build/.parsecache"  # Relative to workspace.rootPath
 
 use_cache = True
 
 def getcachedir() -> str:
-    return os.path.join(workspace.rootPath, "build", cachedir)
+    return os.path.join(workspace.rootPath, cachedir)
 
 def clearcache():
     if not workspace.rootPath:

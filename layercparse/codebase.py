@@ -1,5 +1,5 @@
 import regex
-import multiprocessing
+import multiprocessing, signal
 from dataclasses import dataclass, field
 from typing import Iterable, Any
 
@@ -364,39 +364,6 @@ class Codebase:
         with ScopePush(file=File(fname)):
             self.updateMacroFromText(scope_file().read())
 
-    # def scanFiles__(self, files: Iterable[str], twopass = True, multithread = True) -> None:
-    #     if twopass:
-    #         for fname in files:
-    #             # if get_file_priority(fname) <= 1:
-    #             self.updateMacroFromFile(fname)
-    #         if not multithread:
-    #             for fname in files:
-    #                 # if fname == "/Users/y.ershov/src/wt-mod/src/conn/conn_handle.c":
-    #                 self.updateFromFile(fname, expand_preproc=True)
-    #         else:
-    #             init_multithreading()
-    #             with multiprocessing.Pool(processes=multiprocessing.cpu_count() + 1) as pool:
-    #                 for fname, txt, insertlist in pool.starmap(
-    #                             Codebase._preprocess_file_for_multi__,
-    #                             ((self, fname) for fname in files)):
-    #                     DEBUG2(" ---", f"File: {fname}")
-    #                     with ScopePush(file=File(fname)):
-    #                         scope_file().read()
-    #                         scope_file().updateLineInfoWithInsertList(insertlist)
-    #                         self.updateFromText(txt, do_preproc=False)
-    #     else:
-    #         for fname in files:
-    #             self.updateFromFile(fname, expand_preproc=False)
-
-    # @staticmethod
-    # def _preprocess_file_for_multi__(self: 'Codebase', fname: str) -> tuple[str, str, InsertList]:
-    #     # Return: (fname, expanded_file_content, insert_list)
-    #     expander = MacroExpander()
-    #     return (fname,
-    #             expander.expand(file_content(fname), self.macros),
-    #             # Tuple evaluation is left-to-right, so the insert_list are ready
-    #             expander.insert_list)
-
     def scanFiles(self, files: Iterable[str], twopass = True, multithread = True) -> None:
         if twopass:
             for fname in files:
@@ -408,7 +375,9 @@ class Codebase:
                     self.updateFromFile(fname, expand_preproc=True)
             else:
                 init_multithreading()
-                with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
+                with multiprocessing.Pool(processes=multiprocessing.cpu_count(),
+                                          initializer=signal.signal,
+                                          initargs=(signal.SIGINT, signal.SIG_IGN)) as pool:
                     for res in pool.starmap(
                                 Codebase._preprocess_file_for_multi,
                                 ((self, fname) for fname in files)):

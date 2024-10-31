@@ -1,5 +1,5 @@
 import regex
-import multiprocessing
+import multiprocessing, signal
 import itertools
 from dataclasses import dataclass, field
 from typing import Iterable, Any
@@ -436,7 +436,9 @@ class AccessCheck:
                     yield from self._scan_function(defn, *args, **kwargs)
         else:
             init_multithreading()
-            with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
+            with multiprocessing.Pool(processes=multiprocessing.cpu_count(),
+                                      initializer=signal.signal,
+                                      initargs=(signal.SIGINT, signal.SIG_IGN)) as pool:
                 for res in pool.starmap(
                         AccessCheck._check_function_name_for_multiproc,
                         itertools.chain(
