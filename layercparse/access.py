@@ -147,6 +147,7 @@ class AccessField(AccessEventBase):
     "Report access to a field '(type of X)->a'"
     typename: str
     field: str
+    offset: int
 
 AccessEvent: TypeAlias = AccessMacroExpand | AccessGlobalName | AccessFieldChain | AccessField
 
@@ -404,7 +405,7 @@ class AccessCheck:
                 DEBUG3(_LOC(chain.offset), f"Field access chain: {chain}")
                 for field in chain.members:
                     if on_field_access:
-                        yield from _yield_if_not_none(on_field_access(AccessField(defn, expr_type, field)))
+                        yield from _yield_if_not_none(on_field_access(AccessField(defn, expr_type, field, chain.offset)))
                     DEBUG3(_LOC(chain.offset), f"Field access: {expr_type}->{field}")
                     _check_access_to_field(expr_type, field, chain.offset)
                     if not (expr_type := self._globals.get_field_type(expr_type, field)):

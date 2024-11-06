@@ -4,6 +4,7 @@ import itertools
 import regex
 from .ctoken import *
 from .statement import clean_tokens_decl, scan_defn_ctype
+from .workspace import scope, Scope
 
 def get_base_type(clean_tokens: TokenList) -> str:
     type = TokenList((filter(lambda x:
@@ -21,6 +22,10 @@ class Variable:
     preComment: Token | None = None
     postComment: Token | None = None
     end: str | None = None
+    scope: Scope = field(default_factory=Scope.empty, repr=False)
+
+    def __post_init__(self):
+        self.scope = scope()
 
     def short_repr(self) -> str:
         return f"Variable({self.name} : {self.typename})"

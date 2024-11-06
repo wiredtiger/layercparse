@@ -6,6 +6,7 @@ from .ctoken import *
 from .statement import *
 from .variable import *
 from .workspace import *
+from .workspace import scope, Scope
 
 class RecordKind(enum.Enum):
     UNDEF = 0
@@ -27,6 +28,10 @@ class RecordParts:
     nested: 'list[RecordParts] | None' = None
     parent: 'RecordParts | None' = None
     is_unnamed: bool = False
+    scope: Scope = field(default_factory=Scope.empty, repr=False)
+
+    def __post_init__(self):
+        self.scope = scope()
 
     def short_repr(self) -> str:
         ret = ["Record(", self.name.value, " : ", repr(self.recordKind)]

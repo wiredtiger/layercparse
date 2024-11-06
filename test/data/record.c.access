@@ -19,7 +19,7 @@ data/record.c:84:8: debug3: Record: ACCESS1 (record) data/record.c:84:8: [module
   member: Variable(Token(idx=10, range=(21, 22), value='y') : [16:20] 〈char〉)
   member: Variable(Token(idx=20, range=(66, 67), value='z') : [35:42] 〈ACCESS2〉)
   nested: ACCESS2)
-data/record.c:7:7: debug3: Record: ACCESS2 (record) data/record.c:7:7: [module1] private Record(ACCESS2 : <RecordKind.STRUCT: 1>
+data/record.c:7:7: debug3: Record: ACCESS2 (record) data/record.c:87:12: [module1] private Record(ACCESS2 : <RecordKind.STRUCT: 1>
   member: Variable(Token(idx=4, range=(13, 14), value='z') : [9:12] 〈int〉)
   vardef: Variable(Token(idx=20, range=(66, 67), value='z') : [35:42] 〈ACCESS2〉))
 data/record.c:7:7: info: Global variables of record 'ACCESS2' are ignored {ignored_global}
@@ -31,12 +31,12 @@ data/record.c:97:8: debug3: Record: unnamed_members (record) data/record.c:97:8:
   member: Variable(Token(idx=10, range=(43, 50), value='member2') : [38:42] 〈char〉)
   member: Variable(Token(idx=10, range=(93, 102), value='__padding') : [88:92] 〈char〉)
   nested: (data/record.c:98:12:))
-data/record.c:2:12: debug3: Record: (data/record.c:98:12:) (record) data/record.c:2:12: [] public Record((data/record.c:98:12:) : <RecordKind.UNION: 2>
+data/record.c:2:12: debug3: Record: (data/record.c:98:12:) (record) data/record.c:98:12: [] public Record((data/record.c:98:12:) : <RecordKind.UNION: 2>
   member: Variable(Token(idx=4, range=(17, 24), value='member1') : [13:16] 〈int〉)
   member: Variable(Token(idx=10, range=(43, 50), value='member2') : [38:42] 〈char〉)
   member: Variable(Token(idx=10, range=(93, 102), value='__padding') : [88:92] 〈char〉)
   nested: (data/record.c:99:17:))
-data/record.c:3:5: debug3: Record: (data/record.c:99:17:) (record) data/record.c:3:5: [] public Record((data/record.c:99:17:) : <RecordKind.STRUCT: 1>
+data/record.c:3:5: debug3: Record: (data/record.c:99:17:) (record) data/record.c:99:17: [] public Record((data/record.c:99:17:) : <RecordKind.STRUCT: 1>
   member: Variable(Token(idx=4, range=(17, 24), value='member1') : [13:16] 〈int〉)
   member: Variable(Token(idx=10, range=(43, 50), value='member2') : [38:42] 〈char〉))
 data/record.c:107:8: debug3: Record: __wt_rwlock (record) data/record.c:107:8: [] public Record(__wt_rwlock : <RecordKind.STRUCT: 1>
@@ -49,13 +49,13 @@ data/record.c:107:8: debug3: Record: __wt_rwlock (record) data/record.c:107:8: [
   member: Variable(Token(idx=59, range=(812, 824), value='cond_readers') : [800:810] 〈WT_CONDVAR〉)
   member: Variable(Token(idx=68, range=(865, 877), value='cond_writers') : [853:863] 〈WT_CONDVAR〉)
   nested: (data/record.c:108:21:))
-data/record.c:7:15: debug3: Record: (data/record.c:108:21:) (record) data/record.c:7:15: [] public Record((data/record.c:108:21:) : <RecordKind.UNION: 2>
+data/record.c:7:15: debug3: Record: (data/record.c:108:21:) (record) data/record.c:108:21: [] public Record((data/record.c:108:21:) : <RecordKind.UNION: 2>
   member: Variable(Token(idx=4, range=(18, 19), value='v') : [9:17] 〈uint64_t〉)
   member: Variable(Token(idx=14, range=(390, 391), value='s') : [61:388] 〈(data/record.c:110:17:)〉)
   vardef: Variable(Token(idx=10, range=(442, 443), value='u') : [43:440] 〈(data/record.c:108:21:)〉)
   nested: (data/record.c:110:17:))
 data/record.c:7:15: info: Global variables of record '(data/record.c:108:21:)' are ignored {ignored_global}
-data/record.c:8:10: debug3: Record: (data/record.c:110:17:) (record) data/record.c:8:10: [] public Record((data/record.c:110:17:) : <RecordKind.STRUCT: 1>
+data/record.c:8:10: debug3: Record: (data/record.c:110:17:) (record) data/record.c:110:17: [] public Record((data/record.c:110:17:) : <RecordKind.STRUCT: 1>
   member: Variable(Token(idx=4, range=(21, 28), value='current') : [13:20] 〈uint8_t〉)
   member: Variable(Token(idx=12, range=(79, 83), value='next') : [71:78] 〈uint8_t〉)
   member: Variable(Token(idx=20, range=(144, 150), value='reader') : [136:143] 〈uint8_t〉)
@@ -271,7 +271,7 @@ data/record.c:67:12: [module2] '__wti_module2_func3': debug3: Field access: S2->
 data/record.c:67:12: [module2] '__wti_module2_func3': warning: Can't deduce type of member 'x' in __wti_module1_func2->x {type_deduce_member}
 data/record.c:74:5: debug3: Checking func_local_struct (function) data/record.c:74:5: [] public Function(Token(idx=99, range=(1287, 1304), value='func_local_struct') (Token(idx=100, range=(1305, 1318), value='int a, char b'))) : [1283:1286] 〈int〉
 data/record.c:74:5: debug: Checking function [] func_local_struct
-data/record.c:75:13: debug3: Record: (data/record.c:126:25:) (record) data/record.c:75:13: [] public Record((data/record.c:126:25:) : <RecordKind.STRUCT: 1>
+data/record.c:75:13: debug3: Record: (data/record.c:126:25:) (record) data/record.c:126:25: [] public Record((data/record.c:126:25:) : <RecordKind.STRUCT: 1>
   member: Variable(Token(idx=4, range=(12, 14), value='s1') : [9:11] 〈S1〉)
   member: Variable(Token(idx=10, range=(27, 29), value='s2') : [24:26] 〈S2〉)
   vardef: Variable(Token(idx=6, range=(1371, 1380), value='local_str') : [1334:1369] 〈(data/record.c:126:25:)〉))

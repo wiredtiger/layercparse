@@ -21,15 +21,17 @@ _args: argparse.Namespace
 
 @dataclass
 class AccessDst:
-    mod:     dict[str, int] | None = None                                           # module
-    file:    dict[tuple[str, str], int] | None = None                               # module, file
-    full:   dict[tuple[str, str, tuple[int, int], str, str], int] | None = None  # module, file, linecol, name, kind
+    mod:  dict[str, int] | None = None                                         # module
+    file: dict[tuple[str, str], int] | None = None                             # module, file
+    defn: dict[tuple[str, str, tuple[int, int], str, str], int] | None = None  # module, file, linecol, name, kind
+    full: dict[tuple[str, str, tuple[int, int], str, str, str], int] | None = None  # module, file, linecol, name, kind, snippet
 
 @dataclass
 class AccessSrc:
-    mod:   dict[str, AccessDst] | None = None                                           # module
-    file:  dict[tuple[str, str], AccessDst] | None = None                               # module, file
-    full: dict[tuple[str, str, tuple[int, int], str, str], AccessDst] | None = None  # module, file, linecol, name, kind
+    mod:  dict[str, AccessDst] | None = None                                         # module
+    file: dict[tuple[str, str], AccessDst] | None = None                             # module, file
+    defn: dict[tuple[str, str, tuple[int, int], str, str], AccessDst] | None = None  # module, file, linecol, name, kind
+    full: dict[tuple[str, str, tuple[int, int], str, str, str], AccessDst] | None = None  # module, file, linecol, name, kind, snippet
 
 def access_mod_to_str(mod: str):
     return (f"[{mod}]", )
@@ -37,8 +39,22 @@ def access_mod_to_str(mod: str):
 def access_file_to_str(file: tuple[str, str]):
     return (f"[{file[0]}]", f"{file[1]}")
 
-def access_thing_to_str(full: tuple[str, str, tuple[int, int], str, str]):
-    return (f"[{full[0]}]", f"{full[1]}:{full[2][0]}:{full[2][1]}:", f"{full[4]}", f"{full[3]}")
+def access_defn_to_str(full: tuple[str, str, tuple[int, int], str, str]):
+    return (f"[{full[0]}]", f"{full[1]}:{full[2][0]}:", f"{full[4]}", f"{full[3]}")
+
+# Returns the entire line at the given offset
+def line_at_offset(txt: str, offset: int | None) -> str:
+    if offset is None or offset >= len(txt):
+        return ""
+    begin = txt.rfind("\n", 0, offset) + 1
+    end = txt.find("\n", offset)
+    if end == -1:
+        end = len(txt)
+    return txt[begin:end]
+
+def access_full_to_str(full: tuple[str, str, tuple[int, int], str, str, str]):
+    return (f"[{full[0]}]", f"{full[1]}:{full[2][0]}:", f"{full[4]}", f"{full[3]}",
+            f"\n{full[5]}" if full[5] else "")
 
 # Format output by columns
 def format_columns(rows: list[tuple]) -> list[str]:
@@ -49,7 +65,8 @@ def format_columns(rows: list[tuple]) -> list[str]:
 def print_columns(rows: list[tuple]):
     print(*format_columns(rows), sep="\n")
 
-detailsFunc = {"mod": access_mod_to_str, "file": access_file_to_str, "full": access_thing_to_str}
+detailsFunc = {"mod": access_mod_to_str, "file": access_file_to_str,
+               "defn": access_defn_to_str, "full": access_full_to_str}
 
 def is_addable_type(type) -> bool:
     return type in (int, float, str, list)
@@ -96,26 +113,34 @@ def update_stats(stats, from_what: str, access_from, to_what, access_to, val):
 class LocationId:
     mod: str
     file: str
-    lineCol: tuple[int, int]
+    lineColDefn: tuple[int, int]
+    lineColUse: tuple[int, int]
     kind: str
     name: str
+    snippet: str = ""
     parentname: str | None = None
 
     def getName(self):
         return self.name if not self.parentname else f"{self.parentname}.{self.name}"
 
     @staticmethod
-    def fromDefn(defn: Definition):
+    def fromDefn(defn: Definition, useOffset: int | None = None, snippet = ""):
+        lineColDefn = defn.scope.offsetToLinePos(defn.offset)
+        lineColUse = defn.scope.offsetToLinePos(useOffset) if useOffset is not None else lineColDefn
         return LocationId(mod=defn.module,
                           file=defn.scope.file.name,
-                          lineCol=defn.scope.file.offsetToLinePos(defn.offset),
+                          lineColDefn=lineColDefn,
+                          lineColUse=lineColUse,
                           name=defn.name,
-                          kind=defn.kind)
+                          kind=defn.kind,
+                          snippet=snippet)
     @staticmethod
     def fromField(defntype: Definition, defnfield: Definition):
+        lineColDefn = defnfield.scope.offsetToLinePos(defnfield.offset)
         return LocationId(mod=defntype.module,
                           file=defntype.scope.file.name,
-                          lineCol=defntype.scope.file.offsetToLinePos(defnfield.offset),
+                          lineColDefn=lineColDefn,
+                          lineColUse=lineColDefn,
                           name=defnfield.name,
                           parentname=defntype.name,
                           kind="field")
@@ -136,7 +161,7 @@ def on_macro_expand(arg: AccessMacroExpand) -> list[Access] | None:
     ret: list[Access] = []
     for src, exps in arg.exps.expansions.items():
         defnSrc = _globals.macros[src] if src else arg.src
-        locSrc = LocationId.fromDefn(defnSrc)
+        locSrc = LocationId.fromDefn(defnSrc, arg.exps.range[0])
         for dst in exps:
             ret.append(Access(AccessType.MACRO,
                               locSrc,
@@ -145,7 +170,8 @@ def on_macro_expand(arg: AccessMacroExpand) -> list[Access] | None:
 
 def on_global_name(arg: AccessGlobalName) -> list[Access] | None:
     return [Access(AccessType.CALL,
-                   LocationId.fromDefn(arg.src),
+                   LocationId.fromDefn(arg.src, arg.src.offset + arg.range[0],
+                                       snippet=line_at_offset(arg.src.details.body.value, arg.range[0])),
                    LocationId.fromDefn(_globals.names[arg.dst]))]
 
 # def on_field_chain(arg: AccessFieldChain) -> list[Access]:
@@ -155,7 +181,8 @@ def on_field_access(arg: AccessField) -> list[Access] | None:
     if arg.typename not in _globals.fields or arg.field not in _globals.fields[arg.typename]:
         return None
     return [Access(AccessType.FIELD,
-                   LocationId.fromDefn(arg.src),
+                   LocationId.fromDefn(arg.src, arg.src.offset + arg.offset,
+                                       snippet=line_at_offset(arg.src.details.body.value, arg.offset)),
                    LocationId.fromField(_globals.types[arg.typename], _globals.fields[arg.typename][arg.field]))]
 
 def match_str_or_regex(filter: str, value: str) -> bool:
@@ -392,12 +419,12 @@ To/from filters notation for "TO", "FROM" and "LIST" options:
                        help=argparse.SUPPRESS) # help="Debug output")
 
     group = argparser.add_argument_group(title="Level of detail selection (access report mode)")
-    group.add_argument("-d", "--detail", choices=["mod", "file", "full"],
+    group.add_argument("-d", "--detail", choices=["mod", "file", "defn", "full"],
                        help="Specify the level of detail for access report")
-    group.add_argument("--detail-from", "--df", choices=["mod", "file", "full"],
+    group.add_argument("--detail-from", "--df", choices=["mod", "file", "defn", "full"],
                        default="mod",
                        help="Specify the level of detail for access report for outgoing access")
-    group.add_argument("--detail-to", "--dt", choices=["mod", "file", "full"],
+    group.add_argument("--detail-to", "--dt", choices=["mod", "file", "defn", "full"],
                        default="mod",
                        help="Specify the level of detail for access report for incoming access")
 
@@ -458,11 +485,12 @@ def list_contents() -> None:
                 print(f"    {fieldname} [{defn.module}] {'private' if defn.is_private else 'public'}")
 
 _script_files = script_files_list()
+_version_hash = hashlib.sha1(pickle.dumps((_script_files, LAYERCPARSE_VERSION))).digest()
 
 def _hashstr(obj: Any, sz: int = 8) -> str:
-    return hashlib.sha1(pickle.dumps(obj)).hexdigest()[:sz]
+    return hashlib.sha1(pickle.dumps((obj, _version_hash))).hexdigest()[:sz]
 
-@cache.cached(file=lambda files, *args, **kwargs: "globals." + _hashstr(files + _script_files),
+@cache.cached(file=lambda files, *args, **kwargs: f"globals.{LAYERCPARSE_VERSION}." + _hashstr(files),
               deps=lambda files, *args, **kwargs: files + _script_files)
 def load_globals(files: list[str], extraMacros: list[dict]) -> Codebase:
     ret = Codebase()
@@ -471,7 +499,7 @@ def load_globals(files: list[str], extraMacros: list[dict]) -> Codebase:
     ret.scanFiles(files)
     return ret
 
-@cache.cached(file=lambda files, *args, **kwargs: "access." + _hashstr(files + _script_files),
+@cache.cached(file=lambda files, *args, **kwargs: f"access.{LAYERCPARSE_VERSION}." + _hashstr(files),
               deps=lambda files: files + _script_files)
 def load_access(files: list[str]) -> list[Access]:
     ret = []
@@ -487,7 +515,7 @@ def load_access(files: list[str]) -> list[Access]:
             ret.append(access)
     return ret
 
-@cache.cached(file=lambda files, *args, **kwargs: "stats." + _hashstr(files + _script_files),
+@cache.cached(file=lambda files, *args, **kwargs: f"stats.{LAYERCPARSE_VERSION}." + _hashstr(files),
               deps=lambda files: files + _script_files,
               suffix=lambda _: "." + _hashstr(_args, 16))
 def load_stats(files: list[str]) -> tuple[AccessSrc, AccessSrc]:
@@ -497,10 +525,12 @@ def load_stats(files: list[str]) -> tuple[AccessSrc, AccessSrc]:
     for access in filter_access_list(load_access(files)):
         stats_from = [("mod", access.src.mod),
                         ("file", (access.src.mod, access.src.file)),
-                        ("full", (access.src.mod, access.src.file, access.src.lineCol, access.src.getName(), access.src.kind))]
+                        ("defn", (access.src.mod, access.src.file, access.src.lineColDefn, access.src.getName(), access.src.kind)),
+                        ("full", (access.src.mod, access.src.file, access.src.lineColUse, access.src.getName(), access.src.kind, access.src.snippet))]
         stats_to = [("mod", access.dst.mod),
                     ("file", (access.dst.mod, access.dst.file)),
-                    ("full", (access.dst.mod, access.dst.file, access.dst.lineCol, access.dst.getName(), access.dst.kind))]
+                    ("defn", (access.dst.mod, access.dst.file, access.dst.lineColDefn, access.dst.getName(), access.dst.kind)),
+                    ("full", (access.dst.mod, access.dst.file, access.dst.lineColUse, access.dst.getName(), access.dst.kind, access.dst.snippet))]
         for stat_from in stats_from:
             for stat_to in stats_to:
                 update_stats(access_stats, *stat_from, *stat_to, 1)
@@ -567,7 +597,7 @@ def scan_sources_main(extraFiles: list[str], modules: list[Module], extraMacros:
     if getattr(stats, detail_src):
         for key, val in sorted(getattr(stats, detail_src).items()):
             print(*SrcDetails(key), dir_indicator) # type: ignore[operator] # Cannot call function of unknown type
-            print_columns([(*DstDetails(key2), ":", val2) for key2, val2 in sorted(getattr(val, detail_dst).items())]) # type: ignore[operator] # Cannot call function of unknown type
+            print_columns([(*DstDetails(key2), ":" if val2 > 1 else "", val2 if val2 > 1 else "") for key2, val2 in sorted(getattr(val, detail_dst).items())]) # type: ignore[operator] # Cannot call function of unknown type
             # for key2, val2 in sorted(getattr(val, detail_dst).items()):
             #     print(f"  {DstDetails(key2)} : {val2}")
 

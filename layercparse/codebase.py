@@ -220,7 +220,7 @@ class Codebase:
         _dict_upsert_def(self.types, Definition(
             name=record.name.value,
             kind="record",
-            scope=scope(),
+            scope=record.scope,
             offset=record.name.range[0],
             module=local_module,
             is_private=is_private_record,
@@ -239,7 +239,7 @@ class Codebase:
                 _dict_upsert_def(self.fields[record.name.value], Definition(
                     name=member.name.value,
                     kind="field",
-                    scope=scope(),
+                    scope=member.scope,
                     offset=member.name.range[0],
                     module=local_module,
                     is_private=is_private_field,
@@ -307,7 +307,7 @@ class Codebase:
                             defn = Definition(
                                 name=func.name.value,
                                 kind="function",
-                                scope=scope(),
+                                scope=func.scope,
                                 offset=func.name.range[0],
                                 module=local_module,
                                 is_private=is_private,

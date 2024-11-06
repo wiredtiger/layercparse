@@ -6,6 +6,7 @@ from .ctoken import *
 from .statement import *
 from .variable import *
 from .record import *
+from .workspace import scope, Scope
 
 @dataclass
 class FunctionParts:
@@ -17,6 +18,10 @@ class FunctionParts:
     postComment: Token | None = None
     is_type_const: bool = False
     is_type_static: bool = False
+    scope: Scope = field(default_factory=Scope.empty, repr=False)
+
+    def __post_init__(self):
+        self.scope = scope()
 
     def short_repr(self) -> str:
         ret = f"Function({self.name} ({self.args})) : {self.typename}"
