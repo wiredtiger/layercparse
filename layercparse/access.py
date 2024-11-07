@@ -115,7 +115,8 @@ def member_access_chains_fast(txt: str, offset_in_parent: int = 0) -> Iterable[A
         offset = offset_in_parent + prev_match.start()
 
         yield AccessChain(prev_token.value,
-                          list(zip(match.allcaptures()[1], match.allspans()[1])), # type: ignore[misc] # Tuple index out of range
+                          list(zip(match.allcaptures()[1], # type: ignore[misc] # Tuple index out of range
+                                   (rangeShift(r, offset_in_parent) for r in match.allspans()[1]))), # type: ignore[misc] # Tuple index out of range
                           (offset, offset_in_parent + match.end()))
 
         if prev_token.getKind() == "(":

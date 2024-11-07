@@ -106,7 +106,7 @@ data/record.c:30:26: [module1] 'func': debug3: Field access: S1->x
 data/record.c:30:11: [module1] 'func': debug2: Access chain: ((S2*)s2)->s
 data/record.c:30:11: [module1] 'func': debug3: Access type: S2
 data/record.c:30:11: [module1] 'func': debug3: Field access chain: ((S2*)s2)->s
-data/record.c:26:5: [module1] 'func': debug3: Field access: S2->s
+data/record.c:30:22: [module1] 'func': debug3: Field access: S2->s
 data/record.c:31:11: [module1] 'func': debug2: Access chain: ((S2*)s2 + 1)->s
 data/record.c:31:11: [module1] 'func': debug3: Access type: S2
 data/record.c:31:11: [module1] 'func': debug3: Field access chain: ((S2*)s2 + 1)->s
@@ -118,7 +118,7 @@ data/record.c:31:30: [module1] 'func': debug3: Field access: S1->x
 data/record.c:31:11: [module1] 'func': debug2: Access chain: ((S2*)s2 + 1)->s
 data/record.c:31:11: [module1] 'func': debug3: Access type: S2
 data/record.c:31:11: [module1] 'func': debug3: Field access chain: ((S2*)s2 + 1)->s
-data/record.c:27:1: [module1] 'func': debug3: Field access: S2->s
+data/record.c:31:26: [module1] 'func': debug3: Field access: S2->s
 data/record.c:32:11: [module1] 'func': debug2: Access chain: ((S2*)s2 + 1)->s
 data/record.c:32:11: [module1] 'func': debug3: Access type: S2
 data/record.c:32:11: [module1] 'func': debug3: Field access chain: ((S2*)s2 + 1)->s
@@ -130,7 +130,7 @@ data/record.c:32:30: [module1] 'func': debug3: Field access: S1->x
 data/record.c:32:11: [module1] 'func': debug2: Access chain: ((S2*)s2 + 1)->s
 data/record.c:32:11: [module1] 'func': debug3: Access type: S2
 data/record.c:32:11: [module1] 'func': debug3: Field access chain: ((S2*)s2 + 1)->s
-data/record.c:27:1: [module1] 'func': debug3: Field access: S2->s
+data/record.c:32:26: [module1] 'func': debug3: Field access: S2->s
 data/record.c:33:11: [module1] 'func': debug2: Access chain: ((S2*)s2[10])->s
 data/record.c:33:11: [module1] 'func': debug3: Access type: S2
 data/record.c:33:11: [module1] 'func': debug3: Field access chain: ((S2*)s2[10])->s
@@ -142,7 +142,7 @@ data/record.c:33:30: [module1] 'func': debug3: Field access: S1->x
 data/record.c:33:11: [module1] 'func': debug2: Access chain: ((S2*)s2[10])->s
 data/record.c:33:11: [module1] 'func': debug3: Access type: S2
 data/record.c:33:11: [module1] 'func': debug3: Field access chain: ((S2*)s2[10])->s
-data/record.c:27:1: [module1] 'func': debug3: Field access: S2->s
+data/record.c:33:26: [module1] 'func': debug3: Field access: S2->s
 data/record.c:34:17: [module1] 'func': debug2: Access chain: ((S2*)s2[10])->s
 data/record.c:34:17: [module1] 'func': debug3: Access type: S2
 data/record.c:34:17: [module1] 'func': debug3: Field access chain: ((S2*)s2[10])->s
@@ -154,7 +154,7 @@ data/record.c:34:36: [module1] 'func': debug3: Field access: S1->x
 data/record.c:34:17: [module1] 'func': debug2: Access chain: ((S2*)s2[10])->s
 data/record.c:34:17: [module1] 'func': debug3: Access type: S2
 data/record.c:34:17: [module1] 'func': debug3: Field access chain: ((S2*)s2[10])->s
-data/record.c:27:1: [module1] 'func': debug3: Field access: S2->s
+data/record.c:34:32: [module1] 'func': debug3: Field access: S2->s
 data/record.c:34:5: [module1] 'func': debug2: Access chain: ((S2*)((S1*)((S2*)s2[10])->s)->x)->s
 data/record.c:34:5: [module1] 'func': debug3: Access type: S2
 data/record.c:34:5: [module1] 'func': debug3: Field access chain: ((S2*)((S1*)((S2*)s2[10])->s)->x)->s
@@ -162,15 +162,15 @@ data/record.c:34:40: [module1] 'func': debug3: Field access: S2->s
 data/record.c:34:17: [module1] 'func': debug2: Access chain: ((S2*)s2[10])->s
 data/record.c:34:17: [module1] 'func': debug3: Access type: S2
 data/record.c:34:17: [module1] 'func': debug3: Field access chain: ((S2*)s2[10])->s
-data/record.c:27:7: [module1] 'func': debug3: Field access: S2->s
+data/record.c:34:32: [module1] 'func': debug3: Field access: S2->s
 data/record.c:34:11: [module1] 'func': debug2: Access chain: ((S1*)((S2*)s2[10])->s)->x
 data/record.c:34:11: [module1] 'func': debug3: Access type: S1
 data/record.c:34:11: [module1] 'func': debug3: Field access chain: ((S1*)((S2*)s2[10])->s)->x
-data/record.c:28:1: [module1] 'func': debug3: Field access: S1->x
+data/record.c:34:36: [module1] 'func': debug3: Field access: S1->x
 data/record.c:34:17: [module1] 'func': debug2: Access chain: ((S2*)s2[10])->s
 data/record.c:34:17: [module1] 'func': debug3: Access type: S2
 data/record.c:34:17: [module1] 'func': debug3: Field access chain: ((S2*)s2[10])->s
-data/record.c:27:1: [module1] 'func': debug3: Field access: S2->s
+data/record.c:34:32: [module1] 'func': debug3: Field access: S2->s
 data/record.c:35:9: [module1] 'func': debug2: Access chain: s2->s.y
 data/record.c:35:9: [module1] 'func': debug3: Access type: S2
 data/record.c:35:9: [module1] 'func': debug3: Field access chain: s2->s.y
@@ -183,8 +183,8 @@ data/record.c:35:24: [module1] 'func': debug3: Field access: S0->z
 data/record.c:35:9: [module1] 'func': debug2: Access chain: s2->s.y
 data/record.c:35:9: [module1] 'func': debug3: Access type: S2
 data/record.c:35:9: [module1] 'func': debug3: Field access chain: s2->s.y
-data/record.c:25:7: [module1] 'func': debug3: Field access: S2->s
-data/record.c:26:1: [module1] 'func': debug3: Field access: S1->y
+data/record.c:35:13: [module1] 'func': debug3: Field access: S2->s
+data/record.c:35:18: [module1] 'func': debug3: Field access: S1->y
 data/record.c:36:5: [module1] 'func': debug2: Access chain: xxx->s2
 data/record.c:36:5: [module1] 'func': warning: Can't deduce type of expression xxx->s2 {type_deduce_expr}
 data/record.c:37:5: [module1] 'func': debug2: Access chain: xxx->s2
@@ -241,18 +241,18 @@ data/record.c:48:27: [module1] 'func': debug3: Field access: S0->z
 data/record.c:48:17: [module1] 'func': debug2: Access chain: s2->qwe1
 data/record.c:48:17: [module1] 'func': debug3: Access type: S2
 data/record.c:48:17: [module1] 'func': debug3: Field access chain: s2->qwe1
-data/record.c:25:4: [module1] 'func': debug3: Field access: S2->qwe1
-data/record.c:25:4: [module1] 'func': warning: Can't deduce type of member 'qwe1' in s2->qwe1 {type_deduce_member}
+data/record.c:48:21: [module1] 'func': debug3: Field access: S2->qwe1
+data/record.c:48:21: [module1] 'func': warning: Can't deduce type of member 'qwe1' in s2->qwe1 {type_deduce_member}
 data/record.c:48:29: [module1] 'func': debug2: Access chain: s2->qwe2
 data/record.c:48:29: [module1] 'func': debug3: Access type: S2
 data/record.c:48:29: [module1] 'func': debug3: Field access chain: s2->qwe2
-data/record.c:25:4: [module1] 'func': debug3: Field access: S2->qwe2
-data/record.c:25:4: [module1] 'func': warning: Can't deduce type of member 'qwe2' in s2->qwe2 {type_deduce_member}
+data/record.c:48:33: [module1] 'func': debug3: Field access: S2->qwe2
+data/record.c:48:33: [module1] 'func': warning: Can't deduce type of member 'qwe2' in s2->qwe2 {type_deduce_member}
 data/record.c:48:39: [module1] 'func': debug2: Access chain: s2->qwe3
 data/record.c:48:39: [module1] 'func': debug3: Access type: S2
 data/record.c:48:39: [module1] 'func': debug3: Field access chain: s2->qwe3
-data/record.c:26:3: [module1] 'func': debug3: Field access: S2->qwe3
-data/record.c:26:3: [module1] 'func': warning: Can't deduce type of member 'qwe3' in s2->qwe3 {type_deduce_member}
+data/record.c:48:43: [module1] 'func': debug3: Field access: S2->qwe3
+data/record.c:48:43: [module1] 'func': warning: Can't deduce type of member 'qwe3' in s2->qwe3 {type_deduce_member}
 data/record.c:49:5: [module1] 'func': debug2: Access chain: ((S2*)s2 ? (S1*)NULL : (S0*)NULL)->x
 data/record.c:49:5: [module1] 'func': debug3: Access type: S1
 data/record.c:49:5: [module1] 'func': debug3: Field access chain: ((S2*)s2 ? (S1*)NULL : (S0*)NULL)->x

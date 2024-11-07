@@ -218,7 +218,7 @@ def on_macro_expand(arg: AccessMacroExpand) -> list[Access] | None:
 def on_global_name(arg: AccessGlobalName) -> list[Access] | None:
     return [Access(AccessType.CALL,
                    LocationId.fromDefn(arg.src, arg.src.offset + arg.range[0],
-                                       *lines_at_range(arg.src.details.body.value, arg.range)),
+                                       *lines_at_range(arg.src.details.body.value, arg.range)), # type: ignore[union-attr] # arg.src.details.body.value
                    LocationId.fromDefn(_globals.names[arg.dst]))]
 
 # def on_field_chain(arg: AccessFieldChain) -> list[Access]:
@@ -229,7 +229,7 @@ def on_field_access(arg: AccessField) -> list[Access] | None:
         return None
     return [Access(AccessType.FIELD,
                    LocationId.fromDefn(arg.src, arg.src.offset + arg.range[0],
-                                       *lines_at_range(arg.src.details.body.value, arg.range)),
+                                       *lines_at_range(arg.src.details.body.value, arg.range)), # type: ignore[union-attr] # arg.src.details.body.value
                    LocationId.fromField(_globals.types[arg.typename], _globals.fields[arg.typename][arg.field]))]
 
 def match_str_or_regex(filter: str, value: str) -> bool:
@@ -470,7 +470,7 @@ To/from filters notation for "TO", "FROM" and "LIST" options:
 mod:  module
 file: module, file
 defn: module, file, definition's line, name, kind
-full: module, file, exact location's line, name, kind, code snippet (experimental)
+full: module, file, exact location's line, name, kind, code snippet
         """.strip())
     group.add_argument("-d", "--detail", choices=["mod", "file", "defn", "full"],
                        help="Specify the level of detail for access report")
