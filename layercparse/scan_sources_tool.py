@@ -605,6 +605,9 @@ def scan_sources_main(extraFiles: list[str], modules: list[Module], extraMacros:
         _color = True
     _args.color = None  # Clear for proper cache key
 
+    _reverse = _args.reverse
+    _args.reverse = None  # Clear for proper cache key
+
     if _args.detail:
         _args.detail_from = _args.detail_to = _args.detail
 
@@ -651,7 +654,7 @@ def scan_sources_main(extraFiles: list[str], modules: list[Module], extraMacros:
     access_stats, access_stats_r = load_stats(files)
 
     stats, src, dst, detail_src, detail_dst, dir_indicator = \
-        (access_stats, _args.from_, _args.to, _args.detail_from, _args.detail_to, "->") if not _args.reverse else \
+        (access_stats, _args.from_, _args.to, _args.detail_from, _args.detail_to, "->") if not _reverse else \
         (access_stats_r, _args.to, _args.from_, _args.detail_to, _args.detail_from, "<-")
     SrcDetails, DstDetails = detailsFunc[detail_src], detailsFunc[detail_dst]
 

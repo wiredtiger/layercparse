@@ -6,6 +6,7 @@ from typing import Iterable
 from .ctoken import *
 
 def clean_tokens_decl(clean_tokens: TokenList, clean_static_const: bool = True) -> TokenList:
+    """Clean tokens for variable declaration detection"""
     i = 0
     while i < len(clean_tokens):
         if clean_tokens[i].value in ignore_type_keywords:
@@ -71,6 +72,7 @@ def scan_defn_ctype(clean_tokens: TokenList, ignore_static_const: bool = True) -
 
 @dataclass
 class StatementKind:
+    """Detect the kind of a statement"""
     is_comment: bool | None = None
     is_preproc: bool | None = None
     is_typedef: bool | None = None
@@ -225,6 +227,7 @@ class StatementKind:
 
 @dataclass
 class Statement:
+    """Statement is a list of tokens that resemble a C statement"""
     tokens: TokenList
     kind: StatementKind | None = None
 
@@ -260,6 +263,7 @@ _reg_preproc_only = regex.compile(r"""
 
 # class StatementList: ...
 class StatementList(list[Statement]):
+    """The entire C program is a list of statements"""
     def range(self):
         return self[0].range[0], self[-1].range[1] if len(self) > 0 else (0, 0)
 

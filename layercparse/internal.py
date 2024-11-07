@@ -5,18 +5,20 @@ from typing import Union, Any, Optional, TYPE_CHECKING, cast, Iterator, TypeAlia
 from typing import Generator, Iterable, Callable, NamedTuple, TypedDict, Literal
 import regex
 
+# This regex parses C code into fat tokens.
+# Fat token is a highlevel thing like a string, a comment, a block, etc.
 re_token = r'''(?(DEFINE)(?<TOKEN>
-    (?> (?: \# | \/\/ ) (?: [^\\\n] | \\. )*+ \n) |
-    (?> \/\* (?: [^*] | \*[^\/] )*+ \*\/ ) |
-    (?> " (?> [^\\"] | \\. )* " ) |
-    (?> ' (?> [^\\'] | \\. )* ' ) |
-    (?> \{ (?&TOKEN)*+ \} ) |
-    (?> \( (?&TOKEN)*+ \) ) |
-    (?> \[ (?&TOKEN)*+ \] ) |
-    (?>\n) |
-    [\r\t ]++ |
-    (?>\\.) |
-    (?> , | ; | \? | : |
+    (?> (?: \# | \/\/ ) (?: [^\\\n] | \\. )*+ \n) |                     # //-comment or preprocessor directive
+    (?> \/\* (?: [^*] | \*[^\/] )*+ \*\/ ) |                            # /*-comment
+    (?> " (?> [^\\"] | \\. )* " ) |                                     # ""-string
+    (?> ' (?> [^\\'] | \\. )* ' ) |                                     # ''-string
+    (?> \{ (?&TOKEN)*+ \} ) |                                           # {}-block
+    (?> \( (?&TOKEN)*+ \) ) |                                           # ()-block
+    (?> \[ (?&TOKEN)*+ \] ) |                                           # []-block
+    (?>\n) |                                                            # newline
+    [\r\t ]++ |                                                         # whitespace
+    (?>\\.) |                                                           # escaped char
+    (?> , | ; | \? | : |                                                # C operators
         ! | \~ |
         <<= | >>= |
         \+\+ | \-\- | \-> | \+\+ | \-\- | << | >> | <= | >= | == | != |
@@ -25,28 +27,40 @@ re_token = r'''(?(DEFINE)(?<TOKEN>
         \& | \^ | \| | = |
         \@ # invalid charachter
     ) |
-    \w++
+    \w++                                                                # word
 ))''' # /nxs;
 
+# VERSION1 enables all types of advanced regex features.
+# DOTALL makes dot match newline.
+# VERBOSE allows comments and whitespace in the regex.
 regex.DEFAULT_VERSION = regex.RegexFlag.VERSION1
 re_flags = regex.RegexFlag.VERSION1 | regex.RegexFlag.DOTALL | \
            regex.RegexFlag.VERBOSE # | regex.RegexFlag.POSIX
 
+# Precompiled regex.
 reg_token = regex.compile(r"(?&TOKEN)"+re_token, re_flags)
+# Same for reverse search.
 reg_token_r = regex.compile(r"(?&TOKEN)"+re_token, re_flags | regex.RegexFlag.REVERSE)
 
+# Range is for (start, end) pairs.
 Range: TypeAlias = tuple[int, int]
+
+# Shifts a range by an offset.
 def rangeShift(rng: Range, offset: int) -> Range:
     return (rng[0]+offset, rng[1]+offset)
 
+# Macro expansion insetion list for mappimg the original text to the expanded text.
 InsertList: TypeAlias = list[tuple[int, int]]  # (offset, delta)
 
 @dataclass
 class Expansions:
+    """A list of macro expansions that took place at a location."""
     range: Range
     expansions: dict[str, set[str]]  # name: set[expansion]
 
+# C identifier regex.
 reg_identifier = regex.compile(r"^[a-zA-Z_]\w++$", re_flags)
+# Regex to match a C type definition.
 reg_type = regex.compile(r"^[\w\[\]\(\)\*\, ]++$", re_flags)
 
 c_type_keywords = ["const", "volatile", "restrict", "static", "extern", "auto",
@@ -92,6 +106,9 @@ def file_content(fname: str) -> str:
 
 
 reg_word_char = regex.compile(r"\w", re_flags)
+
+### Multithreading ###
+# Because multithreading must be initialized once at most, we do it globally.
 
 _multithreading_initialized = False
 

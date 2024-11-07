@@ -6,6 +6,7 @@ from typing import Iterable
 from . import common
 from .internal import *
 
+# Types of fat tokens that we use.
 TokenKind: TypeAlias = Literal[
         "",   # undefined
         " ",  # space
