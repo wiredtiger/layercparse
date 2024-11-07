@@ -1,5 +1,9 @@
 # Change log
 
+### 2024-11-06 version 0.4.0
+
+* Finer module stats.
+
 ### 2024-10-30 version 0.3.0
 
 * Add local caching.

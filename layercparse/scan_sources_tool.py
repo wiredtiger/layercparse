@@ -19,19 +19,48 @@ from layercparse import cache
 _globals: Codebase
 _args: argparse.Namespace
 
+_color: bool = False
+
+class Color(enum.Enum):
+    NORM = ""
+    BRIGHT = "1"
+    DIM = "2"
+    UNDERSCORE = "4"
+    INV = "7"
+    RED = "31"
+    GREEN = "32"
+    YELLOW = "33"
+    BLUE = "34"
+    MAGENTA = "35"
+    CYAN = "36"
+    BG_GREY = "40"
+    BG_RED = "41"
+    BG_GREEN = "42"
+    BG_YELLOW = "43"
+    BG_BLUE = "44"
+    _BG_MAGENTA = "45"
+    _BG_CYAN = "46"
+
+    def __call__(self, reset: bool = True, mod: 'Color | None' = None) -> str:
+        if not _color:
+            return ""
+        reset_str = "0;" if reset else ""
+        mod_str = f"{mod.value};" if mod is not None else ""
+        return f"\x1b[{reset_str}{mod_str}{self.value}m" if _color else ""
+
 @dataclass
 class AccessDst:
     mod:  dict[str, int] | None = None                                         # module
     file: dict[tuple[str, str], int] | None = None                             # module, file
     defn: dict[tuple[str, str, tuple[int, int], str, str], int] | None = None  # module, file, linecol, name, kind
-    full: dict[tuple[str, str, tuple[int, int], str, str, str], int] | None = None  # module, file, linecol, name, kind, snippet
+    full: dict[tuple[str, str, tuple[int, int], str, str, str, tuple[int, int] | None], int] | None = None  # module, file, linecol, name, kind, snippet, range
 
 @dataclass
 class AccessSrc:
     mod:  dict[str, AccessDst] | None = None                                         # module
     file: dict[tuple[str, str], AccessDst] | None = None                             # module, file
     defn: dict[tuple[str, str, tuple[int, int], str, str], AccessDst] | None = None  # module, file, linecol, name, kind
-    full: dict[tuple[str, str, tuple[int, int], str, str, str], AccessDst] | None = None  # module, file, linecol, name, kind, snippet
+    full: dict[tuple[str, str, tuple[int, int], str, str, str, tuple[int, int] | None], AccessDst] | None = None  # module, file, linecol, name, kind, snippet, range
 
 def access_mod_to_str(mod: str):
     return (f"[{mod}]", )
@@ -40,21 +69,37 @@ def access_file_to_str(file: tuple[str, str]):
     return (f"[{file[0]}]", f"{file[1]}")
 
 def access_defn_to_str(full: tuple[str, str, tuple[int, int], str, str]):
-    return (f"[{full[0]}]", f"{full[1]}:{full[2][0]}:", f"{full[4]}", f"{full[3]}")
+    return (f"[{full[0]}]", f"{full[1]}:{full[2][0]}:{full[2][1]}:", f"{full[4]}", f"{full[3]}")
 
 # Returns the entire line at the given offset
-def line_at_offset(txt: str, offset: int | None) -> str:
-    if offset is None or offset >= len(txt):
-        return ""
-    begin = txt.rfind("\n", 0, offset) + 1
-    end = txt.find("\n", offset)
+def lines_at_range(txt: str, range_: tuple[int, int] | None) -> tuple[str, tuple[int, int] | None]:
+    if range_ is None or range_[0] >= len(txt):
+        return ("", None)
+    begin = txt.rfind("\n", 0, range_[0]) + 1
+    end = txt.find("\n", range_[1])
     if end == -1:
         end = len(txt)
-    return txt[begin:end]
+    return (txt[begin:end], (range_[0] - begin, range_[1] - begin), )
 
-def access_full_to_str(full: tuple[str, str, tuple[int, int], str, str, str]):
-    return (f"[{full[0]}]", f"{full[1]}:{full[2][0]}:", f"{full[4]}", f"{full[3]}",
-            f"\n{full[5]}" if full[5] else "")
+def access_full_to_str(full: tuple[str, str, tuple[int, int], str, str, str, tuple[int, int] | None]):
+    ret1 = (f"[{full[0]}]", f"{full[1]}:{full[2][0]}:{full[2][1]}:", f"{full[4]}", f"{full[3]}",)
+    txt = full[5]
+    if not txt:
+        return ret1 + ("",)
+    range_ = full[6]
+    if not _color:
+        return ret1 + (f"\n{txt}",)
+    if not range_:
+        return ret1 + (Color.DIM() + f"\n{txt}" + Color.NORM(),)
+    highlighted_txt = (
+        Color.DIM() +
+        txt[:range_[0]] +
+        Color.YELLOW() +
+        txt[range_[0]:range_[1]] +
+        Color.DIM() +
+        txt[range_[1]:] +
+        Color.NORM())
+    return ret1 + (f"\n{highlighted_txt}",)
 
 # Format output by columns
 def format_columns(rows: list[tuple]) -> list[str]:
@@ -118,13 +163,14 @@ class LocationId:
     kind: str
     name: str
     snippet: str = ""
+    range: tuple[int, int] | None = None
     parentname: str | None = None
 
     def getName(self):
         return self.name if not self.parentname else f"{self.parentname}.{self.name}"
 
     @staticmethod
-    def fromDefn(defn: Definition, useOffset: int | None = None, snippet = ""):
+    def fromDefn(defn: Definition, useOffset: int | None = None, snippet = "", range: tuple[int, int] | None = None):
         lineColDefn = defn.scope.offsetToLinePos(defn.offset)
         lineColUse = defn.scope.offsetToLinePos(useOffset) if useOffset is not None else lineColDefn
         return LocationId(mod=defn.module,
@@ -133,7 +179,8 @@ class LocationId:
                           lineColUse=lineColUse,
                           name=defn.name,
                           kind=defn.kind,
-                          snippet=snippet)
+                          snippet=snippet,
+                          range=range)
     @staticmethod
     def fromField(defntype: Definition, defnfield: Definition):
         lineColDefn = defnfield.scope.offsetToLinePos(defnfield.offset)
@@ -171,7 +218,7 @@ def on_macro_expand(arg: AccessMacroExpand) -> list[Access] | None:
 def on_global_name(arg: AccessGlobalName) -> list[Access] | None:
     return [Access(AccessType.CALL,
                    LocationId.fromDefn(arg.src, arg.src.offset + arg.range[0],
-                                       snippet=line_at_offset(arg.src.details.body.value, arg.range[0])),
+                                       *lines_at_range(arg.src.details.body.value, arg.range)),
                    LocationId.fromDefn(_globals.names[arg.dst]))]
 
 # def on_field_chain(arg: AccessFieldChain) -> list[Access]:
@@ -181,8 +228,8 @@ def on_field_access(arg: AccessField) -> list[Access] | None:
     if arg.typename not in _globals.fields or arg.field not in _globals.fields[arg.typename]:
         return None
     return [Access(AccessType.FIELD,
-                   LocationId.fromDefn(arg.src, arg.src.offset + arg.offset,
-                                       snippet=line_at_offset(arg.src.details.body.value, arg.offset)),
+                   LocationId.fromDefn(arg.src, arg.src.offset + arg.range[0],
+                                       *lines_at_range(arg.src.details.body.value, arg.range)),
                    LocationId.fromField(_globals.types[arg.typename], _globals.fields[arg.typename][arg.field]))]
 
 def match_str_or_regex(filter: str, value: str) -> bool:
@@ -418,7 +465,13 @@ To/from filters notation for "TO", "FROM" and "LIST" options:
     group.add_argument(      "--debug", action=argparse.BooleanOptionalAction,
                        help=argparse.SUPPRESS) # help="Debug output")
 
-    group = argparser.add_argument_group(title="Level of detail selection (access report mode)")
+    group = argparser.add_argument_group(title="Level of detail selection (access report mode)",
+        description="""
+mod:  module
+file: module, file
+defn: module, file, definition's line, name, kind
+full: module, file, exact location's line, name, kind, code snippet (experimental)
+        """.strip())
     group.add_argument("-d", "--detail", choices=["mod", "file", "defn", "full"],
                        help="Specify the level of detail for access report")
     group.add_argument("--detail-from", "--df", choices=["mod", "file", "defn", "full"],
@@ -427,6 +480,11 @@ To/from filters notation for "TO", "FROM" and "LIST" options:
     group.add_argument("--detail-to", "--dt", choices=["mod", "file", "defn", "full"],
                        default="mod",
                        help="Specify the level of detail for access report for incoming access")
+
+    group = argparser.add_argument_group(title="Output mode")
+    group.add_argument(      "--color", action=argparse.BooleanOptionalAction,
+                       default=False,
+                       help="Enable ANSI color output (default: no)")
 
     group = argparser.add_argument_group(title="Cache control")
     group.add_argument(      "--cache", action=argparse.BooleanOptionalAction,
@@ -526,11 +584,11 @@ def load_stats(files: list[str]) -> tuple[AccessSrc, AccessSrc]:
         stats_from = [("mod", access.src.mod),
                         ("file", (access.src.mod, access.src.file)),
                         ("defn", (access.src.mod, access.src.file, access.src.lineColDefn, access.src.getName(), access.src.kind)),
-                        ("full", (access.src.mod, access.src.file, access.src.lineColUse, access.src.getName(), access.src.kind, access.src.snippet))]
+                        ("full", (access.src.mod, access.src.file, access.src.lineColUse, access.src.getName(), access.src.kind, access.src.snippet, access.src.range))]
         stats_to = [("mod", access.dst.mod),
                     ("file", (access.dst.mod, access.dst.file)),
                     ("defn", (access.dst.mod, access.dst.file, access.dst.lineColDefn, access.dst.getName(), access.dst.kind)),
-                    ("full", (access.dst.mod, access.dst.file, access.dst.lineColUse, access.dst.getName(), access.dst.kind, access.dst.snippet))]
+                    ("full", (access.dst.mod, access.dst.file, access.dst.lineColUse, access.dst.getName(), access.dst.kind, access.dst.snippet, access.dst.range))]
         for stat_from in stats_from:
             for stat_to in stats_to:
                 update_stats(access_stats, *stat_from, *stat_to, 1)
@@ -539,9 +597,13 @@ def load_stats(files: list[str]) -> tuple[AccessSrc, AccessSrc]:
     return access_stats, access_stats_r
 
 def scan_sources_main(extraFiles: list[str], modules: list[Module], extraMacros: list[dict]) -> int:
-    global _globals, _args
+    global _globals, _args, _color
 
     commandline()
+
+    if _args.color:
+        _color = True
+    _args.color = None  # Clear for proper cache key
 
     if _args.detail:
         _args.detail_from = _args.detail_to = _args.detail
@@ -559,6 +621,7 @@ def scan_sources_main(extraFiles: list[str], modules: list[Module], extraMacros:
         case _:
             print(f"Error: Cannot specify more than one of --calls-only, --fields-only, --macros-only")
             return 1
+    _args.calls_only = _args.fields_only = _args.macros_only = None  # Clear for proper cache key
 
     if _args.list_modules:
         list_modules(modules)
@@ -577,9 +640,7 @@ def scan_sources_main(extraFiles: list[str], modules: list[Module], extraMacros:
     if _args.clear_cache:
         cache.clearcache()
     cache.use_cache = _args.cache
-
-    _args.calls_only = _args.fields_only = _args.macros_only = None  # Clear these for proper cache key
-    _args.cache = _args.clear_cache = None  # Clear these for proper cache key
+    _args.cache = _args.clear_cache = None  # Clear for proper cache key
 
     _globals = load_globals(files, extraMacros)
 

@@ -53,19 +53,23 @@ _reg_member_access_chain_fast = regex.compile(r"""
 @dataclass
 class AccessChain:
     name: str
-    members: list[str]
-    offset: int
+    members: list[tuple[str, Range]]
+    range: Range
 
     def __str__(self) -> str:
-        return self.name.replace("\n", " ") + f"->{'.'.join(self.members)}"
+        return self.name.replace("\n", " ") + f"->{'.'.join(f for f, _ in self.members)}"
 
 def member_access_chains(txt: str, offset_in_parent: int = 0) -> Iterable[AccessChain]:
     for match in _reg_member_access_chain.finditer(txt):
         offset = match.start() + offset_in_parent
         if match[1]:
-            yield AccessChain(match[1], match.allcaptures()[3], offset)  # type: ignore[misc] # Tuple index out of range
+            yield AccessChain(match[1],
+                              list(zip(match.allcaptures()[3], match.allspans()[3])), # type: ignore[misc] # Tuple index out of range
+                              (offset, offset_in_parent + match.end()))
         elif match[2]:
-            yield AccessChain(match[2], match.allcaptures()[3], offset)  # type: ignore[misc] # Tuple index out of range
+            yield AccessChain(match[2],
+                              list(zip(match.allcaptures()[3], match.allspans()[3])), # type: ignore[misc] # Tuple index out of range
+                              (offset, offset_in_parent + match.end()))
             yield from member_access_chains(match[2][1:-1], offset_in_parent + match.start(2) + 1)
 
 def member_access_chains_fast(txt: str, offset_in_parent: int = 0) -> Iterable[AccessChain]:
@@ -110,10 +114,12 @@ def member_access_chains_fast(txt: str, offset_in_parent: int = 0) -> Iterable[A
 
         offset = offset_in_parent + prev_match.start()
 
-        yield AccessChain(prev_token.value, match.allcaptures()[1], offset)  # type: ignore[misc] # Tuple index out of range
+        yield AccessChain(prev_token.value,
+                          list(zip(match.allcaptures()[1], match.allspans()[1])), # type: ignore[misc] # Tuple index out of range
+                          (offset, offset_in_parent + match.end()))
 
         if prev_token.getKind() == "(":
-            yield from member_access_chains_fast(prev_token.value[1:-1], offset_in_parent + prev_match.start() + 1)
+            yield from member_access_chains_fast(prev_token.value[1:-1], offset + 1)
 
         if (match2 := match.allcaptures()[2]): # type: ignore[misc] # Tuple index out of range
             for i in range(0, len(match2)):
@@ -147,7 +153,7 @@ class AccessField(AccessEventBase):
     "Report access to a field '(type of X)->a'"
     typename: str
     field: str
-    offset: int
+    range: Range
 
 AccessEvent: TypeAlias = AccessMacroExpand | AccessGlobalName | AccessFieldChain | AccessField
 
@@ -395,25 +401,25 @@ class AccessCheck:
                         yield from _yield_if_not_none(on_global_name(AccessGlobalName(defn, (match.start(), match.end()), name)))
 
         for chain in member_access_chains_fast(body_clean):
-            DEBUG2(_LOC(chain.offset), f"Access chain: {chain}")
+            DEBUG2(_LOC(chain.range[0]), f"Access chain: {chain}")
             if on_field_chain:
                 yield from _yield_if_not_none(on_field_chain(AccessFieldChain(defn, chain)))
-            expr_type = _get_type_of_expr_str(chain.name, chain.offset)
+            expr_type = _get_type_of_expr_str(chain.name, chain.range[0])
             if expr_type:
-                DEBUG3(_LOC(chain.offset), f"Access type: {expr_type}")
-                _check_access_to_type(expr_type, chain.offset)
-                DEBUG3(_LOC(chain.offset), f"Field access chain: {chain}")
-                for field in chain.members:
+                DEBUG3(_LOC(chain.range[0]), f"Access type: {expr_type}")
+                _check_access_to_type(expr_type, chain.range[0])
+                DEBUG3(_LOC(chain.range[0]), f"Field access chain: {chain}")
+                for field, field_range in chain.members:
                     if on_field_access:
-                        yield from _yield_if_not_none(on_field_access(AccessField(defn, expr_type, field, chain.offset)))
-                    DEBUG3(_LOC(chain.offset), f"Field access: {expr_type}->{field}")
-                    _check_access_to_field(expr_type, field, chain.offset)
+                        yield from _yield_if_not_none(on_field_access(AccessField(defn, expr_type, field, field_range)))
+                    DEBUG3(_LOC(field_range[0]), f"Field access: {expr_type}->{field}")
+                    _check_access_to_field(expr_type, field, field_range[0])
                     if not (expr_type := self._globals.get_field_type(expr_type, field)):
-                        Log.type_deduce_member(_LOC(chain.offset),
+                        Log.type_deduce_member(_LOC(field_range[0]),
                                 f"Can't deduce type of member '{field}' in {chain}")
                         break  # error
             else:
-                Log.type_deduce_expr(_locationStr(chain.offset), f"Can't deduce type of expression {chain}")
+                Log.type_deduce_expr(_locationStr(chain.range[0]), f"Can't deduce type of expression {chain}")
 
     # Go through function bodies. Check calls and struct member accesses.
     def checkAccess(self, multithread = True) -> None:

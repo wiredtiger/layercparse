@@ -100,10 +100,10 @@ class MacroExpander:
         self._expanding_stack.pop()
         if not self._expanding_stack:
             delta = len(replacement) - len(match[0])
-            range = (match.start() + base_offset, delta, )
-            self.insert_list.append(range)
+            range_ = (match.start() + base_offset, delta, )
+            self.insert_list.append(range_)
             self.expand_list.append(Expansions(
-                (self._expand_offset + range[0], self._expand_offset + range[0] + len(replacement)),
+                (self._expand_offset + range_[0], self._expand_offset + range_[0] + len(replacement)),
                 self._cur_expand_entry))
             self._expand_offset += delta
             self._cur_expand_entry = {}
