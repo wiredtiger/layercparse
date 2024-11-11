@@ -521,7 +521,8 @@ def list_contents() -> None:
             print(f"{defn.locationStr()} {'private' if defn.is_private else 'public'}")
     if _args.calls:
         print("  == Functions:")
-        for _, defn in _globals.names.items():
+        for defn in itertools.chain(_globals.names.values(),
+                                    (v for vv in _globals.static_names.values() for v in vv.values())):
             if not want_list(defn):
                 continue
             print(f"{defn.locationStr()} {'private' if defn.is_private else 'public'}")
