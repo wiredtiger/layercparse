@@ -50,12 +50,19 @@ def rangeShift(rng: Range, offset: int) -> Range:
     return (rng[0]+offset, rng[1]+offset)
 
 # Macro expansion insetion list for mappimg the original text to the expanded text.
-InsertList: TypeAlias = list[tuple[int, int]]  # (offset, delta)
+@dataclass
+class InsertPoint:
+    """A point in the original text where an expansion took place."""
+    range_orig: Range
+    range_new: Range
+    delta: int
+InsertList: TypeAlias = list[InsertPoint]
+# InsertList: TypeAlias = list[tuple[int, int]]  # (offset, delta)
 
 @dataclass
 class Expansions:
     """A list of macro expansions that took place at a location."""
-    range: Range
+    at: InsertPoint
     expansions: dict[str, set[str]]  # name: set[expansion]
 
 # C identifier regex.
@@ -78,7 +85,9 @@ c_types = ["void", "char", "short", "int", "long", "float", "double", "signed", 
            "intmax_t", "uintmax_t", "wchar_t", "char16_t", "char32_t", "__int128", "__uint128",
            "__float80", "__float128", "__float16", "__float32", "__float64", "__float128",
            "__int64", "__uint64", "__int32", "__uint32", "__int16", "__uint16", "__int8",
-           "__uint8"]
+           "__uint8",
+           "timespec", "timeval", "tm", "FILE", "DIR", "pid_t", "uid_t", "gid_t", "mode_t",
+           ]
 ignore_type_keywords = [
     "inline", "restrict", "volatile", "auto", "register",
     "__attribute__", "__extension__", "__restrict__", "__restrict", "__inline__", "__inline",
@@ -86,7 +95,9 @@ ignore_type_keywords = [
     "WT_GCC_FUNC_DECL_ATTRIBUTE", "WT_GCC_FUNC_ATTRIBUTE", "WT_INLINE",
     "WT_ATTRIBUTE_LIBRARY_VISIBLE", "wt_shared", "WT_STAT_COMPR_RATIO_READ_HIST_INCR_FUNC",
     "WT_STAT_COMPR_RATIO_WRITE_HIST_INCR_FUNC", "WT_STAT_USECS_HIST_INCR_FUNC",
-    "WT_ATOMIC_CAS_FUNC", "WT_ATOMIC_FUNC", "WT_CURDUMP_PASS"]
+    "WT_ATOMIC_CAS_FUNC", "WT_ATOMIC_FUNC", "WT_CURDUMP_PASS",
+    "WT_STAT_MSECS_HIST_INCR_FUNC",
+    ]
 
 c_ops_all = (
     "<<=", ">>=",

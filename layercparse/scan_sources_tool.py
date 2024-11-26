@@ -208,7 +208,7 @@ def on_macro_expand(arg: AccessMacroExpand) -> list[Access] | None:
     ret: list[Access] = []
     for src, exps in arg.exps.expansions.items():
         defnSrc = _globals.macros[src] if src else arg.src
-        locSrc = LocationId.fromDefn(defnSrc, arg.exps.range[0])
+        locSrc = LocationId.fromDefn(defnSrc, arg.exps.at.range_new[0])
         for dst in exps:
             ret.append(Access(AccessType.MACRO,
                               locSrc,

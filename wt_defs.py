@@ -49,6 +49,7 @@ extraMacros = [
     {"name": "WT_ATTRIBUTE_LIBRARY_VISIBLE"},
     {"name": "WT_INLINE"},
     {"name": "inline"},
+    {"name": "wt_shared"},
 
     {"name": "WT_COMPILER_BARRIER",  "args": ("__VA_ARGS__"),
         "body": "WT_COMPILER_BARRIER", "is_va_args": True},

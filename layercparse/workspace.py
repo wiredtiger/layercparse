@@ -181,6 +181,9 @@ class File:
     expandList: list[Expansions] = field(default_factory=list, repr=False)
     fileKind: FileKind = field(default="", repr=False)
     relpath: str = field(default="", repr=False)
+    # Mapping from expanded offset to original offset
+    _offsetMapIdx: list[int] = field(default_factory=list, repr=False)
+    _offsetMapOffset: list[int] = field(default_factory=list, repr=False)
 
     def __post_init__(self):
         if not self.relpath:
@@ -202,25 +205,20 @@ class File:
         return self.lineOffsets
 
     def updateLineInfoWithInsertList(self, insertList: InsertList) -> None:
-        if not self.lineOffsets or not insertList:
+        self._offsetMapIdx = [0]
+        self._offsetMapOffset = [0]
+        if not insertList:
             return
-        cur_delta, cur_line = 0, 0
-        for offset, delta in insertList:
-            if offset >= self.lineOffsets[-1]:
-                break
-            if not cur_delta:
-                cur_line = bisect_left(self.lineOffsets, offset, lo=cur_line) + 1
-                cur_delta = delta
-                continue
-            while cur_line < len(self.lineOffsets) and self.lineOffsets[cur_line] < offset:
-                self.lineOffsets[cur_line] += cur_delta
-                cur_line += 1
+
+        cur_delta = 0
+        for ins in insertList:
+            offset, delta = ins.range_new[0], ins.delta
             cur_delta += delta
-        if cur_delta:
-            for i in range(cur_line, len(self.lineOffsets)):
-                self.lineOffsets[i] += cur_delta
+            self._offsetMapIdx.append(offset)
+            self._offsetMapOffset.append(cur_delta)
 
     def offsetToLinePos(self, offset: int) -> tuple[int, int]:
+        offset = self.getOrigOffset(offset)
         if not self.lineOffsets:
             return (0, offset)
         line = bisect_left(self.lineOffsets, offset)
@@ -240,12 +238,19 @@ class File:
         return txt
 
     def expansions(self, range: Range) -> Iterable[Expansions]:
-        if self.expandList is None:
+        if not self.expandList:
             return
-        idx = bisect_left(self.expandList, range[0], key=lambda x: x.range[0])
-        while idx < len(self.expandList) and self.expandList[idx].range[0] < range[1]:
+        idx = bisect_left(self.expandList, range[0], key=lambda x: x.at.range_new[0])
+        while idx < len(self.expandList) and self.expandList[idx].at.range_new[0] < range[1]:
             yield self.expandList[idx]
             idx += 1
+
+    # Get original file offset before macro expansion
+    def getOrigOffset(self, offset: int) -> int:
+        if not self._offsetMapIdx:
+            return offset
+        idx = bisect_left(self._offsetMapIdx, offset)
+        return offset - self._offsetMapOffset[idx - 1]
 
 @dataclass
 class Scope:

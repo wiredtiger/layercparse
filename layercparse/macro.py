@@ -93,7 +93,7 @@ class MacroParts:
             self.is_wellformed = is_wellformed(self.body.value)
             if not self.is_wellformed:
                 self.is_const = False
-                DEBUG3(scope().locationStr(self.body.range[0]),
+                DEBUG3(lambda:scope().locationStr(self.body.range[0]),
                        f"Macro '{self.name.value}' unbalanced: {get_unbalanced(self.body.value)}")
             else:
                 for token in TokenList.xxFilterCode(TokenList.xFromText(

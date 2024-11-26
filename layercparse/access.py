@@ -196,7 +196,7 @@ class AccessCheck:
                 cast(Token, cast(FunctionParts, defn.details).body).range):
             if on_macro_expand:
                 yield from _yield_if_not_none(on_macro_expand(AccessMacroExpand(defn, exps)))
-            r, explist = exps.range, exps.expansions
+            r, explist = exps.at.range_new, exps.expansions
             for callerMacro in sorted(explist.keys()):
                 if callerMacro and callerMacro in self._globals.macros:
                     callerDef = self._globals.macros[callerMacro]
@@ -241,8 +241,8 @@ class AccessCheck:
                        on_global_name: Callable[[AccessGlobalName], Any] | None = None,
                        on_field_chain: Callable[[AccessFieldChain], Any] | None = None,
                        on_field_access: Callable[[AccessField], Any] | None = None) -> Iterable[Any]:
-        DEBUG3(defn.scope.locationStr(defn.offset), f"Checking {defn.short_repr()}") or \
-        DEBUG(defn.scope.locationStr(defn.offset),
+        DEBUG3(lambda:defn.scope.locationStr(defn.offset), f"Checking {defn.short_repr()}") or \
+        DEBUG(lambda:defn.scope.locationStr(defn.offset),
               f"Checking {defn.kind} [{defn.module}] {defn.name}")
         if defn.kind != "function" or \
                 not defn.details or \
@@ -372,7 +372,7 @@ class AccessCheck:
                 _check_access_to_defn(self._globals.types_restricted[type], offset)
 
         def _check_access_to_global_name(name: str, offset: int) -> None:
-            DEBUG3(_locationStr(0), f"Access global name: {name}")
+            DEBUG3(lambda:_locationStr(0), f"Access global name: {name}")
             if name in self._globals.names_restricted:
                 _check_access_to_defn(self._globals.names_restricted[name], offset)
 
