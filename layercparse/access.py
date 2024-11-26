@@ -235,7 +235,7 @@ class AccessCheck:
                                 _funcId(calleeMod, calleeMacro),
                                 f"Defined here")
 
-    def _scan_function(self, defn: Definition,
+    def scan_function(self, defn: Definition,
                        optimize_for_errors: bool = False,
                        on_macro_expand: Callable[[AccessMacroExpand], Any] | None = None,
                        on_global_name: Callable[[AccessGlobalName], Any] | None = None,
@@ -441,7 +441,7 @@ class AccessCheck:
                         self._globals.names.values(),
                         *(namedict.values() for namedict in self._globals.static_names.values())):
                 if not want_scan or want_scan(defn):
-                    yield from self._scan_function(defn, *args, **kwargs)
+                    yield from self.scan_function(defn, *args, **kwargs)
         else:
             init_multithreading()
             with multiprocessing.Pool(processes=multiprocessing.cpu_count(),
@@ -466,12 +466,12 @@ class AccessCheck:
         with LogToStringScope():
             if not file:
                 if not want_scan or want_scan(self._globals.names[name]):
-                    for res in self._scan_function(self._globals.names[name], *args, **kwargs):
+                    for res in self.scan_function(self._globals.names[name], *args, **kwargs):
                         ret.append(res)
             else:
                 for defn in self._globals.static_names[name].values():
                     if not want_scan or want_scan(defn):
-                        for res in self._scan_function(defn, *args, **kwargs):
+                        for res in self.scan_function(defn, *args, **kwargs):
                             ret.append(res)
             return (workspace.logStream.getvalue(), # type: ignore # logStream is a StringIO
                     ret)
