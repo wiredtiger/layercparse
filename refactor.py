@@ -76,7 +76,7 @@ def renameFields(renames: dict[str, dict[str, str]]) -> None:
         if body.value[arg.range[0]:arg.range[1]] != arg.field or arg.field != txt[rng[0]:rng[1]]:
             LOG(LogLevel.QUIET, lambda:arg.src.scope.locationStr(rng[0]), f"Field access mismatch in {arg.src.name}: <{arg.field}> == <{body.value[arg.range[0]:arg.range[1]]}> == <{txt[rng[0]:rng[1]]}>")
             return None
-        print(f"{arg.src.scope.locationStr(rng[0])}: Field access in {arg.src.name}: {access_chain}: {t}:{arg.field} -> {renames[t][arg.field]}")
+        print(f"{arg.src.scope.locationStr(rng[0])} Field access in {arg.src.name}: {access_chain}: {t}:{arg.field} -> {renames[t][arg.field]}")
         patcher.replace(rng, renames[t][arg.field])
         return None
 
@@ -132,6 +132,12 @@ def main():
     for macro in wt_defs.extraMacros:
         _globals.addMacro(**macro)
     _globals.scanFiles(files, twopass=False)
+
+    # Pretend that typed macros are functions
+    for macrodef in _globals.macros.values():
+        macro = cast(MacroParts, macrodef.details)
+        if macro.get_has_rettype() and macro.name.value not in _globals.names:
+            _globals.names[macro.name.value] = macrodef
 
     exec(refactor_prog)
     applyPatches()
