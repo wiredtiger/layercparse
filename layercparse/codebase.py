@@ -300,9 +300,10 @@ class Codebase:
                     if st.getKind().is_function_def:
                         func = FunctionParts.fromStatement(st)
                         if func and func.body:
+                            is_static_func_in_c = func.is_type_static and scope_file().fileKind == "c"
                             is_private, local_module = _get_visibility_and_module_check(
                                 func,
-                                default_private=scope_file().is_private,
+                                default_private=True if is_static_func_in_c else scope_file().is_private,
                                 default_module=scope_module())
                             defn = Definition(
                                 name=func.name.value,
@@ -313,7 +314,7 @@ class Codebase:
                                 is_private=is_private,
                                 details=func)
                             DEBUG3(lambda: defn.locationStr(), "Function:", defn.short_repr)
-                            if scope_file().fileKind == "c" and func.is_type_static:
+                            if is_static_func_in_c:
                                 if defn.is_private and defn.module and scope_module() and defn.module != scope_module():
                                     Log.module_foreign_def(defn.locationStr(),
                                           f"Private static function of a foreign module defined in "
