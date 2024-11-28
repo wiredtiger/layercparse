@@ -239,6 +239,9 @@ class TestRecordAccess(TestCaseLocal):
         # pprint(_globals, width=120, compact=False)
         # print(" =====")
         # setLogLevel(LogLevel.DEBUG)
+        # for funcdef in _globals.names.values():
+        #     pprint(funcdef)
+        #     pprint(funcdef.details.getFunctionLocalVarsOfTypes(_globals.types.keys()))
         AccessCheck(_globals).checkAccess(multithread=False)
         self.checkStrAgainstFile(workspace.logStream.getvalue(), "data/record.c.access")
         workspace.logStream = None

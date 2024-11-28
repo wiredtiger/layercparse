@@ -19,7 +19,7 @@ struct S2 {
 S1 *__wti_module2_func1(S2 *s2) {
     return &s2->s;
 }
-
+typedef struct S1 SSS1;
 /* #public(module1) */
 int func(int num) {
     S2 s2;
@@ -48,6 +48,9 @@ int func(int num) {
     ((S1*)z)->y[s2->qwe1].z(s2->qwe2, s2->qwe3);
     ((S2*)s2 ? (S1*)NULL : (S0*)NULL)->x;
     ((S2*)s2 ? NULL : (S0*)NULL)->z;
+
+    SSS1 s1, *ss1;
+    S2 ss2;
 
     return num * num;
 }

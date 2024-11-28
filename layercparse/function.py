@@ -186,3 +186,39 @@ class FunctionParts:
 
     def getLocalVars(self, _globals: 'Codebase | None' = None) -> list[Variable]: # type: ignore[name-defined] # error: Name "Codebase" is not defined (circular dependency)
         return list(self.xGetLocalVars(_globals))
+
+
+    def xGetFunctionLocalVarsOfTypes(self, alltypes: Iterable[str], body: str | None = None) -> Iterable[Variable]:
+        """Get local variables of a function. alltypes should be a merged set of all types including typedefs."""
+        if body is None and self.body:
+            body = self.body.value
+        if not body or not self.body:
+            return
+        reg = regex.compile(r"\b(\L<names>)(\s++)", re_flags, names=alltypes)
+        pos = 0
+        while match := reg.search(body, pos=pos):
+            pos = match.end()
+            tokens = TokenList()
+            tokens.append(Token.fromMatch(match, base_offset=self.body.range[0], match_group=1, idx=0))
+            tokens.append(Token.fromMatch(match, base_offset=self.body.range[0], match_group=2, idx=1))
+            saved_type = TokenList([tokens[0]])
+            idx = 1
+            while ((match := reg_token.match(body, pos=pos)) and  # Require that matches don't have gaps
+                   match[0] not in alltypes and
+                   match[0] not in c_types):
+                pos = match.end()
+                tokens.append(Token.fromMatch(match, base_offset=self.body.range[0], idx=(idx := idx+1)))
+                if match[0] in [",", ";"]:
+                    if (var := Variable.fromVarDef(tokens)):
+                        # if not var.typename:
+                        #     var.typename = saved_type
+                        var.typename = saved_type
+                        yield var
+                        # saved_type = var.typename if var.end == "," else None
+                    tokens = TokenList()
+                if match[0] == ";":
+                    break
+
+    def getFunctionLocalVarsOfTypes(self, alltypes: Iterable[str], body: str | None = None) -> list[Variable]:
+        return list(self.xGetFunctionLocalVarsOfTypes(alltypes))
+

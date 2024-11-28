@@ -8,39 +8,40 @@ data/record.c:8:8: debug3: Record: S1 (record) data/record.c:8:8: [module2] publ
 data/record.c:14:8: debug3: Record: S2 (record) data/record.c:14:8: [module1] private Record(S2 : <RecordKind.STRUCT: 1>
   member: Variable(Token(idx=4, range=(8, 9), value='s') : [5:7] 〈S1〉))
 data/record.c:19:5: function [module2] '__wti_module2_func1': debug3: Function: __wti_module2_func1 (function) data/record.c:19:5: [module2] private Function(Token(idx=35, range=(167, 186), value='__wti_module2_func1') (Token(idx=36, range=(187, 193), value='S2 *s2'))) : [163:165] 〈S1〉
-data/record.c:24:5: function [module1] 'func': debug3: Function: func (function) data/record.c:24:5: [module1] public Function(Token(idx=45, range=(246, 250), value='func') (Token(idx=46, range=(251, 258), value='int num'))) : [242:245] 〈int〉
-data/record.c:56:12: function [module1] '__wti_module1_func2': debug3: Function: __wti_module1_func2 (function) data/record.c:56:12: [module1] private Function(Token(idx=58, range=(986, 1005), value='__wti_module1_func2') (Token(idx=59, range=(1006, 1010), value='void'))) : [982:984] 〈S2〉 static
-data/record.c:61:12: function [module2] '__wti_module2_func2': debug3: Function: __wti_module2_func2 (function) data/record.c:61:12: [module2] private Function(Token(idx=70, range=(1066, 1085), value='__wti_module2_func2') (Token(idx=71, range=(1086, 1090), value='void'))) : [1062:1065] 〈int〉 static
-data/record.c:66:5: function [module2] '__wti_module2_func3': debug3: Function: __wti_module2_func3 (function) data/record.c:66:5: [module2] private Function(Token(idx=80, range=(1159, 1178), value='__wti_module2_func3') (Token(idx=81, range=(1179, 1183), value='void'))) : [1155:1158] 〈int〉
-data/record.c:70:12: function [module1] '__wti_module1_funcX': debug3: Function: __wti_module1_funcX (function) data/record.c:70:12: [module1] private Function(Token(idx=91, range=(1238, 1257), value='__wti_module1_funcX') (Token(idx=92, range=(1258, 1262), value='void'))) : [1234:1236] 〈S2〉 static
-data/record.c:74:5: function 'func_local_struct': debug3: Function: func_local_struct (function) data/record.c:74:5: [] public Function(Token(idx=99, range=(1287, 1304), value='func_local_struct') (Token(idx=100, range=(1305, 1318), value='int a, char b'))) : [1283:1286] 〈int〉
-data/record.c:84:8: debug3: Record: ACCESS1 (record) data/record.c:84:8: [module1] private Record(ACCESS1 : <RecordKind.STRUCT: 1>
+data/record.c:22:1: debug3: Typedef: SSS1 = [218:235] 〈typedef⌇S1〉 = S1
+data/record.c:24:5: function [module1] 'func': debug3: Function: func (function) data/record.c:24:5: [module1] public Function(Token(idx=53, range=(269, 273), value='func') (Token(idx=54, range=(274, 281), value='int num'))) : [265:268] 〈int〉
+data/record.c:59:12: function [module1] '__wti_module1_func2': debug3: Function: __wti_module1_func2 (function) data/record.c:59:12: [module1] private Function(Token(idx=66, range=(1041, 1060), value='__wti_module1_func2') (Token(idx=67, range=(1061, 1065), value='void'))) : [1037:1039] 〈S2〉 static
+data/record.c:64:12: function [module2] '__wti_module2_func2': debug3: Function: __wti_module2_func2 (function) data/record.c:64:12: [module2] private Function(Token(idx=78, range=(1121, 1140), value='__wti_module2_func2') (Token(idx=79, range=(1141, 1145), value='void'))) : [1117:1120] 〈int〉 static
+data/record.c:69:5: function [module2] '__wti_module2_func3': debug3: Function: __wti_module2_func3 (function) data/record.c:69:5: [module2] private Function(Token(idx=88, range=(1214, 1233), value='__wti_module2_func3') (Token(idx=89, range=(1234, 1238), value='void'))) : [1210:1213] 〈int〉
+data/record.c:73:12: function [module1] '__wti_module1_funcX': debug3: Function: __wti_module1_funcX (function) data/record.c:73:12: [module1] private Function(Token(idx=99, range=(1293, 1312), value='__wti_module1_funcX') (Token(idx=100, range=(1313, 1317), value='void'))) : [1289:1291] 〈S2〉 static
+data/record.c:77:5: function 'func_local_struct': debug3: Function: func_local_struct (function) data/record.c:77:5: [] public Function(Token(idx=107, range=(1342, 1359), value='func_local_struct') (Token(idx=108, range=(1360, 1373), value='int a, char b'))) : [1338:1341] 〈int〉
+data/record.c:87:8: debug3: Record: ACCESS1 (record) data/record.c:87:8: [module1] private Record(ACCESS1 : <RecordKind.STRUCT: 1>
   member: Variable(Token(idx=4, range=(9, 10), value='x') : [5:8] 〈int〉)
   member: Variable(Token(idx=10, range=(21, 22), value='y') : [16:20] 〈char〉)
   member: Variable(Token(idx=20, range=(66, 67), value='z') : [35:42] 〈ACCESS2〉)
   nested: ACCESS2)
-data/record.c:7:7: debug3: Record: ACCESS2 (record) data/record.c:87:12: [module1] private Record(ACCESS2 : <RecordKind.STRUCT: 1>
+data/record.c:7:7: debug3: Record: ACCESS2 (record) data/record.c:90:12: [module1] private Record(ACCESS2 : <RecordKind.STRUCT: 1>
   member: Variable(Token(idx=4, range=(13, 14), value='z') : [9:12] 〈int〉)
   vardef: Variable(Token(idx=20, range=(66, 67), value='z') : [35:42] 〈ACCESS2〉))
 data/record.c:7:7: info: Global variables of record 'ACCESS2' are ignored {ignored_global}
-data/record.c:92:8: debug3: Record: FNPTRS (record) data/record.c:92:8: [] public Record(FNPTRS : <RecordKind.STRUCT: 1>
+data/record.c:95:8: debug3: Record: FNPTRS (record) data/record.c:95:8: [] public Record(FNPTRS : <RecordKind.STRUCT: 1>
   member: Variable(Token(idx=4, range=(9, 14), value='f1') : [5:8] 〈int〉)
   member: Variable(Token(idx=11, range=(29, 34), value='f2') : [25:28] 〈int〉))
-data/record.c:97:8: debug3: Record: unnamed_members (record) data/record.c:97:8: [] public Record(unnamed_members : <RecordKind.STRUCT: 1>
+data/record.c:100:8: debug3: Record: unnamed_members (record) data/record.c:100:8: [] public Record(unnamed_members : <RecordKind.STRUCT: 1>
   member: Variable(Token(idx=4, range=(17, 24), value='member1') : [13:16] 〈int〉)
   member: Variable(Token(idx=10, range=(43, 50), value='member2') : [38:42] 〈char〉)
   member: Variable(Token(idx=10, range=(93, 102), value='__padding') : [88:92] 〈char〉)
-  nested: (data/record.c:98:12:))
-data/record.c:2:12: debug3: Record: (data/record.c:98:12:) (record) data/record.c:98:12: [] public Record((data/record.c:98:12:) : <RecordKind.UNION: 2>
+  nested: (data/record.c:101:12:))
+data/record.c:2:12: debug3: Record: (data/record.c:101:12:) (record) data/record.c:101:12: [] public Record((data/record.c:101:12:) : <RecordKind.UNION: 2>
   member: Variable(Token(idx=4, range=(17, 24), value='member1') : [13:16] 〈int〉)
   member: Variable(Token(idx=10, range=(43, 50), value='member2') : [38:42] 〈char〉)
   member: Variable(Token(idx=10, range=(93, 102), value='__padding') : [88:92] 〈char〉)
-  nested: (data/record.c:99:17:))
-data/record.c:3:5: debug3: Record: (data/record.c:99:17:) (record) data/record.c:99:17: [] public Record((data/record.c:99:17:) : <RecordKind.STRUCT: 1>
+  nested: (data/record.c:102:17:))
+data/record.c:3:5: debug3: Record: (data/record.c:102:17:) (record) data/record.c:102:17: [] public Record((data/record.c:102:17:) : <RecordKind.STRUCT: 1>
   member: Variable(Token(idx=4, range=(17, 24), value='member1') : [13:16] 〈int〉)
   member: Variable(Token(idx=10, range=(43, 50), value='member2') : [38:42] 〈char〉))
-data/record.c:107:8: debug3: Record: __wt_rwlock (record) data/record.c:107:8: [] public Record(__wt_rwlock : <RecordKind.STRUCT: 1>
-  member: Variable(Token(idx=10, range=(442, 443), value='u') : [43:440] 〈(data/record.c:108:21:)〉)
+data/record.c:110:8: debug3: Record: __wt_rwlock (record) data/record.c:110:8: [] public Record(__wt_rwlock : <RecordKind.STRUCT: 1>
+  member: Variable(Token(idx=10, range=(442, 443), value='u') : [43:440] 〈(data/record.c:111:21:)〉)
   member: Variable(Token(idx=17, range=(458, 477), value='stat_read_count_off') : [450:457] 〈int16_t〉)
   member: Variable(Token(idx=25, range=(525, 545), value='stat_write_count_off') : [517:524] 〈int16_t〉)
   member: Variable(Token(idx=33, range=(593, 611), value='stat_app_usecs_off') : [585:592] 〈int16_t〉)
@@ -48,21 +49,21 @@ data/record.c:107:8: debug3: Record: __wt_rwlock (record) data/record.c:107:8: [
   member: Variable(Token(idx=49, range=(742, 764), value='stat_session_usecs_off') : [734:741] 〈int16_t〉)
   member: Variable(Token(idx=59, range=(812, 824), value='cond_readers') : [800:810] 〈WT_CONDVAR〉)
   member: Variable(Token(idx=68, range=(865, 877), value='cond_writers') : [853:863] 〈WT_CONDVAR〉)
-  nested: (data/record.c:108:21:))
-data/record.c:7:15: debug3: Record: (data/record.c:108:21:) (record) data/record.c:108:21: [] public Record((data/record.c:108:21:) : <RecordKind.UNION: 2>
+  nested: (data/record.c:111:21:))
+data/record.c:7:15: debug3: Record: (data/record.c:111:21:) (record) data/record.c:111:21: [] public Record((data/record.c:111:21:) : <RecordKind.UNION: 2>
   member: Variable(Token(idx=4, range=(18, 19), value='v') : [9:17] 〈uint64_t〉)
-  member: Variable(Token(idx=14, range=(390, 391), value='s') : [61:388] 〈(data/record.c:110:17:)〉)
-  vardef: Variable(Token(idx=10, range=(442, 443), value='u') : [43:440] 〈(data/record.c:108:21:)〉)
-  nested: (data/record.c:110:17:))
-data/record.c:7:15: info: Global variables of record '(data/record.c:108:21:)' are ignored {ignored_global}
-data/record.c:8:10: debug3: Record: (data/record.c:110:17:) (record) data/record.c:110:17: [] public Record((data/record.c:110:17:) : <RecordKind.STRUCT: 1>
+  member: Variable(Token(idx=14, range=(390, 391), value='s') : [61:388] 〈(data/record.c:113:17:)〉)
+  vardef: Variable(Token(idx=10, range=(442, 443), value='u') : [43:440] 〈(data/record.c:111:21:)〉)
+  nested: (data/record.c:113:17:))
+data/record.c:7:15: info: Global variables of record '(data/record.c:111:21:)' are ignored {ignored_global}
+data/record.c:8:10: debug3: Record: (data/record.c:113:17:) (record) data/record.c:113:17: [] public Record((data/record.c:113:17:) : <RecordKind.STRUCT: 1>
   member: Variable(Token(idx=4, range=(21, 28), value='current') : [13:20] 〈uint8_t〉)
   member: Variable(Token(idx=12, range=(79, 83), value='next') : [71:78] 〈uint8_t〉)
   member: Variable(Token(idx=20, range=(144, 150), value='reader') : [136:143] 〈uint8_t〉)
   member: Variable(Token(idx=28, range=(205, 219), value='readers_queued') : [197:204] 〈uint8_t〉)
   member: Variable(Token(idx=36, range=(273, 287), value='readers_active') : [264:272] 〈uint32_t〉)
-  vardef: Variable(Token(idx=14, range=(390, 391), value='s') : [61:388] 〈(data/record.c:110:17:)〉))
-data/record.c:8:10: info: Global variables of record '(data/record.c:110:17:)' are ignored {ignored_global}
+  vardef: Variable(Token(idx=14, range=(390, 391), value='s') : [61:388] 〈(data/record.c:113:17:)〉))
+data/record.c:8:10: info: Global variables of record '(data/record.c:113:17:)' are ignored {ignored_global}
 data/record.c:19:5: debug3: Checking __wti_module2_func1 (function) data/record.c:19:5: [module2] private Function(Token(idx=35, range=(167, 186), value='__wti_module2_func1') (Token(idx=36, range=(187, 193), value='S2 *s2'))) : [163:165] 〈S1〉
 data/record.c:19:5: debug: Checking function [module2] __wti_module2_func1
 data/record.c:19:34: [module2] '__wti_module2_func1': debug2: locals vars:
@@ -73,11 +74,14 @@ data/record.c:20:13: [module2] '__wti_module2_func1': error: Invalid access to p
 data/record.c:20:13: [module2] '__wti_module2_func1': debug3: Field access chain: s2->s
 data/record.c:20:17: [module2] '__wti_module2_func1': debug3: Field access: S2->s
 data/record.c:20:17: [module2] '__wti_module2_func1': error: Invalid access to private field [module1] 'S2.s' {access_member}
-data/record.c:24:5: debug3: Checking func (function) data/record.c:24:5: [module1] public Function(Token(idx=45, range=(246, 250), value='func') (Token(idx=46, range=(251, 258), value='int num'))) : [242:245] 〈int〉
+data/record.c:24:5: debug3: Checking func (function) data/record.c:24:5: [module1] public Function(Token(idx=53, range=(269, 273), value='func') (Token(idx=54, range=(274, 281), value='int num'))) : [265:268] 〈int〉
 data/record.c:24:5: debug: Checking function [module1] func
 data/record.c:24:20: [module1] 'func': debug2: locals vars:
     num: int
     s2: S2
+    s1: SSS1
+    ss1: SSS1
+    ss2: S2
 data/record.c:39:5: [module1] 'func': error: Invalid access to private name [module2] '__wti_module2_func1'  {access_global}
 data/record.c:40:5: [module1] 'func': error: Invalid access to private name [module2] '__wti_module2_func1'  {access_global}
 data/record.c:41:5: [module1] 'func': error: Invalid access to private name [module2] '__wti_module2_func1'  {access_global}
@@ -261,39 +265,28 @@ data/record.c:50:5: [module1] 'func': debug2: Access chain: ((S2*)s2 ? NULL : (S
 data/record.c:50:5: [module1] 'func': debug3: Access type: S0
 data/record.c:50:5: [module1] 'func': debug3: Field access chain: ((S2*)s2 ? NULL : (S0*)NULL)->z
 data/record.c:50:35: [module1] 'func': debug3: Field access: S0->z
-data/record.c:66:5: debug3: Checking __wti_module2_func3 (function) data/record.c:66:5: [module2] private Function(Token(idx=80, range=(1159, 1178), value='__wti_module2_func3') (Token(idx=81, range=(1179, 1183), value='void'))) : [1155:1158] 〈int〉
-data/record.c:66:5: debug: Checking function [module2] __wti_module2_func3
-data/record.c:67:12: [module2] '__wti_module2_func3': debug2: Access chain: __wti_module1_func2->x
-data/record.c:67:12: [module2] '__wti_module2_func3': debug3: Access type: S2
-data/record.c:67:12: [module2] '__wti_module2_func3': error: Invalid access to private record [module1] 'S2' {access_member}
-data/record.c:67:12: [module2] '__wti_module2_func3': debug3: Field access chain: __wti_module1_func2->x
-data/record.c:67:35: [module2] '__wti_module2_func3': debug3: Field access: S2->x
-data/record.c:67:35: [module2] '__wti_module2_func3': warning: Can't deduce type of member 'x' in __wti_module1_func2->x {type_deduce_member}
-data/record.c:74:5: debug3: Checking func_local_struct (function) data/record.c:74:5: [] public Function(Token(idx=99, range=(1287, 1304), value='func_local_struct') (Token(idx=100, range=(1305, 1318), value='int a, char b'))) : [1283:1286] 〈int〉
-data/record.c:74:5: debug: Checking function [] func_local_struct
-data/record.c:75:13: debug3: Record: (data/record.c:126:25:) (record) data/record.c:126:25: [] public Record((data/record.c:126:25:) : <RecordKind.STRUCT: 1>
-  member: Variable(Token(idx=4, range=(12, 14), value='s1') : [9:11] 〈S1〉)
-  member: Variable(Token(idx=10, range=(27, 29), value='s2') : [24:26] 〈S2〉)
-  vardef: Variable(Token(idx=6, range=(1371, 1380), value='local_str') : [1334:1369] 〈(data/record.c:126:25:)〉))
-data/record.c:74:39: 'func_local_struct': debug2: locals vars:
+data/record.c:69:5: debug3: Checking __wti_module2_func3 (function) data/record.c:69:5: [module2] private Function(Token(idx=88, range=(1214, 1233), value='__wti_module2_func3') (Token(idx=89, range=(1234, 1238), value='void'))) : [1210:1213] 〈int〉
+data/record.c:69:5: debug: Checking function [module2] __wti_module2_func3
+data/record.c:70:12: [module2] '__wti_module2_func3': debug2: Access chain: __wti_module1_func2->x
+data/record.c:70:12: [module2] '__wti_module2_func3': debug3: Access type: S2
+data/record.c:70:12: [module2] '__wti_module2_func3': error: Invalid access to private record [module1] 'S2' {access_member}
+data/record.c:70:12: [module2] '__wti_module2_func3': debug3: Field access chain: __wti_module1_func2->x
+data/record.c:70:35: [module2] '__wti_module2_func3': debug3: Field access: S2->x
+data/record.c:70:35: [module2] '__wti_module2_func3': warning: Can't deduce type of member 'x' in __wti_module1_func2->x {type_deduce_member}
+data/record.c:77:5: debug3: Checking func_local_struct (function) data/record.c:77:5: [] public Function(Token(idx=107, range=(1342, 1359), value='func_local_struct') (Token(idx=108, range=(1360, 1373), value='int a, char b'))) : [1338:1341] 〈int〉
+data/record.c:77:5: debug: Checking function [] func_local_struct
+data/record.c:77:39: 'func_local_struct': debug2: locals vars:
     a: int
     b: char
-    local_str: (data/record.c:126:25:)
-data/record.c:79:5: 'func_local_struct': debug2: Access chain: local_str->s1.x
-data/record.c:79:5: 'func_local_struct': debug3: Access type: (data/record.c:126:25:)
-data/record.c:79:5: 'func_local_struct': debug3: Field access chain: local_str->s1.x
-data/record.c:79:15: 'func_local_struct': debug3: Field access: (data/record.c:126:25:)->s1
-data/record.c:79:18: 'func_local_struct': debug3: Field access: S1->x
-data/record.c:80:5: 'func_local_struct': debug2: Access chain: local_str->s2.s.x
-data/record.c:80:5: 'func_local_struct': debug3: Access type: (data/record.c:126:25:)
-data/record.c:80:5: 'func_local_struct': debug3: Field access chain: local_str->s2.s.x
-data/record.c:80:15: 'func_local_struct': debug3: Field access: (data/record.c:126:25:)->s2
-data/record.c:80:18: 'func_local_struct': debug3: Field access: S2->s
-data/record.c:80:18: 'func_local_struct': error: Invalid access to private field [module1] 'S2.s' {access_member}
-data/record.c:80:20: 'func_local_struct': debug3: Field access: S1->x
-data/record.c:56:12: debug3: Checking __wti_module1_func2 (function) data/record.c:56:12: [module1] private Function(Token(idx=58, range=(986, 1005), value='__wti_module1_func2') (Token(idx=59, range=(1006, 1010), value='void'))) : [982:984] 〈S2〉 static
-data/record.c:56:12: debug: Checking function [module1] __wti_module1_func2
-data/record.c:61:12: debug3: Checking __wti_module2_func2 (function) data/record.c:61:12: [module2] private Function(Token(idx=70, range=(1066, 1085), value='__wti_module2_func2') (Token(idx=71, range=(1086, 1090), value='void'))) : [1062:1065] 〈int〉 static
-data/record.c:61:12: debug: Checking function [module2] __wti_module2_func2
-data/record.c:70:12: debug3: Checking __wti_module1_funcX (function) data/record.c:70:12: [module1] private Function(Token(idx=91, range=(1238, 1257), value='__wti_module1_funcX') (Token(idx=92, range=(1258, 1262), value='void'))) : [1234:1236] 〈S2〉 static
-data/record.c:70:12: debug: Checking function [module1] __wti_module1_funcX
+    s1: S1
+    s2: S2
+data/record.c:82:5: 'func_local_struct': debug2: Access chain: local_str->s1.x
+data/record.c:82:5: 'func_local_struct': warning: Can't deduce type of expression local_str->s1.x {type_deduce_expr}
+data/record.c:83:5: 'func_local_struct': debug2: Access chain: local_str->s2.s.x
+data/record.c:83:5: 'func_local_struct': warning: Can't deduce type of expression local_str->s2.s.x {type_deduce_expr}
+data/record.c:59:12: debug3: Checking __wti_module1_func2 (function) data/record.c:59:12: [module1] private Function(Token(idx=66, range=(1041, 1060), value='__wti_module1_func2') (Token(idx=67, range=(1061, 1065), value='void'))) : [1037:1039] 〈S2〉 static
+data/record.c:59:12: debug: Checking function [module1] __wti_module1_func2
+data/record.c:64:12: debug3: Checking __wti_module2_func2 (function) data/record.c:64:12: [module2] private Function(Token(idx=78, range=(1121, 1140), value='__wti_module2_func2') (Token(idx=79, range=(1141, 1145), value='void'))) : [1117:1120] 〈int〉 static
+data/record.c:64:12: debug: Checking function [module2] __wti_module2_func2
+data/record.c:73:12: debug3: Checking __wti_module1_funcX (function) data/record.c:73:12: [module1] private Function(Token(idx=99, range=(1293, 1312), value='__wti_module1_funcX') (Token(idx=100, range=(1313, 1317), value='void'))) : [1289:1291] 〈S2〉 static
+data/record.c:73:12: debug: Checking function [module1] __wti_module1_funcX

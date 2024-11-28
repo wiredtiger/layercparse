@@ -152,6 +152,8 @@ class Codebase:
     static_names: dict[str, dict[str, Definition]] = field(default_factory=dict)
     # Typedefs
     typedefs: dict[str, str] = field(default_factory=dict)
+    typedefs_merged: bool = field(default=False, repr=False)
+    alltypes: frozenset[str] = field(default_factory=frozenset, repr=False)
     # Macros
     macros: dict[str, Definition] = field(default_factory=dict)
     # macros_restricted: dict[str, Definition] = field(default_factory=dict)
@@ -168,6 +170,13 @@ class Codebase:
                 details=MacroParts(name=Token(0, (0, 0), "__attribute__"),
                                    args=[Token(0, (0, 0), "@")])
             )
+
+    def finalize(self) -> None:
+        if self.typedefs_merged:
+            return
+        self.fill_typedefs()
+        self.alltypes = frozenset(name for name in self.types.keys()
+                                  if not name.startswith("("))
 
     def addMacro(self, name: str,
                        args: int | tuple[str, ...] | None = None,
@@ -188,11 +197,32 @@ class Codebase:
                                **kwargs))
 
     def untypedef(self, name: str) -> str:
+        if self.typedefs_merged:
+            return self.types[name].name if name in self.types else name
+
         seen: set[str] = set()
         while name not in self.types and name in self.typedefs and name not in seen:
             seen.add(name)
             name = self.typedefs[name]
         return name
+
+    def fill_typedefs(self) -> None:
+        """Add typedef'd types to the types list."""
+        if self.typedefs_merged:
+            return
+
+        for typealias in self.typedefs.keys():
+            if typealias in self.types:
+                continue
+            typename = self.untypedef(typealias)
+            if typename not in self.types:
+                continue
+            typedef = self.types[typename]
+            self.types[typealias] = typedef
+            if typedef.is_private:
+                self.types_restricted[typealias] = typedef
+
+        self.typedefs_merged = True
 
     # Get the un-typedefed type of a field or ""
     def get_field_type(self, rec_type: str, field_name: str) -> str:

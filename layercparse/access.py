@@ -167,6 +167,9 @@ class AccessCheck:
     _globals: Codebase
     _perModuleInvisibleNamesRe: dict[str, regex.Pattern | None] = field(default_factory=dict)
 
+    def __post_init__(self) -> None:
+        self._globals.finalize()
+
     def _get_invisible_global_names_for_module(self, module: str) -> regex.Pattern | None:
         if module not in self._perModuleInvisibleNamesRe:
             retSet = set()
@@ -268,7 +271,10 @@ class AccessCheck:
         # Check local names
         localvars: dict[str, Definition] = {} # name -> type
         with ScopePush(file=defn.scope.file, offset=0):
-            for var in defn.details.getArgs() + defn.details.getLocalVars(self._globals):
+            for var in itertools.chain(defn.details.xGetArgs(),
+                                       #defn.details.getLocalVars(self._globals),
+                                       defn.details.xGetFunctionLocalVarsOfTypes(self._globals.alltypes, body_clean),
+                                       ):
                 if var.typename:
                     localvars[var.name.value] = Definition(
                         name=var.name.value,
