@@ -45,7 +45,7 @@ class MacroExpander:
         obj_like_names, fn_like_names = [], []
         for k, v in self._macros.items():
             macro = _D2M(v)
-            if not expand_const and macro.is_const:
+            if not expand_const and macro.get_is_const():
                 continue
             if macro.args is None:
                 obj_like_names.append(k)

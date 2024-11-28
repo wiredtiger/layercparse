@@ -89,6 +89,7 @@ class TestCaseLocal(unittest.TestCase):
                 elif st.getKind().is_preproc:
                     macro = MacroParts.fromStatement(st)
                     if macro:
+                        macro.parseExtra()
                         a.extend(["Macro:", pf(macro)])
         return "\n".join(a)
 
@@ -308,6 +309,8 @@ class TestCodebase(TestCaseLocal):
     def test_codebase(self):
         _globals = Codebase()
         _globals.scanFiles(["data/statements.c"], twopass=False, multithread=False)
+        for macro in _globals.macros.values():
+            macro.details.parseExtra()
         self.checkStrAgainstFile(pformat(_globals, width=120, compact=False),
                                  "data/statements.c.globals")
 

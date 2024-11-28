@@ -437,8 +437,11 @@ MacroParts(name=Token(idx=0, range=(355, 358), value='qwe'),
            body=Token(idx=0, range=(359, 382), value='QWE                   '),
            preComment=Token(idx=133, range=(329, 346), value='/* pre comment */'),
            is_va_args=False,
+           is_const=False,
            is_wellformed=True,
-           is_const=False)
+           unbalanced='',
+           has_rettype=False,
+           typename=[0:0] 〈〉)
 Statement(tokens=[382:432] 〈
 ⌇#define asd(x, y) ASD \
   ZXC /* post comment */
@@ -465,8 +468,11 @@ MacroParts(name=Token(idx=0, range=(391, 394), value='asd'),
            body=Token(idx=0, range=(401, 432), value='ASD  \n  ZXC                   '),
            preComment=None,
            is_va_args=False,
+           is_const=False,
            is_wellformed=True,
-           is_const=False)
+           unbalanced='',
+           has_rettype=False,
+           typename=[0:0] 〈〉)
 Statement(tokens=[432:445] 〈
 ⌇// typedef
 ⌇
@@ -1654,8 +1660,11 @@ MacroParts(name=Token(idx=0, range=(2596, 2599), value='AAA'),
            body=Token(idx=0, range=(2600, 2600), value=''),
            preComment=None,
            is_va_args=False,
+           is_const=True,
            is_wellformed=True,
-           is_const=True)
+           unbalanced='',
+           has_rettype=False,
+           typename=[0:0] 〈〉)
 Statement(tokens=[2600:2614] 〈#define BBB 5
 〉,
           kind=StatementKind(is_comment=None,
@@ -1680,8 +1689,11 @@ MacroParts(name=Token(idx=0, range=(2608, 2611), value='BBB'),
            body=Token(idx=0, range=(2612, 2614), value='5'),
            preComment=None,
            is_va_args=False,
+           is_const=True,
            is_wellformed=True,
-           is_const=True)
+           unbalanced='',
+           has_rettype=False,
+           typename=[0:0] 〈〉)
 Statement(tokens=[2614:2632] 〈#define CCC 5 + 8
 〉,
           kind=StatementKind(is_comment=None,
@@ -1706,8 +1718,11 @@ MacroParts(name=Token(idx=0, range=(2622, 2625), value='CCC'),
            body=Token(idx=0, range=(2626, 2632), value='5 + 8'),
            preComment=None,
            is_va_args=False,
+           is_const=True,
            is_wellformed=True,
-           is_const=False)
+           unbalanced='',
+           has_rettype=False,
+           typename=[0:0] 〈〉)
 Statement(tokens=[2632:2652] 〈#define DDD() 5 + 8
 〉,
           kind=StatementKind(is_comment=None,
@@ -1732,8 +1747,11 @@ MacroParts(name=Token(idx=0, range=(2640, 2643), value='DDD'),
            body=Token(idx=0, range=(2646, 2652), value='5 + 8'),
            preComment=None,
            is_va_args=False,
+           is_const=True,
            is_wellformed=True,
-           is_const=False)
+           unbalanced='',
+           has_rettype=False,
+           typename=[0:0] 〈〉)
 Statement(tokens=[2652:2673] 〈#define EEE(x) x + 8
 〉,
           kind=StatementKind(is_comment=None,
@@ -1758,8 +1776,11 @@ MacroParts(name=Token(idx=0, range=(2660, 2663), value='EEE'),
            body=Token(idx=0, range=(2667, 2673), value='x + 8'),
            preComment=None,
            is_va_args=False,
+           is_const=False,
            is_wellformed=True,
-           is_const=False)
+           unbalanced='',
+           has_rettype=False,
+           typename=[0:0] 〈〉)
 Statement(tokens=[2673:2697] 〈#define FFF(x, y) x + y
 〉,
           kind=StatementKind(is_comment=None,
@@ -1784,8 +1805,11 @@ MacroParts(name=Token(idx=0, range=(2681, 2684), value='FFF'),
            body=Token(idx=0, range=(2691, 2697), value='x + y'),
            preComment=None,
            is_va_args=False,
+           is_const=False,
            is_wellformed=True,
-           is_const=False)
+           unbalanced='',
+           has_rettype=False,
+           typename=[0:0] 〈〉)
 Statement(tokens=[2697:2724] 〈#define GGG(x, y) x + \
  y
 〉,
@@ -1811,8 +1835,11 @@ MacroParts(name=Token(idx=0, range=(2705, 2708), value='GGG'),
            body=Token(idx=0, range=(2715, 2724), value='x +  \n y'),
            preComment=None,
            is_va_args=False,
+           is_const=False,
            is_wellformed=True,
-           is_const=False)
+           unbalanced='',
+           has_rettype=False,
+           typename=[0:0] 〈〉)
 Statement(tokens=[2724:2734] 〈
 ⌇qwe⌇ ⌇asd⌇;⌇
 〉,

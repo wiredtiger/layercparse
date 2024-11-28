@@ -77,38 +77,35 @@ class MacroParts:
     preComment: Token | None = None
     postComment: Token | None = field(default=None, repr=False) # for compatibility with all details
     is_va_args: bool = False
-    is_wellformed: bool = True
     # is_multiple_statements: bool = False
+
     is_const: bool | None = None
-    typename: TokenList = field(default_factory=TokenList, repr=False) # compatibility with details
+    is_wellformed: bool | None = True
+    unbalanced: str | None = None
+    has_rettype: bool | None = None
+    typename: TokenList = field(default_factory=TokenList)
 
     # TODO(later): Parse body into a list of tokens.
     #              Use special token types for # and ## operators and replacements
 
-    def __post_init__(self):
-        if not self.body:
-            self.is_wellformed = True
-            self.is_const = True
-        else:
-            self.is_wellformed = is_wellformed(self.body.value)
-            if not self.is_wellformed:
-                self.is_const = False
-                DEBUG3(lambda:scope().locationStr(self.body.range[0]),
-                       f"Macro '{self.name.value}' unbalanced: {get_unbalanced(self.body.value)}")
-            else:
-                for token in TokenList.xxFilterCode(TokenList.xFromText(
-                                self.body.value, base_offset=self.body.range[0])):
-                    if token.getKind() in [" ", "#", "/"]:
-                        continue
-                    if (self.is_const is None and (
-                            token.getKind() == "'" or
-                            (token.getKind() == "w" and regex.match(r"^\d", token.value)))):
-                        self.is_const = True
-                    else:
-                        self.is_const = False
-                        break
-                else:  # Not break
-                    self.is_const = True
+    # def __post_init__(self):
+    #     self.parseExtra()
+
+    def get_is_const(self) -> bool | None:
+        self.parseExtra()
+        return self.is_const
+    def get_is_wellformed(self) -> bool | None:
+        self.parseExtra()
+        return self.is_wellformed
+    def get_unbalanced(self) -> str | None:
+        self.parseExtra()
+        return self.unbalanced
+    def get_has_rettype(self) -> bool | None:
+        self.parseExtra()
+        return self.has_rettype
+    def get_typename(self) -> TokenList:
+        self.parseExtra()
+        return self.typename
 
     def args_short_repr(self) -> str:
         return "(" + ", ".join([arg.value for arg in self.args]) + ")" if self.args is not None else ""
@@ -168,3 +165,81 @@ class MacroParts:
         return MacroParts(preComment=preComment, args=args, is_va_args=is_va_args,
             name=Token.fromMatch(match, offset, "name", kind="w"), # type: ignore # match is not None; match is indexable
             body=body) # type: ignore # match is not None; match is indexable
+
+    def parseExtra(self) -> None:
+        """Do extra parsing of body: fill in is_wellformed, unbalanced, has_rettype, typename"""
+        if self.is_const is not None:
+            return
+        if not self.body:
+            self.is_wellformed = True
+            self.is_const = True
+            self.unbalanced = ""
+            self.has_rettype = False
+            return
+
+        tokens = TokenList()
+        unbalanced: list[str] = []
+        offset = 0
+        for match in reg_token_preproc.finditer(self.body.value):
+            if match.start() != offset:
+                unbalanced.append(self.body.value[offset:match.start()])
+            offset = match.end()
+            if not unbalanced:  # Only add tokens up to the first unbalanced token after which the expression is broken
+                token = Token.fromMatch(match, self.body.range[0])
+                if token.getKind() not in [" ", "/", ";"]:
+                    tokens.append(token)
+                    if self.is_const is None:
+                        if (token.getKind() == "'" or
+                                (token.getKind() == "w" and regex.match(r"^\d", token.value))):
+                            self.is_const = True
+                        elif token.getKind() == "+":
+                            pass  # skip operators
+                        else:
+                            self.is_const = False
+        if offset != len(self.body.value):
+            unbalanced.append(self.body.value[offset:])
+
+        self.is_wellformed = not unbalanced
+        self.unbalanced = "".join(unbalanced)
+        if not self.is_wellformed:
+            self.is_const = False
+        elif self.is_const is None:
+            self.is_const = True
+
+        self.typename = self._get_return_type_from_tokens(tokens, self.body.range[0])
+        self.has_rettype = bool(self.typename)
+
+    def _get_return_type_from_tokens(self, tokens: TokenList, base_offset: int) -> TokenList:
+        if not tokens:
+            return self.typename
+
+        if len(tokens) == 1:
+            if tokens[0].getKind() != "(":
+                return self.typename
+            base_offset += 1
+            return self._get_return_type_from_tokens(
+                self._get_preproc_tokens_from_text(
+                    tokens[0].value[1:-1], base_offset), base_offset)
+
+        # more than one token
+        if tokens[0].getKind() != "(":
+            return self.typename
+
+        # fist token is something in (...)
+        if tokens[1].getKind() not in ["w", "(", "{"] or (tokens[1].getKind() == "+" and tokens[1].value != "*"):
+            return self.typename
+
+        return self._get_preproc_tokens_from_text(tokens[0].value[1:-1], base_offset+1)
+
+    def _get_preproc_tokens_from_text(self, txt: str, base_offset: int) -> TokenList:
+        offset = 0
+        tokens = TokenList()
+        for match in reg_token_preproc.finditer(txt):
+            if match.start() != offset:
+                break
+            offset = match.end()
+            token = Token.fromMatch(match, self.body.range[0])  # type: ignore[union-attr] # we do have a body
+            if token.getKind() not in [" ", "/", ";"]:
+                tokens.append(token)
+        return tokens
+
