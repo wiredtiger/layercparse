@@ -35,7 +35,7 @@ re_token = r'''(?(DEFINE)(?<TOKEN>
 # VERBOSE allows comments and whitespace in the regex.
 regex.DEFAULT_VERSION = regex.RegexFlag.VERSION1
 re_flags = regex.RegexFlag.VERSION1 | regex.RegexFlag.DOTALL | \
-           regex.RegexFlag.VERBOSE # | regex.RegexFlag.POSIX
+           regex.RegexFlag.VERBOSE | regex.RegexFlag.ASCII # | regex.RegexFlag.POSIX
 
 # Precompiled regex.
 reg_token = regex.compile(r"(?&TOKEN)"+re_token, re_flags)

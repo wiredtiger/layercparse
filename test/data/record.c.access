@@ -12,7 +12,7 @@ data/record.c:24:5: function [module1] 'func': debug3: Function: func (function)
 data/record.c:56:12: function [module1] '__wti_module1_func2': debug3: Function: __wti_module1_func2 (function) data/record.c:56:12: [module1] private Function(Token(idx=58, range=(986, 1005), value='__wti_module1_func2') (Token(idx=59, range=(1006, 1010), value='void'))) : [982:984] 〈S2〉 static
 data/record.c:61:12: function [module2] '__wti_module2_func2': debug3: Function: __wti_module2_func2 (function) data/record.c:61:12: [module2] private Function(Token(idx=70, range=(1066, 1085), value='__wti_module2_func2') (Token(idx=71, range=(1086, 1090), value='void'))) : [1062:1065] 〈int〉 static
 data/record.c:66:5: function [module2] '__wti_module2_func3': debug3: Function: __wti_module2_func3 (function) data/record.c:66:5: [module2] private Function(Token(idx=80, range=(1159, 1178), value='__wti_module2_func3') (Token(idx=81, range=(1179, 1183), value='void'))) : [1155:1158] 〈int〉
-data/record.c:70:12: function [module1] '__wti_module1_funcX': debug3: Function: __wti_module1_funcX (function) data/record.c:70:12: [module1] public Function(Token(idx=91, range=(1238, 1257), value='__wti_module1_funcX') (Token(idx=92, range=(1258, 1262), value='void'))) : [1234:1236] 〈S2〉 static
+data/record.c:70:12: function [module1] '__wti_module1_funcX': debug3: Function: __wti_module1_funcX (function) data/record.c:70:12: [module1] private Function(Token(idx=91, range=(1238, 1257), value='__wti_module1_funcX') (Token(idx=92, range=(1258, 1262), value='void'))) : [1234:1236] 〈S2〉 static
 data/record.c:74:5: function 'func_local_struct': debug3: Function: func_local_struct (function) data/record.c:74:5: [] public Function(Token(idx=99, range=(1287, 1304), value='func_local_struct') (Token(idx=100, range=(1305, 1318), value='int a, char b'))) : [1283:1286] 〈int〉
 data/record.c:84:8: debug3: Record: ACCESS1 (record) data/record.c:84:8: [module1] private Record(ACCESS1 : <RecordKind.STRUCT: 1>
   member: Variable(Token(idx=4, range=(9, 10), value='x') : [5:8] 〈int〉)
@@ -295,5 +295,5 @@ data/record.c:56:12: debug3: Checking __wti_module1_func2 (function) data/record
 data/record.c:56:12: debug: Checking function [module1] __wti_module1_func2
 data/record.c:61:12: debug3: Checking __wti_module2_func2 (function) data/record.c:61:12: [module2] private Function(Token(idx=70, range=(1066, 1085), value='__wti_module2_func2') (Token(idx=71, range=(1086, 1090), value='void'))) : [1062:1065] 〈int〉 static
 data/record.c:61:12: debug: Checking function [module2] __wti_module2_func2
-data/record.c:70:12: debug3: Checking __wti_module1_funcX (function) data/record.c:70:12: [module1] public Function(Token(idx=91, range=(1238, 1257), value='__wti_module1_funcX') (Token(idx=92, range=(1258, 1262), value='void'))) : [1234:1236] 〈S2〉 static
+data/record.c:70:12: debug3: Checking __wti_module1_funcX (function) data/record.c:70:12: [module1] private Function(Token(idx=91, range=(1238, 1257), value='__wti_module1_funcX') (Token(idx=92, range=(1258, 1262), value='void'))) : [1234:1236] 〈S2〉 static
 data/record.c:70:12: debug: Checking function [module1] __wti_module1_funcX

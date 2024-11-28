@@ -2254,7 +2254,7 @@ Codebase(types={'(data/statements.c:127:11:)': Definition(name='(data/statements
                                                                              offset=0),
                                                                  offset=2384,
                                                                  module='',
-                                                                 is_private=None,
+                                                                 is_private=True,
                                                                  details=FunctionParts(typename=[2380:2383] 〈int〉,
                                                                                        name=Token(idx=394,
                                                                                                   range=(2384, 2389),
