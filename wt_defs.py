@@ -34,7 +34,7 @@ modules = [
     # Directory-less modules
     Module("bitstring"),
     Module("cell"),
-    Module("checkpoint", sourceAliases=["ckpt"]),
+    Module("checkpoint", sourceAliases=["ckpt", "ckptlist"]),
     Module("column", sourceAliases=["col"]),
     Module("compact"),
     Module("generation", sourceAliases=["gen"]),
