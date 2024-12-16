@@ -14,7 +14,6 @@ from dataclasses import dataclass, field
 # layercparse is a library written and maintained by the WiredTiger team.
 import regex
 from layercparse import *
-import wt_defs
 
 _globals: Codebase
 
@@ -106,6 +105,14 @@ def applyPatches() -> None:
                 f.write(patcher.get_patched())
     print(f"Total patches applied: {total}")
 
+def load_wt_defs(rootPath):
+    wt_defs_path = os.path.join(rootPath, 'dist', 'access_check', 'wt_defs.py')
+    with open(wt_defs_path, "r") as f:
+        code = f.read()
+    wt_defs = {}
+    exec(code, {}, wt_defs)
+    return wt_defs
+
 def main():
     global _globals, _patchers
     _patchers = {}
@@ -121,15 +128,17 @@ def main():
 
     rootPath = os.path.realpath(sys.argv[1])
     setRootPath(rootPath)
-    setModules(wt_defs.modules)
+
+    wt_defs = load_wt_defs(rootPath)
+    setModules(wt_defs["modules"])
 
     files = get_files()  # list of all source files
-    for file in wt_defs.extraFiles:
+    for file in wt_defs["extraFiles"]:
         files.insert(0, os.path.join(os.path.realpath(rootPath), file))
 
     _globals = Codebase()
     # print(" ===== Scan")
-    for macro in wt_defs.extraMacros:
+    for macro in wt_defs["extraMacros"]:
         _globals.addMacro(**macro)
     _globals.scanFiles(files, twopass=False)
 

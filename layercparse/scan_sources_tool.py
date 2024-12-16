@@ -602,8 +602,6 @@ def load_stats(files: list[str]) -> tuple[AccessSrc, AccessSrc]:
 def scan_sources_main(extraFiles: list[str], modules: list[Module], extraMacros: list[dict]) -> int:
     global _globals, _args, _color
 
-    commandline()
-
     if _args.color:
         _color = True
     _args.color = None  # Clear for proper cache key
