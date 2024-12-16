@@ -8,13 +8,24 @@ described in MODULARITY.md.
 """
 
 import sys, os
+import glob
 import itertools
 from dataclasses import dataclass, field
 
 # layercparse is a library written and maintained by the WiredTiger team.
 import regex
 from layercparse import *
-import wt_defs
+
+home_dir = os.path.expanduser("~")
+pattern = os.path.join(home_dir, '**', 'dist', 'access_check')
+wt_defs_path = next(glob.iglob(pattern, recursive=True), None)
+
+if wt_defs_path:
+    sys.path.insert(0, os.path.abspath(wt_defs_path))
+    import wt_defs
+else:
+    print("Error: 'wt_defs.py' not found.")
+    sys.exit(1)
 
 _globals: Codebase
 
@@ -113,6 +124,8 @@ def main():
     if len(sys.argv) < 3:
         print("Usage: refactor.py <path> <script>")
         return 1
+
+    print(f"Loading wt_defs.py from: {wt_defs_path}")
 
     refactor_prog = file_content(sys.argv[2])
 
