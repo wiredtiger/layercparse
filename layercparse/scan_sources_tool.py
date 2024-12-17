@@ -11,6 +11,7 @@ import pickle, hashlib
 import argparse
 from glob import glob
 from dataclasses import dataclass, field, is_dataclass, fields
+import json
 
 import regex
 from layercparse import *
@@ -433,6 +434,10 @@ To/from filters notation for "TO", "FROM" and "LIST" options:
     group.add_argument("-l", "--list", action="extend", nargs="*",
                        help="List what belongs to a module or file")
 
+    group = argparser.add_argument_group(title="Metrics to evaluate module modularity")
+    group.add_argument("-me", "--metrics", action="extend", nargs="*", metavar='MODULE',
+                       help="Output metrics for a module")
+
     group = argparser.add_argument_group(title="Access report mode (default)")
     group.add_argument("-f", "--from", dest="from_", metavar="FROM", action="extend", nargs=1,
                        help="Find access from module, file, function, type or field")
@@ -513,6 +518,38 @@ def list_modules(modules: list[Module]) -> None:
             desc.append(f"fileAliases: {mod.fileAliases}")
         output.append((f"{mod.name}:", ",   ".join(desc)))
     print_columns(output)
+
+def struct_fields_access_metrics(modules_metrics: dict) -> None:
+    for recdefn in _globals.fields.values():
+        for defn in recdefn.values():
+            if not defn.module and not _args.unmod:
+                continue
+            if defn.module and _args.metrics and defn.module not in _args.metrics:
+                continue
+            assert defn.module in modules_metrics
+            module_metrics = modules_metrics[defn.module]
+            fields_access = module_metrics.setdefault("fields_access", {"pub": 0, "priv": 0})
+            access_type = "priv" if defn.is_private else "pub"
+            fields_access[access_type] += 1
+
+def suspected_symbols_outside_module(modules_metrics) -> None:
+    return
+
+def symbols_with_invalid_naming(modules_metrics) -> None:
+    return
+
+def output_metrics() -> None:
+    modules_metrics = {"": {}}
+    for mod in workspace.modules:
+        if _args.metrics and mod not in _args.metrics:
+            continue
+        modules_metrics[mod] = {}
+
+    suspected_symbols_outside_module(modules_metrics)
+    struct_fields_access_metrics(modules_metrics)
+    symbols_with_invalid_naming(modules_metrics)
+
+    print(json.dumps(modules_metrics, indent=4))
 
 def list_contents() -> None:
     if _args.macros:
@@ -649,6 +686,10 @@ def scan_sources_main(extraFiles: list[str], modules: list[Module], extraMacros:
     _args.cache = _args.clear_cache = None  # Clear for proper cache key
 
     _globals = load_globals(files, extraMacros)
+
+    if _args.metrics is not None:
+        output_metrics()
+        return 0
 
     if _args.list is not None:
         list_contents()
