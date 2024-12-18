@@ -10,6 +10,7 @@ with open("requirements.txt") as f:
 
 setup(
     name="layercparse",
+    version="0.4.3",
     author="Yury Ershov",
     license="GPL3",
     description="Layered C parser",
