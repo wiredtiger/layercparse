@@ -12,6 +12,11 @@ from .internal import *
 from .common import *
 from . import workspace
 
+def load_wt_defs(rootPath) -> dict[str, list]:
+    content = file_content(path.join(rootPath, 'dist', 'modularity', 'wt_defs.py'))
+    wt_defs = regex.sub(r"(?m)^\s*(import|from\s+\S+\s+import).*?$", "", content)
+    return eval(wt_defs)
+
 FileKind: TypeAlias = Literal[
     "",   # undefined
     "c",  # .c file

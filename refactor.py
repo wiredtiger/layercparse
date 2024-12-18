@@ -105,14 +105,6 @@ def applyPatches() -> None:
                 f.write(patcher.get_patched())
     print(f"Total patches applied: {total}")
 
-def load_wt_defs(rootPath):
-    wt_defs_path = os.path.join(rootPath, 'dist', 'access_check', 'wt_defs.py')
-    with open(wt_defs_path, "r") as f:
-        code = f.read()
-    wt_defs = {}
-    exec(code, {}, wt_defs)
-    return wt_defs
-
 def main():
     global _globals, _patchers
     _patchers = {}
