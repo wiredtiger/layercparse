@@ -12,8 +12,8 @@ from .internal import *
 from .common import *
 from . import workspace
 
-def load_wt_defs(rootPath) -> dict[str, list]:
-    wt_defs = file_content(path.join(rootPath, 'dist', 'modularity', 'wt_defs.py'))
+def load_wt_defs(rootPath, wt_defs_rel_path) -> dict[str, list]:
+    wt_defs = file_content(path.join(rootPath, wt_defs_rel_path))
     return eval(wt_defs)
 
 FileKind: TypeAlias = Literal[

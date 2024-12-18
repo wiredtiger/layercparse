@@ -17,6 +17,8 @@ from layercparse import *
 
 _globals: Codebase
 
+WT_DEFS_RELATIVE_PATH = "dist/modularity/wt_defs.py"
+
 class Patcher:
     txt = ""
     patch_list: list[tuple[tuple[int, int], int, str]]
@@ -121,7 +123,7 @@ def main():
     rootPath = os.path.realpath(sys.argv[1])
     setRootPath(rootPath)
 
-    wt_defs = load_wt_defs(rootPath)
+    wt_defs = load_wt_defs(rootPath, WT_DEFS_RELATIVE_PATH)
     setModules(wt_defs["modules"])
 
     files = get_files()  # list of all source files
