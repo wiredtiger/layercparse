@@ -599,7 +599,7 @@ def load_stats(files: list[str]) -> tuple[AccessSrc, AccessSrc]:
 
     return access_stats, access_stats_r
 
-def scan_sources_main(wt_defs_rel_path) -> int:
+def scan_sources_main(code_config_rel_path) -> int:
     global _globals, _args, _color
 
     commandline()
@@ -629,9 +629,9 @@ def scan_sources_main(wt_defs_rel_path) -> int:
             return 1
     _args.calls_only = _args.fields_only = _args.macros_only = None  # Clear for proper cache key
 
-    wt_defs = load_wt_defs(_args.home, wt_defs_rel_path)
+    code_config = load_code_config(_args.home, code_config_rel_path)
 
-    modules = wt_defs["modules"]
+    modules = code_config["modules"]
     if _args.list_modules:
         list_modules(modules)
         return 0
@@ -643,7 +643,7 @@ def scan_sources_main(wt_defs_rel_path) -> int:
     setModules(modules)
 
     files = get_files()  # list of all source files
-    for file in wt_defs["extraFiles"]:
+    for file in code_config["extraFiles"]:
         files.insert(0, os.path.join(os.path.realpath(rootPath), file))
 
     if _args.clear_cache:
@@ -651,7 +651,7 @@ def scan_sources_main(wt_defs_rel_path) -> int:
     cache.use_cache = _args.cache
     _args.cache = _args.clear_cache = None  # Clear for proper cache key
 
-    _globals = load_globals(files, wt_defs["extraMacros"])
+    _globals = load_globals(files, code_config["extraMacros"])
 
     if _args.list is not None:
         list_contents()

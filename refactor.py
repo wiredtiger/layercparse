@@ -17,7 +17,7 @@ from layercparse import *
 
 _globals: Codebase
 
-WT_DEFS_RELATIVE_PATH = "dist/modularity/wt_defs.py"
+CODE_CONFIG_REL_PATH = "dist/modularity/wt_defs.py"
 
 class Patcher:
     txt = ""
@@ -123,16 +123,16 @@ def main():
     rootPath = os.path.realpath(sys.argv[1])
     setRootPath(rootPath)
 
-    wt_defs = load_wt_defs(rootPath, WT_DEFS_RELATIVE_PATH)
-    setModules(wt_defs["modules"])
+    code_config = load_code_config(rootPath, CODE_CONFIG_REL_PATH)
+    setModules(code_config["modules"])
 
     files = get_files()  # list of all source files
-    for file in wt_defs["extraFiles"]:
+    for file in code_config["extraFiles"]:
         files.insert(0, os.path.join(os.path.realpath(rootPath), file))
 
     _globals = Codebase()
     # print(" ===== Scan")
-    for macro in wt_defs["extraMacros"]:
+    for macro in code_config["extraMacros"]:
         _globals.addMacro(**macro)
     _globals.scanFiles(files, twopass=False)
 

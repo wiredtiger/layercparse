@@ -12,12 +12,12 @@ import sys, os
 import layercparse as lcp
 from layercparse.scan_sources_tool import scan_sources_main
 
-WT_DEFS_RELATIVE_PATH = "dist/modularity/wt_defs.py"
+CODE_CONFIG_REL_PATH = "dist/modularity/wt_defs.py"
 
 def main(): 
     lcp.Log.module_name_mismatch.enabled = False
 
-    return scan_sources_main(WT_DEFS_RELATIVE_PATH)
+    return scan_sources_main(CODE_CONFIG_REL_PATH)
 
 if __name__ == "__main__":
     try:

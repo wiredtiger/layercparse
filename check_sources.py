@@ -12,7 +12,7 @@ import sys, os
 # layercparse is a library written and maintained by the WiredTiger team.
 import layercparse as lcp
 
-WT_DEFS_RELATIVE_PATH = "dist/modularity/wt_defs.py"
+CODE_CONFIG_REL_PATH = "dist/modularity/wt_defs.py"
 
 def main():
     # lcp.setLogLevel(lcp.LogLevel.WARNING)
@@ -20,16 +20,16 @@ def main():
 
     rootPath = os.path.realpath(sys.argv[1])
     lcp.setRootPath(rootPath)
-    wt_defs = lcp.load_wt_defs(rootPath, WT_DEFS_RELATIVE_PATH)
-    lcp.setModules(wt_defs["modules"])
+    code_config = lcp.load_code_config(rootPath, CODE_CONFIG_REL_PATH)
+    lcp.setModules(code_config["modules"])
 
     files = lcp.get_files()  # list of all source files
-    for file in wt_defs["extraFiles"]:
+    for file in code_config["extraFiles"]:
         files.insert(0, os.path.join(os.path.realpath(rootPath), file))
 
     _globals = lcp.Codebase()
     # print(" ===== Scan")
-    for macro in wt_defs["extraMacros"]:
+    for macro in code_config["extraMacros"]:
         _globals.addMacro(**macro)
     _globals.scanFiles(files)
     # _globals.scanFiles(files, twopass=True, multithread=False)

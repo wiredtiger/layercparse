@@ -12,9 +12,9 @@ from .internal import *
 from .common import *
 from . import workspace
 
-def load_wt_defs(rootPath, wt_defs_rel_path) -> dict[str, list]:
-    wt_defs = file_content(path.join(rootPath, wt_defs_rel_path))
-    return eval(wt_defs)
+def load_code_config(rootPath, code_config_rel_path) -> dict[str, list]:
+    code_config = file_content(path.join(rootPath, code_config_rel_path))
+    return eval(code_config)
 
 FileKind: TypeAlias = Literal[
     "",   # undefined
