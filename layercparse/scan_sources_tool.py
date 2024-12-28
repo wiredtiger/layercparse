@@ -383,6 +383,13 @@ def want_list(defn: Definition) -> bool:
         return False
     return True
 
+def want_metric(defn: Definition) -> bool:
+    if not defn.module and not _args.unmod:
+        return False
+    if defn.module and _args.metrics and defn.module not in _args.metrics:
+        return False
+    return True
+
 def EnumFromStr(type, val: str) -> type:
     try:
         return type[val]
@@ -522,21 +529,50 @@ def list_modules(modules: list[Module]) -> None:
 def struct_fields_access_metrics(modules_metrics: dict) -> None:
     for recdefn in _globals.fields.values():
         for defn in recdefn.values():
-            if not defn.module and not _args.unmod:
-                continue
-            if defn.module and _args.metrics and defn.module not in _args.metrics:
-                continue
-            assert defn.module in modules_metrics
-            module_metrics = modules_metrics[defn.module]
-            fields_access = module_metrics.setdefault("fields_access", {"pub": 0, "priv": 0})
-            access_type = "priv" if defn.is_private else "pub"
-            fields_access[access_type] += 1
+            if want_metric(defn):
+                assert defn.module in modules_metrics
+                module_metrics = modules_metrics[defn.module]
+                fields_access = module_metrics.setdefault("fields_access", {"pub": 0, "priv": 0})
+                fields_access["priv" if defn.is_private else "pub"] += 1
 
-def suspected_symbols_outside_module(modules_metrics) -> None:
+def suspected_symbols_outside_module(modules_metrics: dict) -> None:
     return
 
-def symbols_with_invalid_naming(modules_metrics) -> None:
-    return
+def update_naming_metrics(defn: Definition, modules_metrics: dict, valid_prefix_pattern: str, valid_module_names: list[str], ignore_case:bool = False) -> None:
+    if want_metric(defn):
+        assert defn.module in modules_metrics, f"Module {defn.module} not found in args.metrics."
+        module_metrics = modules_metrics[defn.module]
+        naming = module_metrics.setdefault("naming", {}).setdefault(defn.kind, {"valid": 0, "invalid": 0})
+        valid_name_pattern = regex.compile(
+            rf'^{valid_prefix_pattern}(?:{"|".join(valid_module_names)})',
+            regex.IGNORECASE if ignore_case else 0
+        )
+        naming["valid" if regex.match(valid_name_pattern, defn.name) else "invalid"] += 1
+        if not regex.match(valid_name_pattern, defn.name):
+                print(f"Invalid {defn.kind} name: {defn.name}")
+        # allow --unmod
+        # some macros can be function like for instance __wt_verbose, allow them to be this way.
+
+def symbols_naming_metrics(modules_metrics: dict) -> None:
+    valid_prefix_patterns = {
+        "macros": "(?:__wti?_|WTI?_)",
+        "functions": "__(?:wti?_|ut_)?",
+        "records": "__wti?_",
+    }
+    for kind, valid_prefix_pattern in valid_prefix_patterns.items():
+        if kind == "macros":
+            definitions = _globals.macros.values()
+        elif kind == "functions":
+            definitions = itertools.chain(
+                _globals.names.values(),
+                (v for vv in _globals.static_names.values() for v in vv.values())
+            )
+        elif kind == "records":
+            definitions = _globals.types.values()
+
+        for defn in definitions:
+            valid_module_names = [defn.module] + workspace.modules[defn.module].sourceAliases if defn.module else []
+            update_naming_metrics(defn, modules_metrics, valid_prefix_pattern, valid_module_names, ignore_case=(kind == "macros"))
 
 def output_metrics() -> None:
     modules_metrics = {"": {}}
@@ -545,9 +581,9 @@ def output_metrics() -> None:
             continue
         modules_metrics[mod] = {}
 
-    suspected_symbols_outside_module(modules_metrics)
+    # suspected_symbols_outside_module(modules_metrics)
     struct_fields_access_metrics(modules_metrics)
-    symbols_with_invalid_naming(modules_metrics)
+    symbols_naming_metrics(modules_metrics)
 
     print(json.dumps(modules_metrics, indent=4))
 
