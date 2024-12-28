@@ -548,10 +548,6 @@ def update_naming_metrics(defn: Definition, modules_metrics: dict, valid_prefix_
             regex.IGNORECASE if ignore_case else 0
         )
         naming["valid" if regex.match(valid_name_pattern, defn.name) else "invalid"] += 1
-        if not regex.match(valid_name_pattern, defn.name):
-                print(f"Invalid {defn.kind} name: {defn.name}")
-        # allow --unmod
-        # some macros can be function like for instance __wt_verbose, allow them to be this way.
 
 def symbols_naming_metrics(modules_metrics: dict) -> None:
     valid_prefix_patterns = {
