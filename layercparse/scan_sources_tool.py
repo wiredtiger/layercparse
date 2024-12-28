@@ -11,6 +11,7 @@ import pickle, hashlib
 import argparse
 from glob import glob
 from dataclasses import dataclass, field, is_dataclass, fields
+import json
 
 import regex
 from layercparse import *
@@ -382,6 +383,13 @@ def want_list(defn: Definition) -> bool:
         return False
     return True
 
+def want_metric(defn: Definition) -> bool:
+    if not defn.module and not _args.unmod:
+        return False
+    if defn.module and _args.metrics and defn.module not in _args.metrics:
+        return False
+    return True
+
 def EnumFromStr(type, val: str) -> type:
     try:
         return type[val]
@@ -432,6 +440,10 @@ To/from filters notation for "TO", "FROM" and "LIST" options:
     group = argparser.add_argument_group(title="Module content mode")
     group.add_argument("-l", "--list", action="extend", nargs="*",
                        help="List what belongs to a module or file")
+
+    group = argparser.add_argument_group(title="Metrics to evaluate module modularity")
+    group.add_argument("-me", "--metrics", action="extend", nargs="*", metavar='MODULE',
+                       help="Output metrics for a module")
 
     group = argparser.add_argument_group(title="Access report mode (default)")
     group.add_argument("-f", "--from", dest="from_", metavar="FROM", action="extend", nargs=1,
@@ -513,6 +525,63 @@ def list_modules(modules: list[Module]) -> None:
             desc.append(f"fileAliases: {mod.fileAliases}")
         output.append((f"{mod.name}:", ",   ".join(desc)))
     print_columns(output)
+
+def struct_fields_access_metrics(modules_metrics: dict) -> None:
+    for recdefn in _globals.fields.values():
+        for defn in recdefn.values():
+            if want_metric(defn):
+                assert defn.module in modules_metrics
+                module_metrics = modules_metrics[defn.module]
+                fields_access = module_metrics.setdefault("fields_access", {"pub": 0, "priv": 0})
+                fields_access["priv" if defn.is_private else "pub"] += 1
+
+def suspected_symbols_outside_module(modules_metrics: dict) -> None:
+    return
+
+def update_naming_metrics(defn: Definition, modules_metrics: dict, valid_prefix_pattern: str, valid_module_names: list[str], ignore_case:bool = False) -> None:
+    if want_metric(defn):
+        assert defn.module in modules_metrics, f"Module {defn.module} not found in args.metrics."
+        module_metrics = modules_metrics[defn.module]
+        naming = module_metrics.setdefault("naming", {}).setdefault(defn.kind, {"valid": 0, "invalid": 0})
+        valid_name_pattern = regex.compile(
+            rf'^{valid_prefix_pattern}(?:{"|".join(valid_module_names)})',
+            regex.IGNORECASE if ignore_case else 0
+        )
+        naming["valid" if regex.match(valid_name_pattern, defn.name) else "invalid"] += 1
+
+def symbols_naming_metrics(modules_metrics: dict) -> None:
+    valid_prefix_patterns = {
+        "macros": "(?:__wti?_|WTI?_)",
+        "functions": "__(?:wti?_|ut_)?",
+        "records": "__wti?_",
+    }
+    for kind, valid_prefix_pattern in valid_prefix_patterns.items():
+        if kind == "macros":
+            definitions = _globals.macros.values()
+        elif kind == "functions":
+            definitions = itertools.chain(
+                _globals.names.values(),
+                (v for vv in _globals.static_names.values() for v in vv.values())
+            )
+        elif kind == "records":
+            definitions = _globals.types.values()
+
+        for defn in definitions:
+            valid_module_names = [defn.module] + workspace.modules[defn.module].sourceAliases if defn.module else []
+            update_naming_metrics(defn, modules_metrics, valid_prefix_pattern, valid_module_names, ignore_case=(kind == "macros"))
+
+def output_metrics() -> None:
+    modules_metrics = {"": {}}
+    for mod in workspace.modules:
+        if _args.metrics and mod not in _args.metrics:
+            continue
+        modules_metrics[mod] = {}
+
+    # suspected_symbols_outside_module(modules_metrics)
+    struct_fields_access_metrics(modules_metrics)
+    symbols_naming_metrics(modules_metrics)
+
+    print(json.dumps(modules_metrics, indent=4))
 
 def list_contents() -> None:
     if _args.macros:
@@ -652,6 +721,10 @@ def scan_sources_main(code_config_rel_path) -> int:
     _args.cache = _args.clear_cache = None  # Clear for proper cache key
 
     _globals = load_globals(files, code_config["extraMacros"])
+
+    if _args.metrics is not None:
+        output_metrics()
+        return 0
 
     if _args.list is not None:
         list_contents()
