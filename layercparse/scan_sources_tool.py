@@ -516,36 +516,24 @@ def list_modules(modules: list[Module]) -> None:
 
 def list_contents() -> None:
     if _args.calls:
-        hasFunctions = False
         print("  == Functions:")
         for defn in itertools.chain(_globals.names.values(),
                                     (v for vv in _globals.static_names.values() for v in vv.values())):
             if not want_list(defn):
                 continue
-            else:
-                hasFunctions = True
             print(f"{defn.locationStr()} {'private' if defn.is_private else 'public'}")
-        if not hasFunctions:
-            print("This module does not contain any functions.")
     if _args.macros:
-        hasMacros = False
         print("  == Macros:")
         for _, defn in _globals.macros.items():
             if not defn.offset or not want_list(defn):
                 continue
-            else:
-                hasMacros = True
             print(f"{defn.locationStr()} {'private' if defn.is_private else 'public'}")
-        if not hasMacros:
-            print("This module does not contain any macros.")
     if _args.fields:
-        hasFields = False
         print("  == Fields:")
         for recname, recdefn in _globals.fields.items():
             defn = _globals.types[recname]
             r: str | None = f"{defn.locationStr()} {'private' if defn.is_private else 'public'}:"
             if want_list(defn):
-                hasFields = True
                 print(r)
                 r = None
             for fieldname, defn in recdefn.items():
@@ -556,8 +544,6 @@ def list_contents() -> None:
                     r = None
                 # print(f"{defn.locationStr()} ..... {'private' if defn.is_private else 'public'} {fieldname}")
                 print(f"    {fieldname} [{defn.module}] {'private' if defn.is_private else 'public'}")
-        if not hasFields:
-            print("This module does not contain any fields.")
 
 _script_files = script_files_list()
 _version_hash = hashlib.sha1(pickle.dumps((_script_files, LAYERCPARSE_VERSION))).digest()
