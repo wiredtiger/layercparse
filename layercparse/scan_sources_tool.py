@@ -444,6 +444,8 @@ To/from filters notation for "TO", "FROM" and "LIST" options:
     group = argparser.add_argument_group(title="Metrics to evaluate module modularity")
     group.add_argument("-me", "--metrics", action="extend", nargs="*", metavar='MODULE',
                        help="Output metrics for a module")
+    group.add_argument("--detailed-metrics", action="store_true",
+                   help="Provide detailed output for the metrics")
 
     group = argparser.add_argument_group(title="Access report mode (default)")
     group.add_argument("-f", "--from", dest="from_", metavar="FROM", action="extend", nargs=1,
@@ -534,9 +536,8 @@ def struct_fields_access_metrics(modules_metrics: dict) -> None:
                 module_metrics = modules_metrics[defn.module]
                 fields_access = module_metrics.setdefault("fields_access", {"pub": 0, "priv": 0})
                 fields_access["priv" if defn.is_private else "pub"] += 1
-
-def suspected_symbols_outside_module(modules_metrics: dict) -> None:
-    return
+                if (_args.detailed_metrics and not defn.is_private):
+                    print(f"[{defn.module}] Public field: {defn.name}")
 
 def update_naming_metrics(defn: Definition, modules_metrics: dict, valid_prefix_pattern: str, valid_module_names: list[str], ignore_case:bool = False) -> None:
     if want_metric(defn):
@@ -548,12 +549,14 @@ def update_naming_metrics(defn: Definition, modules_metrics: dict, valid_prefix_
             regex.IGNORECASE if ignore_case else 0
         )
         naming["valid" if regex.match(valid_name_pattern, defn.name) else "invalid"] += 1
+        if (_args.detailed_metrics and not regex.match(valid_name_pattern, defn.name)):
+            print(f"[{defn.module}] Invalid {defn.kind} name: {defn.name}")
 
 def symbols_naming_metrics(modules_metrics: dict) -> None:
     valid_prefix_patterns = {
         "macros": "(?:__wti?_|WTI?_)",
         "functions": "__(?:wti?_|ut_)?",
-        "records": "__wti?_",
+        "records": "(?:__wti?_|WTI?_)",
     }
     for kind, valid_prefix_pattern in valid_prefix_patterns.items():
         if kind == "macros":
@@ -577,10 +580,8 @@ def output_metrics() -> None:
             continue
         modules_metrics[mod] = {}
 
-    # suspected_symbols_outside_module(modules_metrics)
     struct_fields_access_metrics(modules_metrics)
     symbols_naming_metrics(modules_metrics)
-
     print(json.dumps(modules_metrics, indent=4))
 
 def list_contents() -> None:
