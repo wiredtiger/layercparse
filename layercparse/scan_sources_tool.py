@@ -558,6 +558,7 @@ def symbols_naming_metrics(modules_metrics: dict) -> None:
         "functions": "__(?:wti?_|ut_)?",
         "records": "(?:__wti?_|WTI?_)",
     }
+    definitions: Iterable[Definition] = []
     for kind, valid_prefix_pattern in valid_prefix_patterns.items():
         if kind == "macros":
             definitions = _globals.macros.values()
@@ -574,7 +575,7 @@ def symbols_naming_metrics(modules_metrics: dict) -> None:
             update_naming_metrics(defn, modules_metrics, valid_prefix_pattern, valid_module_names, ignore_case=(kind == "macros"))
 
 def output_metrics() -> None:
-    modules_metrics = {"": {}}
+    modules_metrics : dict[str, Any] = {"": {}}
     for mod in workspace.modules:
         if _args.metrics and mod not in _args.metrics:
             continue
