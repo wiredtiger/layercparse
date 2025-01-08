@@ -515,17 +515,17 @@ def list_modules(modules: list[Module]) -> None:
     print_columns(output)
 
 def list_contents() -> None:
-    if _args.macros:
-        print("  == Macros:")
-        for _, defn in _globals.macros.items():
-            if not defn.offset or not want_list(defn):
-                continue
-            print(f"{defn.locationStr()} {'private' if defn.is_private else 'public'}")
     if _args.calls:
         print("  == Functions:")
         for defn in itertools.chain(_globals.names.values(),
                                     (v for vv in _globals.static_names.values() for v in vv.values())):
             if not want_list(defn):
+                continue
+            print(f"{defn.locationStr()} {'private' if defn.is_private else 'public'}")
+    if _args.macros:
+        print("  == Macros:")
+        for _, defn in _globals.macros.items():
+            if not defn.offset or not want_list(defn):
                 continue
             print(f"{defn.locationStr()} {'private' if defn.is_private else 'public'}")
     if _args.fields:
