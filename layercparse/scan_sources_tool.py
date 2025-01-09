@@ -528,31 +528,35 @@ def list_modules(modules: list[Module]) -> None:
         output.append((f"{mod.name}:", ",   ".join(desc)))
     print_columns(output)
 
-def struct_fields_access_metrics(modules_metrics: dict) -> None:
+def struct_fields_access_metrics(modules_metrics: list[dict]) -> None:
     for recdefn in _globals.fields.values():
         for defn in recdefn.values():
             if want_metric(defn):
-                assert defn.module in modules_metrics
-                module_metrics = modules_metrics[defn.module]
-                fields_access = module_metrics.setdefault("fields_access", {"pub": 0, "priv": 0})
-                fields_access["priv" if defn.is_private else "pub"] += 1
+                module_dict = next(m for m in modules_metrics if m["name"] == defn.module)
+                module_metrics_dict = module_dict.setdefault("metrics", {})
+                access_metric = module_metrics_dict.setdefault("field_access", [{"name": "Public", "value": 0}, {"name": "Private", "value": 0}])
+                target = "Private" if defn.is_private else "Public"
+                item = next((d for d in access_metric if d["name"] == target), None)
+                item["value"] += 1
                 if (_args.detailed_metrics and not defn.is_private):
                     print(f"[{defn.module}] Public field: {defn.name}")
 
-def update_naming_metrics(defn: Definition, modules_metrics: dict, valid_prefix_pattern: str, valid_module_names: list[str], ignore_case:bool = False) -> None:
+def update_naming_metrics(defn: Definition, modules_metrics: list[dict], valid_prefix_pattern: str, valid_module_names: list[str], ignore_case:bool = False) -> None:
     if want_metric(defn):
-        assert defn.module in modules_metrics, f"Module {defn.module} not found in args.metrics."
-        module_metrics = modules_metrics[defn.module]
-        naming = module_metrics.setdefault("naming", {}).setdefault(defn.kind, {"valid": 0, "invalid": 0})
+        module_dict = next(m for m in modules_metrics if m["name"] == defn.module)
+        module_metrics_dict = module_dict.setdefault("metrics", {})
+        naming_metric = module_metrics_dict.setdefault("naming", [{"name": "Valid", "value": 0}, {"name": "Invalid", "value": 0}])
         valid_name_pattern = regex.compile(
             rf'^{valid_prefix_pattern}(?:{"|".join(valid_module_names)})',
             regex.IGNORECASE if ignore_case else 0
         )
-        naming["valid" if regex.match(valid_name_pattern, defn.name) else "invalid"] += 1
+        target = "Valid" if regex.match(valid_name_pattern, defn.name) else "Invalid"
+        item = next((d for d in naming_metric if d["name"] == target), None)
+        item["value"] += 1
         if (_args.detailed_metrics and not regex.match(valid_name_pattern, defn.name)):
             print(f"[{defn.module}] Invalid {defn.kind} name: {defn.name}")
 
-def symbols_naming_metrics(modules_metrics: dict) -> None:
+def symbols_naming_metrics(modules_metrics: list[dict]) -> None:
     valid_prefix_patterns = {
         "macros": "(?:__wti?_|WTI?_)",
         "functions": "__(?:wti?_|ut_)?",
@@ -575,15 +579,18 @@ def symbols_naming_metrics(modules_metrics: dict) -> None:
             update_naming_metrics(defn, modules_metrics, valid_prefix_pattern, valid_module_names, ignore_case=(kind == "macros"))
 
 def output_metrics() -> None:
-    modules_metrics : dict[str, Any] = {"": {}}
+    modules_metrics_list : list[dict] = []
+    modules_metrics_list.append({"name": ""})
     for mod in workspace.modules:
         if _args.metrics and mod not in _args.metrics:
             continue
-        modules_metrics[mod] = {}
+        modules_metrics_list.append({"name": mod})
 
-    struct_fields_access_metrics(modules_metrics)
-    symbols_naming_metrics(modules_metrics)
-    print(json.dumps(modules_metrics, indent=4))
+    struct_fields_access_metrics(modules_metrics_list)
+    symbols_naming_metrics(modules_metrics_list)
+
+    modules_metrics_dict : dict[str, Any] = {"modules_metrics": modules_metrics_list}
+    print(json.dumps(modules_metrics_dict, indent=4))
 
 def list_contents() -> None:
     if _args.macros:
