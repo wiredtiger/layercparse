@@ -536,7 +536,7 @@ def struct_fields_access_metrics(modules_metrics: list[dict]) -> None:
                 module_metrics_dict = module_dict.setdefault("metrics", {})
                 access_metric = module_metrics_dict.setdefault("field_access", [{"name": "Public", "value": 0}, {"name": "Private", "value": 0}])
                 target = "Private" if defn.is_private else "Public"
-                item = next((d for d in access_metric if d["name"] == target), None)
+                item = next(d for d in access_metric if d["name"] == target)
                 item["value"] += 1
                 if (_args.detailed_metrics and not defn.is_private):
                     print(f"[{defn.module}] Public field: {defn.name}")
@@ -551,7 +551,7 @@ def update_naming_metrics(defn: Definition, modules_metrics: list[dict], valid_p
             regex.IGNORECASE if ignore_case else 0
         )
         target = "Valid" if regex.match(valid_name_pattern, defn.name) else "Invalid"
-        item = next((d for d in naming_metric if d["name"] == target), None)
+        item = next(d for d in naming_metric if d["name"] == target)
         item["value"] += 1
         if (_args.detailed_metrics and not regex.match(valid_name_pattern, defn.name)):
             print(f"[{defn.module}] Invalid {defn.kind} name: {defn.name}")
