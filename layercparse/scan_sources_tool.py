@@ -749,7 +749,7 @@ def scan_sources_main(code_config_rel_path) -> int:
     if getattr(stats, detail_src):
         for key, val in sorted(getattr(stats, detail_src).items()):
             print(*SrcDetails(key), dir_indicator) # type: ignore[operator] # Cannot call function of unknown type
-            print_columns([(*DstDetails(key2), ":" if val2 > 1 else "", val2 if val2 > 1 else "") for key2, val2 in sorted(getattr(val, detail_dst).items())]) # type: ignore[operator] # Cannot call function of unknown type
+            print_columns([(*DstDetails(key2), ":" if val2 > 0 else "", val2 if val2 > 0 else "") for key2, val2 in sorted(getattr(val, detail_dst).items())]) # type: ignore[operator] # Cannot call function of unknown type
             # for key2, val2 in sorted(getattr(val, detail_dst).items()):
             #     print(f"  {DstDetails(key2)} : {val2}")
 
