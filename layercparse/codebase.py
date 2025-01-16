@@ -104,7 +104,7 @@ def _get_visibility_and_module(thing: Details, default_private: bool | None = No
                                  thing.postComment.value, flags=re_flags):
             return (bool(match[2]), match[3] if match[3] else default_module)
 
-    match = regex.match(r"^(?>(__wt_)|(__wti_|WT_))(?>(\L<names>)_)?",
+    match = regex.match(r"^(?>(__wt_|WT_)|(__wti_|WTI_))(?>(\L<names>)_)?",
                         thing.name.value, flags=re_flags, names=workspace.moduleSrcNames)
     module_from_name = (workspace.moduleAliasesSrc.get(match[3], match[3])
                         if match and match[3] else default_module)
@@ -112,8 +112,10 @@ def _get_visibility_and_module(thing: Details, default_private: bool | None = No
     if is_nested and match:
         return (bool(match[2]), module_from_name)
 
+    new_private = bool(match[2]) if match else default_private
+
     if not default_module:
-        return (default_private, module_from_name)
+        return (new_private, module_from_name)
 
     # Top level
     if module_from_name != default_module:
@@ -123,7 +125,7 @@ def _get_visibility_and_module(thing: Details, default_private: bool | None = No
               f"Assigning it to module [{default_module}] "
               f"because identifier name has lower priority.")
 
-    return (default_private, default_module)
+    return (new_private, default_module)
 
 def _get_visibility_and_module_check(thing: Details,
                                      default_private: bool | None = None,
